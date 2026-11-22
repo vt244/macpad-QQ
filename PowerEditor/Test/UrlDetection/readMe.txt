@@ -67,4 +67,3 @@ Automated version of the URL detection test
 -------------------------------------------
 
 An automated version of the test can be conducted by running verifyUrlDetection.ps1.
-This is mainly to run the test in Appveyor.

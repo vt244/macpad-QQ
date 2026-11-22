@@ -62,7 +62,6 @@ plugin_hash=$(shasum -a 256 "$resources/catalog/DocumentTools.dylib")
 printf '{"plugins":[{"name":"Document Tools","version":"1.0.0","file":"DocumentTools.dylib","url":"catalog/DocumentTools.dylib","sha256":"%s"}]}\n' \
 	"${plugin_hash%% *}" > "$resources/plugins-catalog.json"
 cp -R PowerEditor/bin/userDefineLangs "$resources/"
-cp PowerEditor/bin/{change.log,readme.txt} "$resources/"
 cp LICENSE THIRD_PARTY_NOTICES.md README.md "$resources/"
 cp licenses/*.txt "$resources/licenses/"
 cp scintilla/License.txt "$resources/licenses/Scintilla.txt"

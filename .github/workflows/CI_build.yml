@@ -86,11 +86,10 @@ jobs:
         }
         if ($Env:PYTHON_ALLOW_CACHE -eq "true") {
           $python = ((python -V) -split " ")[1]
-          $requests = (Invoke-RestMethod https://pypi.org/pypi/requests/json).info.version
           $rfc3987 = (Invoke-RestMethod https://pypi.org/pypi/rfc3987/json).info.version
           $pywin32 = (Invoke-RestMethod https://pypi.org/pypi/pywin32/json).info.version
           $lxml = (Invoke-RestMethod https://pypi.org/pypi/lxml/json).info.version
-          $key = "${{ runner.os }}-python_$python-requests_$requests-rfc3987_$rfc3987-pywin32_$pywin32-lxml_$lxml"
+          $key = "${{ runner.os }}-python_$python-rfc3987_$rfc3987-pywin32_$pywin32-lxml_$lxml"
           Write-Output "python=$key" >> $env:GITHUB_OUTPUT
         }
 
@@ -113,7 +112,7 @@ jobs:
     - name: (cache) Install Python modules
       if: env.PYTHON_ALLOW_CACHE == 'true' && steps.cache-lookup.outputs.cache-hit != 'true'
       run: |
-        python -m pip install --target ${{ env.PYTHON_DIR_CACHE }} requests rfc3987 pywin32 lxml
+        python -m pip install --target ${{ env.PYTHON_DIR_CACHE }} rfc3987 pywin32 lxml
 
     - name: (cache) Save Python modules
       if: env.PYTHON_ALLOW_CACHE == 'true' && steps.cache-lookup.outputs.cache-hit != 'true' && github.event_name == 'push'
@@ -129,7 +128,7 @@ jobs:
           $Env:PYTHONPATH = "${{ env.PYTHON_DIR_CACHE }}"
         }
         else {
-          python -m pip install requests rfc3987 pywin32 lxml
+          python -m pip install rfc3987 pywin32 lxml
         }
         python PowerEditor\Test\xmlValidator\validator_xml.py
         if ($LastExitCode -eq 0) {
@@ -258,7 +257,7 @@ jobs:
              $Env:PYTHONPATH = "${{ env.PYTHON_DIR_CACHE }}"
            }
            else {
-             python -m pip install requests rfc3987 pywin32 lxml
+             python -m pip install rfc3987 pywin32 lxml
            }
            python PowerEditor\Test\xmlValidator\validator_xml.py
 
