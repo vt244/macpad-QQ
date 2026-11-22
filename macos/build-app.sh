@@ -20,6 +20,30 @@ mkdir -p "$app/Contents/MacOS" "$resources/licenses"
 
 cp macos/Info.plist "$app/Contents/"
 cp macos/AppIcon.icns "$resources/"
+mkdir -p "$resources/toolbar" "$resources/tabbar"
+toolbar_icons=(new open save saveall close closeall print cut copy paste undo redo find findrep zoomIn zoomOut syncV syncH wrap allChars indentGuide docList fileBrowser monitoring)
+for scheme in light dark; do
+	for style in regular filled; do
+		destination="$resources/toolbar/$scheme/$style"
+		mkdir -p "$destination"
+		for icon in "${toolbar_icons[@]}"; do
+			cp "PowerEditor/src/icons/$scheme/toolbar/$style/${icon}_off.ico" "$destination/"
+			disabled="PowerEditor/src/icons/$scheme/toolbar/$style/${icon}_dis.ico"
+			if [[ -f "$disabled" ]]; then
+				cp "$disabled" "$destination/"
+			fi
+		done
+	done
+done
+mkdir "$resources/toolbar/classic"
+cp PowerEditor/src/icons/standard/toolbar/*.bmp "$resources/toolbar/classic/"
+for scheme in standard dark; do
+	mkdir -p "$resources/panels/$scheme"
+	cp PowerEditor/src/icons/"$scheme"/panels/toolbar/fb_*.ico "$resources/panels/$scheme/"
+done
+mkdir "$resources/tabbar/dark"
+cp PowerEditor/src/icons/standard/tabbar/{saved,unsaved,readonly,monitoring,pinTabButton_pinned}.ico "$resources/tabbar/"
+cp PowerEditor/src/icons/dark/tabbar/{unsaved,readonly,monitoring,pinTabButton_pinned}.ico "$resources/tabbar/dark/"
 for cursor in mac_cursor_busy mac_cursor_flipped; do
 	sips -s format tiff "scintilla/cocoa/res/$cursor.png" --out "$resources/$cursor.tiff" >/dev/null
 done

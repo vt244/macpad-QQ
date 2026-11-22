@@ -19,10 +19,9 @@ Run the smoke test in a macOS graphical session:
 macos/test-app.sh
 ```
 
-It checks native document I/O, syntax highlighting, imported XML resources,
-and a locally compiled plugin. The [macOS workflow](.github/workflows/macos.yml)
-archives the app and its corresponding source together. See the
-[redistribution notes](THIRD_PARTY_NOTICES.md) for license details.
+It checks dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins.
+The [macOS workflow](.github/workflows/macos.yml) builds, tests and archives
+the app with its corresponding source.
 
 ### Native plugins
 

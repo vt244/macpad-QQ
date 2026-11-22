@@ -9,11 +9,23 @@
 @property(nonatomic, readonly) NSDictionary<NSString *, NSURL *> *translations;
 @property(nonatomic, readonly) NSURL *selectedTheme;
 @property(nonatomic, readonly) NSURL *selectedTranslation;
+@property(nonatomic, readonly) BOOL usesDarkColors;
 + (instancetype)shared;
 - (NSString *)label:(NSString *)identifier fallback:(NSString *)fallback;
+- (NSString *)englishMenuLabel:(NSString *)identifier;
+- (NSArray<NSString *> *)commandIDsWithEnglishTitle:(NSString *)title;
+- (NSString *)findLabel:(NSString *)identifier fallback:(NSString *)fallback;
 - (NSString *)translationName:(NSURL *)url;
 - (void)chooseTheme:(NSURL *)url;
 - (void)chooseTranslation:(NSURL *)url;
+- (id)setting:(NSString *)name fallback:(id)fallback;
+- (void)setSetting:(id)value forName:(NSString *)name;
+- (void)setSettings:(NSDictionary<NSString *, id> *)settings;
 - (NSURL *)importXML:(NSURL *)url theme:(BOOL)theme error:(NSError **)error;
-- (void)configure:(ScintillaView *)view extension:(NSString *)extension;
+- (NSString *)configure:(ScintillaView *)view extension:(NSString *)extension language:(NSString *)name
+	syntaxHighlighting:(BOOL)highlight identifier:(NSString **)identifier;
+- (NSDictionary<NSString *, NSString *> *)languages;
+- (NSArray<NSString *> *)commentSymbolsForLanguage:(NSString *)identifier;
+- (NSColor *)widgetColor:(NSString *)name background:(BOOL)background;
+- (void)styleSearchResults:(ScintillaView *)view;
 @end

@@ -1,12 +1,798 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #import "EditorDocument.h"
+#import "EditorChrome.h"
+#import "EditorContextMenus.h"
+#import "EditorDocumentList.h"
+#import "EditorDock.h"
+#import "EditorFileSearch.h"
+#import "EditorFolderPanel.h"
+#import "EditorIncrementalSearch.h"
+#import "EditorProjectPanel.h"
 #import "EditorResources.h"
+#import "EditorText.h"
 #import "ScintillaView.h"
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
+#include "SciLexer.h"
+#include "BoostRegexSearch.h"
+#include "pugiconfig.hpp"
+#undef PUGIXML_CHARCONV_FLOAT
+#include <algorithm>
+#include <climits>
 #include <cstring>
+#include <optional>
+#include <sstream>
 #include <string_view>
+#include <vector>
+
+static constexpr int Bookmark = 20;
+static constexpr int FindMark = 8;
+static constexpr int FirstTokenMark = 10;
+static constexpr int TokenMarkCount = 5;
+static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor);
+static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end);
+static NSUInteger NextUntitledNumber = 1;
+
+@interface EditorTabPane : NSView
+@property(nonatomic, weak) EditorTabStrip *tabs;
+@property(nonatomic, strong) NSView *host;
+@end
+
+@implementation EditorTabPane
+- (void)layout
+{
+	[super layout];
+	NSRect content = self.bounds;
+	if (!self.tabs.hidden)
+	{
+		EditorResources *resources = EditorResources.shared;
+		const BOOL vertical = [[resources setting:@"verticalTabs" fallback:@NO] boolValue];
+		const BOOL multiline = [[resources setting:@"multilineTabs" fallback:@NO] boolValue];
+		const CGFloat width = vertical ? MIN(180, MAX(0, NSWidth(content) / 3)) : NSWidth(content);
+		const CGFloat height = [self.tabs layoutTabsForWidth:width height:NSHeight(content) vertical:vertical multiline:multiline];
+		NSRect tabFrame;
+		NSDivideRect(content, &tabFrame, &content, vertical ? width : MIN(NSHeight(content), height),
+			vertical ? NSMinXEdge : NSMaxYEdge);
+		self.tabs.frame = tabFrame;
+	}
+	self.host.frame = content;
+}
+
+- (void)setFrameSize:(NSSize)size
+{
+	[super setFrameSize:size];
+	self.needsLayout = YES;
+}
+@end
+
+static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
+{
+	NSView *host = [[NSView alloc] initWithFrame:NSZeroRect];
+	pane.tabs = (EditorTabStrip *)tabs;
+	pane.host = host;
+	[pane addSubview:tabs];
+	[pane addSubview:host];
+	return host;
+}
+
+@interface EditorSplitView : NSSplitView
+@property(nonatomic, copy) void (^rotate)(NSInteger);
+@end
+
+@implementation EditorSplitView
+- (NSMenu *)menuForEvent:(NSEvent *)event
+{
+	if (self.arrangedSubviews.count != 2)
+		return [super menuForEvent:event];
+	NSPoint point = [self convertPoint:event.locationInWindow fromView:nil];
+	NSRect first = self.arrangedSubviews.firstObject.frame;
+	NSRect second = self.arrangedSubviews.lastObject.frame;
+	const CGFloat divider = self.isVertical ? (MIN(NSMaxX(first), NSMaxX(second)) + MAX(NSMinX(first), NSMinX(second))) / 2 :
+		(MIN(NSMaxY(first), NSMaxY(second)) + MAX(NSMinY(first), NSMinY(second))) / 2;
+	if (fabs((self.isVertical ? point.x : point.y) - divider) > 6)
+		return [super menuForEvent:event];
+	NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Split View"];
+	NSMenuItem *right = [menu addItemWithTitle:@"Rotate Right" action:@selector(rotateFromMenu:) keyEquivalent:@""];
+	right.target = self;
+	right.tag = 1;
+	NSMenuItem *left = [menu addItemWithTitle:@"Rotate Left" action:@selector(rotateFromMenu:) keyEquivalent:@""];
+	left.target = self;
+	left.tag = -1;
+	return menu;
+}
+
+- (void)rotateFromMenu:(NSMenuItem *)item { self.rotate(item.tag); }
+@end
+
+@interface EditorDocument ()
+- (void)displaySearchReports:(NSArray<EditorSearchReport *> *)reports purge:(BOOL)purge match:(EditorSearchMatch *)match visible:(BOOL)visible;
+- (void)refineSearchReports:(NSArray<EditorSearchReport *> *)reports;
+- (void)displayDocumentList:(NSArray<EditorDocument *> *)documents otherView:(NSArray<EditorDocument *> *)other
+	focused:(EditorDocument *)focused focusOther:(BOOL)focusOther groupByView:(BOOL)groupByView visible:(BOOL)visible;
+- (void)displayFolderWorkspace:(NSArray<NSURL *> *)folders visible:(BOOL)visible;
+- (void)displayProjectPanels:(NSIndexSet *)visible;
+- (void)checkDiskChanges:(BOOL)checkNormal allowPrompt:(BOOL)allowPrompt;
+- (NSData *)editorUTF8;
+- (void)displayOtherDocument:(EditorDocument *)document;
+- (void)applySplitRotation:(NSInteger)rotation;
+- (void)applyPresentationMode:(NSInteger)mode;
+- (void)focusEditor;
+- (void)updateStatus;
+- (void)refreshDockPlacements;
+- (BOOL)largeFileMode;
+- (void)setReaderEncoding:(NSStringEncoding)encoding;
+- (void)closeClonedView;
+- (void)addClonedView;
+- (void)focusPrimaryEditor;
+- (void)focusClonedEditor;
+- (ScintillaView *)companionClone;
+- (ScintillaView *)primaryEditorView;
+- (ScintillaView *)clonedEditorView;
+- (void)clonedViewNotification:(SCNotification *)notification;
+@end
+
+@interface EditorCloneObserver : NSObject <ScintillaNotificationProtocol>
+@property(nonatomic, weak) EditorDocument *document;
+@end
+
+@implementation EditorCloneObserver
+- (void)notification:(SCNotification *)notification
+{
+	[self.document clonedViewNotification:notification];
+}
+@end
+
+@interface EditorDocumentController ()
+@property(nonatomic, copy) NSArray<EditorSearchReport *> *searchReports;
+@property(nonatomic) BOOL purgeSearchReports;
+@property(nonatomic) BOOL searchResultsVisible;
+@property(nonatomic) BOOL documentListVisible;
+@property(nonatomic) BOOL documentListUngrouped;
+@property(nonatomic) BOOL syncVerticalScroll;
+@property(nonatomic) BOOL syncHorizontalScroll;
+@property(nonatomic) BOOL syncZoom;
+@property(nonatomic) NSInteger splitRotation;
+@property(nonatomic, readonly) EditorDockPlacement *documentListPlacement;
+@property(nonatomic, readonly) EditorDockPlacement *searchResultsPlacement;
+@property(nonatomic, readonly) EditorDockPlacement *folderWorkspacePlacement;
+@property(nonatomic, readonly) NSArray<EditorProjectWorkspace *> *projectWorkspaces;
+@property(nonatomic, readonly) NSArray<EditorDockPlacement *> *projectPlacements;
+- (void)setProjectPanel:(NSUInteger)index visible:(BOOL)visible;
+- (void)showSearchReport:(EditorSearchReport *)report;
+- (void)refreshSearchPanel;
+- (void)openSearchMatch:(EditorSearchMatch *)match;
+- (void)refreshDocumentList;
+- (EditorDocument *)windowOwnerForDocument:(EditorDocument *)document;
+- (void)showInOtherView:(EditorDocument *)document;
+- (void)hideOtherView;
+- (BOOL)hasOtherView;
+- (BOOL)focusOtherViewDocument:(EditorDocument *)document;
+- (void)prepareToCloseDocument:(EditorDocument *)document;
+- (void)syncScrollFromDocument:(EditorDocument *)document changes:(int)changes;
+- (void)syncZoomFromDocument:(EditorDocument *)document;
+@end
+
+static BOOL IsAvailableEncoding(NSStringEncoding encoding)
+{
+	if (!encoding)
+		return NO;
+	const auto cf = CFStringConvertNSStringEncodingToEncoding(encoding);
+	return cf != kCFStringEncodingInvalidId && CFStringIsEncodingAvailable(cf);
+}
 
 @implementation EditorDocumentController
+{
+	__weak EditorDocument *_activeDocument;
+	NSMutableArray<EditorDocument *> *_tabOrder;
+	NSPointerArray *_recentTabs;
+	NSArray<EditorDocument *> *_switchTabs;
+	NSPanel *_tabSwitcher;
+	NSTextField *_switchList;
+	NSInteger _switchIndex;
+	NSHashTable<EditorDocument *> *_secondaryTabs;
+	__weak EditorDocument *_otherDocument;
+	EditorDockPlacement *_documentListPlacement;
+	EditorDockPlacement *_searchResultsPlacement;
+	EditorDockPlacement *_folderWorkspacePlacement;
+	NSArray<NSURL *> *_workspaceFolders;
+	BOOL _folderWorkspaceVisible;
+	NSArray<EditorProjectWorkspace *> *_projectWorkspaces;
+	NSArray<EditorDockPlacement *> *_projectPlacements;
+	NSMutableIndexSet *_visibleProjects;
+	NSTimer *_fileStatusTimer;
+	__weak EditorSearchMatch *_currentSearchMatch;
+}
+
+- (EditorDockPlacement *)documentListPlacement
+{
+	if (!_documentListPlacement)
+		_documentListPlacement = [[EditorDockPlacement alloc] initWithEdge:EditorDockLeft];
+	return _documentListPlacement;
+}
+
+- (EditorDockPlacement *)searchResultsPlacement
+{
+	if (!_searchResultsPlacement)
+		_searchResultsPlacement = [[EditorDockPlacement alloc] initWithEdge:EditorDockBottom];
+	return _searchResultsPlacement;
+}
+
+- (EditorDockPlacement *)folderWorkspacePlacement
+{
+	if (!_folderWorkspacePlacement)
+		_folderWorkspacePlacement = [[EditorDockPlacement alloc] initWithEdge:EditorDockLeft];
+	return _folderWorkspacePlacement;
+}
+
+- (IBAction)chooseWorkspaceFolders:(id)sender
+{
+	NSOpenPanel *panel = NSOpenPanel.openPanel;
+	panel.canChooseFiles = NO;
+	panel.canChooseDirectories = YES;
+	panel.allowsMultipleSelection = YES;
+	panel.prompt = @"Add";
+	panel.directoryURL = self.focusedDocument.fileURL.URLByDeletingLastPathComponent;
+	[panel beginWithCompletionHandler:^(NSModalResponse response) {
+		if (response == NSModalResponseOK)
+			[self addWorkspaceFolders:panel.URLs];
+	}];
+}
+
+- (IBAction)toggleFolderWorkspace:(id)sender
+{
+	if (!_activeDocument)
+		[self newDocument:nil];
+	_folderWorkspaceVisible = !_folderWorkspaceVisible;
+	[self refreshFolderWorkspace];
+}
+
+- (void)addWorkspaceFolders:(NSArray<NSURL *> *)folders
+{
+	NSMutableOrderedSet<NSURL *> *combined = [NSMutableOrderedSet orderedSetWithArray:_workspaceFolders ?: @[]];
+	for (NSURL *folder in folders)
+		if (EditorIsWorkspaceDirectory(folder))
+			[combined addObject:folder.URLByStandardizingPath];
+	if (!_activeDocument)
+		[self newDocument:nil];
+	_folderWorkspaceVisible = YES;
+	[self setWorkspaceFolders:combined.array];
+}
+
+- (void)setWorkspaceFolders:(NSArray<NSURL *> *)folders
+{
+	_workspaceFolders = [folders copy];
+	[self refreshFolderWorkspace];
+}
+
+- (void)refreshFolderWorkspace
+{
+	[_activeDocument displayFolderWorkspace:_workspaceFolders visible:_folderWorkspaceVisible];
+}
+
+- (NSArray<EditorProjectWorkspace *> *)projectWorkspaces
+{
+	if (!_projectWorkspaces)
+		_projectWorkspaces = @[[EditorProjectWorkspace new], [EditorProjectWorkspace new], [EditorProjectWorkspace new]];
+	return _projectWorkspaces;
+}
+
+- (NSArray<EditorDockPlacement *> *)projectPlacements
+{
+	if (!_projectPlacements)
+		_projectPlacements = @[[[EditorDockPlacement alloc] initWithEdge:EditorDockRight],
+			[[EditorDockPlacement alloc] initWithEdge:EditorDockRight], [[EditorDockPlacement alloc] initWithEdge:EditorDockRight]];
+	return _projectPlacements;
+}
+
+- (IBAction)toggleProjectPanel:(NSMenuItem *)sender
+{
+	[self setProjectPanel:sender.tag visible:![_visibleProjects containsIndex:sender.tag]];
+}
+
+- (void)setProjectPanel:(NSUInteger)index visible:(BOOL)visible
+{
+	if (index >= self.projectWorkspaces.count)
+		return;
+	if (!_activeDocument && visible)
+		[self newDocument:nil];
+	if (!_visibleProjects)
+		_visibleProjects = [NSMutableIndexSet indexSet];
+	if (visible)
+		[_visibleProjects addIndex:index];
+	else
+		[_visibleProjects removeIndex:index];
+	[_activeDocument displayProjectPanels:_visibleProjects];
+}
+
+- (NSArray<EditorDocument *> *)tabDocuments
+{
+	NSArray<EditorDocument *> *documents = (NSArray<EditorDocument *> *)self.documents;
+	if (!_tabOrder)
+		_tabOrder = [NSMutableArray array];
+	for (EditorDocument *document in documents)
+		if (![_tabOrder containsObject:document])
+			[_tabOrder addObject:document];
+	NSMutableArray<EditorDocument *> *ordered = [NSMutableArray arrayWithCapacity:_tabOrder.count];
+	for (BOOL pinned : {YES, NO})
+		for (EditorDocument *document in _tabOrder)
+			if (document.isTabPinned == pinned)
+				[ordered addObject:document];
+	return ordered;
+}
+
+- (NSArray<EditorDocument *> *)tabsInOtherView:(BOOL)other
+{
+	if (other && !_otherDocument && _activeDocument.clonedEditorView)
+		return @[_activeDocument];
+	NSMutableArray<EditorDocument *> *tabs = [NSMutableArray array];
+	for (EditorDocument *document in self.tabDocuments)
+		if ([_secondaryTabs containsObject:document] == other)
+			[tabs addObject:document];
+	return tabs;
+}
+
+- (EditorDocument *)selectedTabInOtherView:(BOOL)other
+{
+	return other ? (_otherDocument ?: (_activeDocument.clonedEditorView ? _activeDocument : nil)) : _activeDocument;
+}
+
+- (void)activateTab:(EditorDocument *)document otherView:(BOOL)other
+{
+	if (document == _activeDocument && document.clonedEditorView)
+	{
+		if (other)
+			[document focusClonedEditor];
+		else
+			[document focusPrimaryEditor];
+	}
+	else
+		[document showWindows];
+}
+
+- (void)dropTab:(EditorDocument *)document before:(EditorDocument *)anchor otherView:(BOOL)other
+{
+	if (![self.tabDocuments containsObject:document])
+		return;
+	BOOL wasOther = [_secondaryTabs containsObject:document];
+	if (other != wasOther)
+		[self showInOtherView:document];
+	if (document != anchor)
+	{
+		[_tabOrder removeObjectIdenticalTo:document];
+		NSUInteger index = anchor ? [_tabOrder indexOfObjectIdenticalTo:anchor] : NSNotFound;
+		[_tabOrder insertObject:document atIndex:index == NSNotFound ? _tabOrder.count : index];
+	}
+	[self activateTab:document otherView:other];
+	[self refreshDocumentTabs];
+}
+
+- (void)moveTab:(EditorDocument *)document toEnd:(BOOL)toEnd
+{
+	if (![self.tabDocuments containsObject:document])
+		return;
+	[_tabOrder removeObjectIdenticalTo:document];
+	[_tabOrder insertObject:document atIndex:toEnd ? _tabOrder.count : 0];
+	[self refreshDocumentTabs];
+}
+
+- (void)noteFocusedTab:(EditorDocument *)document
+{
+	if (!document || ![self.documents containsObject:document])
+		return;
+	NSArray *old = _recentTabs.allObjects;
+	if (old.firstObject == document)
+		return;
+	_recentTabs = NSPointerArray.weakObjectsPointerArray;
+	[_recentTabs addPointer:(__bridge void *)document];
+	for (EditorDocument *candidate in old)
+		if (candidate != document)
+			[_recentTabs addPointer:(__bridge void *)candidate];
+}
+
+- (BOOL)cycleRecentTabsBackwards:(BOOL)backwards
+{
+	if (![[EditorResources.shared setting:@"mruTabSwitcher" fallback:@YES] boolValue])
+		return NO;
+	if (!_switchTabs)
+	{
+		NSArray *tabs = self.tabDocuments;
+		if (tabs.count < 2)
+			return NO;
+		NSMutableOrderedSet *order = [NSMutableOrderedSet orderedSetWithArray:_recentTabs.allObjects ?: @[]];
+		[order intersectOrderedSet:[NSOrderedSet orderedSetWithArray:tabs]];
+		[order addObjectsFromArray:tabs];
+		_switchTabs = order.array;
+		NSUInteger index = [_switchTabs indexOfObjectIdenticalTo:self.focusedDocument];
+		_switchIndex = index == NSNotFound ? 0 : index;
+		_tabSwitcher = [[NSPanel alloc] initWithContentRect:NSMakeRect(0, 0, 370, 175)
+			styleMask:NSWindowStyleMaskNonactivatingPanel | NSWindowStyleMaskTitled backing:NSBackingStoreBuffered defer:NO];
+		_tabSwitcher.title = [EditorResources.shared label:@"view-tab-switcher" fallback:@"Open Documents"];
+		_tabSwitcher.floatingPanel = YES;
+		_tabSwitcher.hidesOnDeactivate = YES;
+		_switchList = [NSTextField wrappingLabelWithString:@""];
+		_switchList.frame = NSInsetRect(_tabSwitcher.contentView.bounds, 10, 8);
+		[_tabSwitcher.contentView addSubview:_switchList];
+		NSRect parent = NSApp.keyWindow.frame;
+		[_tabSwitcher setFrameOrigin:NSMakePoint(NSMidX(parent) - 185, NSMidY(parent) - 88)];
+		[_tabSwitcher orderFront:nil];
+	}
+	const NSInteger count = _switchTabs.count;
+	_switchIndex = (_switchIndex + count + (backwards ? -1 : 1)) % count;
+	NSMutableAttributedString *lines = [[NSMutableAttributedString alloc] initWithString:@""];
+	const NSInteger first = std::clamp<NSInteger>(_switchIndex - 3, 0, std::max<NSInteger>(0, count - 8));
+	for (NSInteger i = first; i < MIN(first + 8, count); ++i)
+	{
+		BOOL active = i == _switchIndex;
+		NSFont *font = active ? [NSFont boldSystemFontOfSize:14] : [NSFont systemFontOfSize:13];
+		NSString *line = [NSString stringWithFormat:@"%@ %@\n", active ? @"›" : @" ", _switchTabs[i].displayName];
+		[lines appendAttributedString:[[NSAttributedString alloc] initWithString:line attributes:@{NSFontAttributeName: font}]];
+	}
+	_switchList.attributedStringValue = lines;
+	return YES;
+}
+
+- (BOOL)finishRecentTabSwitch:(BOOL)accept
+{
+	if (!_switchTabs)
+		return NO;
+	EditorDocument *document = _switchTabs[_switchIndex];
+	[_tabSwitcher orderOut:nil];
+	_tabSwitcher = nil;
+	_switchList = nil;
+	_switchTabs = nil;
+	if (accept && [self.documents containsObject:document])
+		[document showWindows];
+	return YES;
+}
+
+- (IBAction)navigateTab:(NSMenuItem *)item
+{
+	EditorDocument *document = self.focusedDocument;
+	const BOOL other = [_secondaryTabs containsObject:document] ||
+		(document.clonedEditorView && document.editor == document.clonedEditorView);
+	NSArray<EditorDocument *> *tabs = [self tabsInOtherView:other];
+	NSInteger count = tabs.count;
+	NSUInteger current = [tabs indexOfObjectIdenticalTo:document];
+	if (!count || current == NSNotFound)
+		return;
+	NSInteger command = item.tag;
+	if (command >= 44110 && command <= 44115)
+	{
+		[document changeTabColor:command - 44110];
+		return;
+	}
+	if (command == 10005 || command == 10006)
+	{
+		[self moveTab:document toEnd:command == 10006];
+		return;
+	}
+	if (command == 44098 || command == 44099)
+	{
+		NSInteger target = static_cast<NSInteger>(current) + (command == 44098 ? 1 : -1);
+		if (target >= 0 && target < count && document.isTabPinned == tabs[target].isTabPinned)
+		{
+			[_tabOrder exchangeObjectAtIndex:[_tabOrder indexOfObjectIdenticalTo:document]
+				withObjectAtIndex:[_tabOrder indexOfObjectIdenticalTo:tabs[target]]];
+			[self refreshDocumentTabs];
+		}
+		return;
+	}
+	NSInteger target = command >= 44086 && command <= 44094 ? command - 44086 :
+		command == 44116 ? 0 : command == 44117 ? count - 1 :
+		(static_cast<NSInteger>(current) + count + (command == 44095 ? 1 : -1)) % count;
+	if (target < count)
+		[self activateTab:tabs[target] otherView:other];
+}
+
+- (void)prepareToShowDocument:(EditorDocument *)document
+{
+	NSWindow *previous = _activeDocument.windowControllers.firstObject.window;
+	NSWindow *next = document.windowControllers.firstObject.window;
+	if (_activeDocument != document)
+	{
+		[_activeDocument displayOtherDocument:nil];
+		[_activeDocument displaySearchReports:nil purge:NO match:nil visible:NO];
+		[_activeDocument displayDocumentList:nil otherView:nil focused:nil focusOther:NO groupByView:NO visible:NO];
+		[_activeDocument displayFolderWorkspace:nil visible:NO];
+		[_activeDocument displayProjectPanels:nil];
+		_activeDocument = document;
+		if (previous.visible)
+		{
+			[next setFrame:previous.frame display:NO];
+			[previous orderOut:nil];
+		}
+		[document displayOtherDocument:_otherDocument];
+	}
+	[self noteFocusedTab:document];
+	[self refreshSearchPanel];
+	[document applySplitRotation:self.splitRotation];
+	[self refreshDocumentTabs];
+	[self refreshFolderWorkspace];
+	[document displayProjectPanels:_visibleProjects];
+	if (!_fileStatusTimer)
+	{
+		__weak EditorDocumentController *weakSelf = self;
+		_fileStatusTimer = [NSTimer scheduledTimerWithTimeInterval:1 repeats:YES block:^(NSTimer *timer) {
+			[weakSelf checkOpenFilesOnDisk];
+		}];
+	}
+}
+
+- (void)checkOpenFilesOnDisk
+{
+	const NSInteger mode = [[EditorResources.shared setting:@"fileStatusMode" fallback:@1] integerValue];
+	const BOOL appActive = NSApp.active;
+	EditorDocument *focus = self.focusedDocument;
+	for (EditorDocument *document in self.documents)
+	{
+		NSWindow *window = _activeDocument.windowControllers.firstObject.window;
+		[document checkDiskChanges:appActive && (mode == 2 || (mode == 1 && document == focus))
+			allowPrompt:appActive && window.visible && window.keyWindow && !window.attachedSheet];
+	}
+}
+
+- (EditorDocument *)focusedDocument
+{
+	NSResponder *responder = _activeDocument.windowControllers.firstObject.window.firstResponder;
+	if (_otherDocument && [responder isKindOfClass:NSView.class] &&
+		[(NSView *)responder isDescendantOf:_otherDocument.editor])
+		return _otherDocument;
+	return _activeDocument;
+}
+
+- (EditorDocument *)windowOwnerForDocument:(EditorDocument *)document
+{
+	return document == _otherDocument ? _activeDocument : document;
+}
+
+- (BOOL)focusOtherViewDocument:(EditorDocument *)document
+{
+	if (!_activeDocument || ![_secondaryTabs containsObject:document])
+		return NO;
+	_otherDocument = document;
+	[_activeDocument displayOtherDocument:document];
+	[document focusEditor];
+	[self noteFocusedTab:document];
+	[self refreshDocumentTabs];
+	return YES;
+}
+
+- (BOOL)hasOtherView
+{
+	return _otherDocument || _activeDocument.companionClone;
+}
+
+- (void)syncScrollFromDocument:(EditorDocument *)document changes:(int)changes
+{
+	if (document != self.focusedDocument)
+		return;
+	ScintillaView *source = document.editor;
+	ScintillaView *other = _otherDocument ? (document == _otherDocument ? _activeDocument : _otherDocument).editor : document.companionClone;
+	if (!other)
+		return;
+	if (self.syncVerticalScroll && (changes & SC_UPDATE_V_SCROLL))
+	{
+		auto firstLine = [source message:SCI_GETFIRSTVISIBLELINE];
+		if (firstLine != [other message:SCI_GETFIRSTVISIBLELINE])
+			[other message:SCI_SETFIRSTVISIBLELINE wParam:firstLine];
+	}
+	if (self.syncHorizontalScroll && (changes & SC_UPDATE_H_SCROLL))
+	{
+		auto offset = [source message:SCI_GETXOFFSET];
+		if (offset != [other message:SCI_GETXOFFSET])
+			[other message:SCI_SETXOFFSET wParam:offset];
+	}
+}
+
+- (void)syncZoomFromDocument:(EditorDocument *)document
+{
+	if (!self.syncZoom || document != self.focusedDocument)
+		return;
+	ScintillaView *source = document.editor;
+	ScintillaView *other = _otherDocument ? (document == _otherDocument ? _activeDocument : _otherDocument).editor : document.companionClone;
+	const auto zoom = [source message:SCI_GETZOOM];
+	if (other && [other message:SCI_GETZOOM] != zoom)
+		[other message:SCI_SETZOOM wParam:zoom];
+}
+
+- (void)showInOtherView:(EditorDocument *)document
+{
+	if (!_activeDocument || !document)
+		return;
+	if ([_secondaryTabs containsObject:document])
+	{
+		[_secondaryTabs removeObject:document];
+		if (_otherDocument == document)
+		{
+			[_activeDocument displayOtherDocument:nil];
+			_otherDocument = [self tabsInOtherView:YES].firstObject;
+		}
+		[document showWindows];
+		return;
+	}
+	EditorDocument *replacement = _activeDocument;
+	if (_activeDocument == document)
+	{
+		replacement = nil;
+		for (EditorDocument *candidate in [self tabsInOtherView:NO].reverseObjectEnumerator)
+			if (candidate != document)
+			{
+				replacement = candidate;
+				break;
+			}
+		if (!replacement)
+		{
+			NSError *error = nil;
+			replacement = [self makeUntitledDocumentOfType:self.defaultType error:&error];
+			if (!replacement)
+			{
+				if (error)
+					[NSApp presentError:error];
+				return;
+			}
+			[self addDocument:replacement];
+			[replacement makeWindowControllers];
+		}
+	}
+	if (!_secondaryTabs)
+		_secondaryTabs = NSHashTable.weakObjectsHashTable;
+	[_secondaryTabs addObject:document];
+	if (replacement != _activeDocument)
+		[replacement showWindows];
+	[self focusOtherViewDocument:document];
+}
+
+- (void)hideOtherView
+{
+	[_activeDocument displayOtherDocument:nil];
+	[_activeDocument closeClonedView];
+	_otherDocument = nil;
+	[_secondaryTabs removeAllObjects];
+	[_activeDocument focusEditor];
+	[self refreshDocumentTabs];
+}
+
+- (void)prepareToCloseDocument:(EditorDocument *)document
+{
+	[_secondaryTabs removeObject:document];
+	if (document == _otherDocument)
+	{
+		_otherDocument = [self tabsInOtherView:YES].firstObject;
+		[_activeDocument displayOtherDocument:_otherDocument];
+		[(_otherDocument ?: _activeDocument) focusEditor];
+	}
+	else if (document == _activeDocument)
+		[document displayOtherDocument:nil];
+}
+
+- (void)removeDocument:(NSDocument *)document
+{
+	NSArray<EditorDocument *> *documents = self.tabDocuments;
+	NSUInteger index = [documents indexOfObjectIdenticalTo:(EditorDocument *)document];
+	BOOL wasActive = document == _activeDocument;
+	NSRect frame = document.windowControllers.firstObject.window.frame;
+	[super removeDocument:document];
+	[_tabOrder removeObjectIdenticalTo:(EditorDocument *)document];
+	if (wasActive)
+	{
+		_activeDocument = nil;
+		NSArray<EditorDocument *> *remaining = [self tabsInOtherView:NO];
+		if (!remaining.count)
+			remaining = [self tabsInOtherView:YES];
+		if (remaining.count)
+		{
+			NSDocument *replacement = remaining[MIN(index, remaining.count - 1)];
+			[_secondaryTabs removeObject:(EditorDocument *)replacement];
+			if (replacement == _otherDocument)
+				_otherDocument = [self tabsInOtherView:YES].firstObject;
+			if (!NSIsEmptyRect(frame))
+				[replacement.windowControllers.firstObject.window setFrame:frame display:NO];
+			[replacement showWindows];
+		}
+	}
+	[self refreshDocumentTabs];
+}
+
+- (void)refreshDocumentTabs
+{
+	for (EditorDocument *document in self.documents)
+		[document.chrome refreshTabs];
+	[self refreshDocumentList];
+}
+
+- (void)refreshDocumentList
+{
+	NSArray<EditorDocument *> *primary = [self tabsInOtherView:NO];
+	NSArray<EditorDocument *> *other = [self tabsInOtherView:YES];
+	EditorDocument *focused = self.focusedDocument;
+	BOOL focusOther = _otherDocument ? focused == _otherDocument :
+		_activeDocument.clonedEditorView && _activeDocument.editor == _activeDocument.clonedEditorView;
+	[_activeDocument displayDocumentList:primary otherView:other focused:focused focusOther:focusOther
+		groupByView:!self.documentListUngrouped visible:self.documentListVisible];
+}
+
+- (void)setSearchResultsVisible:(BOOL)visible
+{
+	_searchResultsVisible = visible;
+	[self refreshSearchPanel];
+}
+
+- (void)refreshSearchPanel
+{
+	[_activeDocument displaySearchReports:self.searchReports purge:self.purgeSearchReports
+		match:_currentSearchMatch visible:self.searchResultsVisible];
+}
+
+- (void)showSearchReport:(EditorSearchReport *)report
+{
+	_currentSearchMatch = nil;
+	self.searchReports = self.purgeSearchReports ? @[report] : [@[report] arrayByAddingObjectsFromArray:self.searchReports ?: @[]];
+	self.searchResultsVisible = YES;
+}
+
+- (IBAction)stepSearchResult:(NSMenuItem *)sender
+{
+	NSMutableArray<EditorSearchMatch *> *matches = [NSMutableArray array];
+	for (EditorSearchReport *report in self.searchReports)
+		for (EditorSearchFile *file in report.files)
+			[matches addObjectsFromArray:file.matches];
+	if (!matches.count)
+		return;
+	NSInteger index = [matches indexOfObjectIdenticalTo:_currentSearchMatch];
+	if (index == NSNotFound)
+		index = sender.tag < 0 ? 0 : -1;
+	for (NSUInteger attempt = 0; attempt < matches.count; ++attempt)
+	{
+		index = (index + (NSInteger)matches.count + sender.tag) % (NSInteger)matches.count;
+		EditorSearchMatch *match = matches[index];
+		if (match.url || [self.documents containsObject:match.document])
+		{
+			self.searchResultsVisible = YES;
+			[self openSearchMatch:match];
+			return;
+		}
+	}
+}
+
+- (void)openSearchMatch:(EditorSearchMatch *)match
+{
+	_currentSearchMatch = match;
+	[self refreshSearchPanel];
+	void (^navigate)(EditorDocument *) = ^(EditorDocument *target) {
+		ScintillaView *editor = target.editor;
+		const auto length = [editor message:SCI_GETLENGTH];
+		const NSRange range = match.byteRange;
+		const auto *bytes = reinterpret_cast<const char *>([editor message:SCI_GETCHARACTERPOINTER]);
+		auto line = MIN(match.line - 1, static_cast<NSUInteger>([editor message:SCI_GETLINECOUNT] - 1));
+		if (range.location <= length && range.length <= length - range.location &&
+			(!range.length || std::memcmp(bytes + range.location, match.matchedBytes.bytes, range.length) == 0))
+		{
+			line = [editor message:SCI_LINEFROMPOSITION wParam:range.location];
+			[editor message:SCI_SETSEL wParam:range.location lParam:NSMaxRange(range)];
+		}
+		else
+			[editor message:SCI_GOTOLINE wParam:line];
+		[editor message:SCI_ENSUREVISIBLE wParam:line];
+		[editor message:SCI_SCROLLCARET];
+		[target focusEditor];
+	};
+	EditorDocument *document = match.document;
+	if (document && [self.documents containsObject:document])
+	{
+		[document showWindows];
+		navigate(document);
+	}
+	else if (match.url)
+		[self openDocumentWithContentsOfURL:match.url display:YES completionHandler:^(NSDocument *opened, BOOL wasOpen, NSError *failure) {
+			if (failure)
+				[NSApp presentError:failure];
+			else
+				navigate((EditorDocument *)opened);
+		}];
+	else
+		NSBeep();
+}
+
 - (NSString *)defaultType
 {
 	return @"public.plain-text";
@@ -35,14 +821,120 @@
 
 @implementation EditorDocument
 {
+	ScintillaView *_editor;
+	ScintillaView *_clone;
+	EditorCloneObserver *_cloneObserver;
 	NSData *_loadedUTF8;
 	NSStringEncoding _encoding;
+	NSStringEncoding _readerEncoding;
 	NSData *_bom;
-	NSTextField *_status;
+	NSString *_statusLanguage;
+	NSString *_languageOverride;
+	NSString *_untitledName;
 	NSString *_query;
 	NSInteger _searchFlags;
 	sptr_t _lastEmptyMatch;
+	NSPanel *_searchPanel;
+	NSComboBox *_searchInput;
+	NSComboBox *_replaceInput;
+	NSTextField *_searchStatus;
+	NSButton *_matchCase;
+	NSButton *_wholeWord;
+	NSButton *_regularExpression;
+	NSButton *_extendedSearch;
+	NSButton *_inSelection;
+	NSRange _searchSelection;
+	NSButton *_wrapSearch;
+	NSButton *_replaceButton;
+	NSButton *_replaceAllButton;
+	std::optional<sptr_t> _selectionStart;
+	NSSegmentedControl *_searchMode;
+	NSTextField *_replaceLabel;
+	NSTextField *_searchFolder;
+	NSTextField *_searchFilters;
+	NSButton *_recursive;
+	NSButton *_includeHidden;
+	NSButton *_matchNewline;
+	NSButton *_findAll;
+	NSButton *_replaceFiles;
+	NSButton *_findForward;
+	NSButton *_findBackward;
+	NSButton *_countMatches;
+	NSButton *_findInDocument;
+	NSButton *_findInOpenDocuments;
+	NSButton *_replaceInOpenDocuments;
+	NSArray<NSButton *> *_projectSearchControls;
+	NSArray<NSView *> *_directoryControls;
+	NSArray<NSView *> *_markControls;
+	NSButton *_bookmarkMatches;
+	NSButton *_purgeMarks;
+	NSArray<NSView *> *_fileSearchControls;
+	NSProgress *_fileSearch;
+	EditorSearchResultsView *_resultsView;
+	EditorDocumentList *_documentList;
+	EditorDockPane *_documentListPane;
+	__weak EditorDockArea *_dockArea;
+	EditorDockPane *_resultsPane;
+	EditorDockPane *_folderPane;
+	EditorFolderPanel *_folderWorkspace;
+	NSArray<EditorDockPane *> *_projectPanes;
+	NSArray<EditorProjectPanel *> *_projectPanels;
+	EditorIncrementalSearch *_incremental;
+	NSLayoutConstraint *_incrementalHeight;
+	NSLayoutConstraint *_dockUnderChrome;
+	NSLayoutConstraint *_dockUnderTitle;
+	NSLayoutConstraint *_incrementalOverStatus;
+	NSLayoutConstraint *_incrementalAtBottom;
+	NSInteger _presentationMode;
+	BOOL _presentationFullScreen;
+	id _presentationKeys;
+	__weak EditorDocument *_incrementalDocument;
+	NSString *_languageIdentifier;
+	EditorSplitView *_editorSplit;
+	EditorTabPane *_primaryPane;
+	NSView *_primaryEditorHost;
+	EditorTabPane *_otherPane;
+	NSView *_otherEditorHost;
+	NSArray<NSLayoutConstraint *> *_editorConstraints;
+	__weak EditorDocument *_displayedOtherDocument;
 	BOOL _loading;
+	BOOL _encodingChanged;
+	BOOL _monitoring;
+	BOOL _readOnlyBeforeMonitoring;
+	BOOL _askingAboutDisk;
+	NSDictionary *_diskState;
+	NSDictionary *_pendingDiskState;
+}
+
+- (void)dealloc
+{
+	if (_presentationKeys)
+		[NSEvent removeMonitor:_presentationKeys];
+	_editor.delegate = nil;
+	_clone.delegate = nil;
+}
+
+- (ScintillaView *)editor
+{
+	NSResponder *responder = _clone.window.firstResponder;
+	if (_clone && [responder isKindOfClass:NSView.class] && [(NSView *)responder isDescendantOf:_clone])
+		return _clone;
+	return _editor;
+}
+
+- (ScintillaView *)companionClone
+{
+	return _clone && self.editor == _clone ? _editor : _clone;
+}
+
+- (ScintillaView *)primaryEditorView
+{
+	return _editor;
+}
+
+- (ScintillaView *)clonedEditorView
+{
+	return _clone;
 }
 
 - (instancetype)init
@@ -50,7 +942,16 @@
 	self = [super init];
 	if (self)
 	{
-		_encoding = NSUTF8StringEncoding;
+		static const NSStringEncoding encodings[] = {NSWindowsCP1252StringEncoding, NSUTF8StringEncoding,
+			NSUTF16BigEndianStringEncoding, NSUTF16LittleEndianStringEncoding, NSUTF8StringEncoding,
+			NSASCIIStringEncoding, NSUTF16BigEndianStringEncoding, NSUTF16LittleEndianStringEncoding};
+		NSInteger encoding = [[EditorResources.shared setting:@"newDocumentEncoding" fallback:@4] integerValue];
+		encoding = std::clamp<NSInteger>(encoding, 0, 7);
+		_encoding = encodings[encoding];
+		if (encoding == 1)
+			_bom = [NSData dataWithBytes:"\xef\xbb\xbf" length:3];
+		else if (encoding == 2 || encoding == 3)
+			_bom = [NSData dataWithBytes:encoding == 2 ? "\xfe\xff" : "\xff\xfe" length:2];
 		_lastEmptyMatch = -1;
 		self.hasUndoManager = NO;
 	}
@@ -75,71 +976,1130 @@
 	return YES;
 }
 
+static void ApplyPreferencesToView(ScintillaView *view)
+{
+	EditorResources *resources = EditorResources.shared;
+	auto enabled = ^BOOL(NSString *name, BOOL fallback) { return [[resources setting:name fallback:@(fallback)] boolValue]; };
+	[view message:SCI_SETTABWIDTH wParam:MIN(32, MAX(1, [[resources setting:@"tabWidth" fallback:@4] integerValue]))];
+	[view message:SCI_SETUSETABS wParam:!enabled(@"insertSpaces", NO)];
+	[view message:SCI_SETWRAPMODE wParam:enabled(@"wordWrap", NO) ? SC_WRAP_WORD : SC_WRAP_NONE];
+	[view message:SCI_SETMARGINWIDTHN wParam:0 lParam:enabled(@"lineNumbers", YES) ? 32 : 0];
+	[view message:SCI_SETMARGINWIDTHN wParam:1 lParam:enabled(@"bookmarkMargin", YES) ? 16 : 0];
+	[view message:SCI_SETWRAPVISUALFLAGS wParam:enabled(@"showWrapSymbol", NO) ? SC_WRAPVISUALFLAG_END : SC_WRAPVISUALFLAG_NONE];
+	[view message:SCI_SETENDATLASTLINE wParam:!enabled(@"scrollBeyondLastLine", NO)];
+	[view message:SCI_SETVIRTUALSPACEOPTIONS wParam:SCVS_RECTANGULARSELECTION |
+		(enabled(@"virtualSpace", NO) ? SCVS_USERACCESSIBLE : 0)];
+	[view message:SCI_SETMULTIPLESELECTION wParam:enabled(@"multipleSelections", YES)];
+	[view message:SCI_SETBACKSPACEUNINDENTS wParam:enabled(@"backspaceUnindent", NO)];
+	[view message:SCI_SETINDENTATIONGUIDES wParam:enabled(@"indentGuide", NO) ? SC_IV_REAL : SC_IV_NONE];
+	[view message:SCI_SETVIEWWS wParam:enabled(@"whitespace", NO) ? SCWS_VISIBLEALWAYS : SCWS_INVISIBLE];
+	[view message:SCI_SETVIEWEOL wParam:enabled(@"showEOL", NO)];
+}
+
+- (void)refreshDockPlacements
+{
+	[_dockArea refreshPanelPlacements];
+}
+
+- (BOOL)largeFileMode
+{
+	EditorResources *resources = EditorResources.shared;
+	if (![[resources setting:@"limitLargeFiles" fallback:@NO] boolValue])
+		return NO;
+	const auto megabytes = std::clamp<NSInteger>([[resources setting:@"largeFileMegabytes" fallback:@200] integerValue], 1, 4096);
+	const auto size = MAX(_loadedUTF8.length, static_cast<NSUInteger>([_editor message:SCI_GETLENGTH]));
+	return size >= static_cast<NSUInteger>(megabytes) * 1024 * 1024;
+}
+
+- (void)applyPreferences
+{
+	ApplyPreferencesToView(_editor);
+	ApplyPreferencesToView(_clone);
+	[self applyTheme];
+	[_chrome refreshAppearancePreferences];
+	[_chrome refreshToolbar];
+}
+
+- (void)configureEditorView:(ScintillaView *)view
+{
+	[view message:SCI_SETCODEPAGE wParam:SC_CP_UTF8];
+	[view message:SCI_SETMULTIPLESELECTION wParam:1];
+	[view message:SCI_SETADDITIONALSELECTIONTYPING wParam:1];
+	[view message:SCI_SETVIRTUALSPACEOPTIONS wParam:SCVS_RECTANGULARSELECTION];
+	[view message:SCI_SETTABWIDTH wParam:4];
+	[view message:SCI_SETMARGINTYPEN wParam:0 lParam:SC_MARGIN_NUMBER];
+	[view message:SCI_SETMARGINWIDTHN wParam:0 lParam:32];
+	[view message:SCI_SETMARGINTYPEN wParam:1 lParam:SC_MARGIN_SYMBOL];
+	[view message:SCI_SETMARGINMASKN wParam:1 lParam:1 << Bookmark];
+	[view message:SCI_SETMARGINWIDTHN wParam:1 lParam:16];
+	[view message:SCI_SETMARGINSENSITIVEN wParam:1 lParam:1];
+	[view message:SCI_SETCHANGEHISTORY wParam:SC_CHANGE_HISTORY_ENABLED | SC_CHANGE_HISTORY_MARKERS];
+	const unsigned historyMask = (1 << SC_MARKNUM_HISTORY_REVERTED_TO_ORIGIN) | (1 << SC_MARKNUM_HISTORY_SAVED) |
+		(1 << SC_MARKNUM_HISTORY_MODIFIED) | (1 << SC_MARKNUM_HISTORY_REVERTED_TO_MODIFIED);
+	[view message:SCI_SETMARGINTYPEN wParam:3 lParam:SC_MARGIN_SYMBOL];
+	[view message:SCI_SETMARGINMASKN wParam:3 lParam:historyMask];
+	[view message:SCI_SETMARGINWIDTHN wParam:3 lParam:4];
+	const int changeColors[] = {0x70afaf, 0x44aa44, 0x22aaff, 0x70aadd};
+	for (int i = 0; i < std::size(changeColors); ++i)
+	{
+		const int marker = SC_MARKNUM_HISTORY_REVERTED_TO_ORIGIN + i;
+		[view message:SCI_MARKERDEFINE wParam:marker lParam:SC_MARK_FULLRECT];
+		[view message:SCI_MARKERSETBACK wParam:marker lParam:changeColors[i]];
+	}
+	[view message:SCI_MARKERDEFINE wParam:Bookmark lParam:SC_MARK_CIRCLE];
+	[view message:SCI_MARKERSETBACK wParam:Bookmark lParam:0xD48000];
+	[view message:SCI_SETMARGINTYPEN wParam:2 lParam:SC_MARGIN_SYMBOL];
+	[view message:SCI_SETMARGINMASKN wParam:2 lParam:SC_MASK_FOLDERS];
+	[view message:SCI_SETMARGINSENSITIVEN wParam:2 lParam:1];
+	const int foldMarkers[] = {SC_MARK_BOXPLUSCONNECTED, SC_MARK_BOXMINUSCONNECTED, SC_MARK_TCORNER,
+		SC_MARK_LCORNER, SC_MARK_VLINE, SC_MARK_BOXPLUS, SC_MARK_BOXMINUS};
+	for (NSUInteger i = 0; i < std::size(foldMarkers); ++i)
+	{
+		[view message:SCI_MARKERDEFINE wParam:SC_MARKNUM_FOLDEREND + i lParam:foldMarkers[i]];
+		[view message:SCI_MARKERSETFORE wParam:SC_MARKNUM_FOLDEREND + i lParam:0xffffff];
+		[view message:SCI_MARKERSETBACK wParam:SC_MARKNUM_FOLDEREND + i lParam:0x808080];
+	}
+	[view message:SCI_SETAUTOMATICFOLD wParam:SC_AUTOMATICFOLD_SHOW | SC_AUTOMATICFOLD_CLICK | SC_AUTOMATICFOLD_CHANGE];
+	ApplyPreferencesToView(view);
+}
+
 - (void)makeWindowControllers
 {
 	NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 680)
 		styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable |
 			NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:NO];
-	window.minSize = NSMakeSize(420, 260);
-	window.tabbingIdentifier = @"macpad.editor";
-	window.tabbingMode = NSWindowTabbingModePreferred;
+	window.minSize = NSMakeSize(680, 260);
+	window.tabbingMode = NSWindowTabbingModeDisallowed;
 	window.releasedWhenClosed = NO;
+	window.restorable = NO;
 	[window center];
 
 	NSView *content = window.contentView;
-	_editor = [[ScintillaView alloc] initWithFrame:content.bounds];
+	EditorContextView *primary = [[EditorContextView alloc] initWithFrame:content.bounds];
+	primary.document = self;
+	_editor = primary;
 	_editor.translatesAutoresizingMaskIntoConstraints = NO;
 	_editor.delegate = (id<ScintillaNotificationProtocol>)self;
-	[_editor message:SCI_SETCODEPAGE wParam:SC_CP_UTF8];
-	[_editor message:SCI_SETTABWIDTH wParam:4];
-	[_editor message:SCI_SETMARGINTYPEN wParam:0 lParam:SC_MARGIN_NUMBER];
-	[_editor message:SCI_SETMARGINWIDTHN wParam:0 lParam:46];
-	[_editor message:SCI_SETMARGINWIDTHN wParam:1 lParam:0];
-	_status = [NSTextField labelWithString:@""];
-	_status.translatesAutoresizingMaskIntoConstraints = NO;
-	_status.font = [NSFont monospacedDigitSystemFontOfSize:11 weight:NSFontWeightRegular];
-	_status.textColor = NSColor.secondaryLabelColor;
-	NSBox *line = [[NSBox alloc] initWithFrame:NSZeroRect];
-	line.boxType = NSBoxSeparator;
-	line.translatesAutoresizingMaskIntoConstraints = NO;
-	[content addSubview:_editor];
-	[content addSubview:line];
-	[content addSubview:_status];
+	[self configureEditorView:_editor];
+	_chrome = [[EditorChrome alloc] initWithDocument:self commands:[self toolbarCommands]];
+	[_chrome refreshAppearancePreferences];
+	NSView *statusBar = _chrome.statusBar;
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	__weak EditorDocumentController *weakController = controller;
+	void (^dismissResults)(void) = ^{ weakController.searchResultsVisible = NO; };
+	void (^dismissDocuments)(void) = ^{
+		EditorDocumentController *documents = weakController;
+		documents.documentListVisible = NO;
+		[documents refreshDocumentTabs];
+	};
+	_resultsView = [[EditorSearchResultsView alloc] initWithOpenMatch:^(EditorSearchMatch *match) {
+		[weakController openSearchMatch:match];
+	} dismiss:dismissResults];
+	_resultsView.reportsChanged = ^(NSArray<EditorSearchReport *> *reports) {
+		EditorDocumentController *documents = weakController;
+		documents.searchReports = reports;
+		[documents refreshSearchPanel];
+	};
+	_resultsView.purgeChanged = ^(BOOL purge) {
+		EditorDocumentController *documents = weakController;
+		documents.purgeSearchReports = purge;
+		[documents refreshSearchPanel];
+	};
+	_resultsView.refine = ^(NSArray<EditorSearchReport *> *reports) { [weakController.focusedDocument refineSearchReports:reports]; };
+	_documentList = [[EditorDocumentList alloc] initWithSelect:^(EditorDocument *document, BOOL otherView) {
+		[document showWindows];
+		if (document.clonedEditorView)
+		{
+			if (otherView)
+				[document focusClonedEditor];
+			else
+				[document focusPrimaryEditor];
+		}
+	} dismiss:dismissDocuments groupingChanged:^(BOOL grouped) {
+		weakController.documentListUngrouped = !grouped;
+		[weakController refreshDocumentList];
+	}];
+	_editorSplit = [[EditorSplitView alloc] initWithFrame:content.bounds];
+	_editorSplit.vertical = YES;
+	_editorSplit.dividerStyle = NSSplitViewDividerStyleThin;
+	__weak EditorDocument *weakDocument = self;
+	_editorSplit.rotate = ^(NSInteger direction) {
+		EditorDocumentController *documents = weakController;
+		documents.splitRotation = (documents.splitRotation + direction + 4) % 4;
+		[weakDocument applySplitRotation:documents.splitRotation];
+	};
+	_primaryPane = [[EditorTabPane alloc] initWithFrame:content.bounds];
+	_primaryEditorHost = AddEditorHost(_primaryPane, _chrome.primaryTabs);
+	[_editorSplit addArrangedSubview:_primaryPane];
+	[self attachEditorTo:_primaryEditorHost];
+	EditorDockArea *dock = [[EditorDockArea alloc] initWithEditor:_editorSplit];
+	_dockArea = dock;
+	dock.translatesAutoresizingMaskIntoConstraints = NO;
+	EditorResources *resources = EditorResources.shared;
+	_resultsPane = [dock addPanel:_resultsView title:[resources label:@"find-result-caption" fallback:@"Search results"]
+		placement:controller.searchResultsPlacement dismiss:dismissResults];
+	_documentListPane = [dock addPanel:_documentList title:[resources label:@"docList:PanelTitle" fallback:@"Document List"]
+		placement:controller.documentListPlacement dismiss:dismissDocuments];
+	void (^dismissFolder)(void) = ^{ [weakController toggleFolderWorkspace:nil]; };
+	void (^openFromPanel)(NSURL *) = ^(NSURL *url) {
+		[weakController openDocumentWithContentsOfURL:url display:YES completionHandler:
+			^(NSDocument *document, BOOL wasOpen, NSError *error) { if (error) [NSApp presentError:error]; }];
+	};
+	_folderWorkspace = [[EditorFolderPanel alloc] initWithOpen:openFromPanel add:^{
+		[weakController chooseWorkspaceFolders:nil];
+	} changeRoots:^(NSArray<NSURL *> *folders) {
+		[weakController setWorkspaceFolders:folders];
+	} dismiss:dismissFolder];
+	_folderPane = [dock addPanel:_folderWorkspace title:[resources label:@"44085" fallback:@"Folder as Workspace"]
+		placement:controller.folderWorkspacePlacement dismiss:dismissFolder];
+	NSMutableArray *panels = [NSMutableArray array], *panes = [NSMutableArray array];
+	for (NSUInteger index = 0; index < controller.projectWorkspaces.count; ++index)
+	{
+		NSString *title = [resources label:[@(44081 + index) stringValue]
+			fallback:[NSString stringWithFormat:@"Project Panel %lu", index + 1]];
+		void (^dismiss)(void) = ^{ [weakController setProjectPanel:index visible:NO]; };
+		EditorProjectPanel *panel = [[EditorProjectPanel alloc] initWithTitle:title workspace:controller.projectWorkspaces[index]
+			open:openFromPanel changed:^{} dismiss:dismiss];
+		[panels addObject:panel];
+		[panes addObject:[dock addPanel:panel title:title placement:controller.projectPlacements[index] dismiss:dismiss]];
+	}
+	_projectPanes = [panes copy];
+	_projectPanels = [panels copy];
+	[content addSubview:_chrome];
+	[content addSubview:dock];
+	_incremental = [[EditorIncrementalSearch alloc] initWithDismiss:^{ [weakDocument dismissIncrementalSearch]; }];
+	_incremental.hidden = YES;
+	_incrementalHeight = [_incremental.heightAnchor constraintEqualToConstant:0];
+	[content addSubview:_incremental];
+	[content addSubview:statusBar];
+	_dockUnderChrome = [dock.topAnchor constraintEqualToAnchor:_chrome.bottomAnchor];
+	_dockUnderTitle = [dock.topAnchor constraintEqualToAnchor:content.topAnchor];
+	_incrementalOverStatus = [_incremental.bottomAnchor constraintEqualToAnchor:statusBar.topAnchor];
+	_incrementalAtBottom = [_incremental.bottomAnchor constraintEqualToAnchor:content.bottomAnchor];
 	[NSLayoutConstraint activateConstraints:@[
-		[_editor.topAnchor constraintEqualToAnchor:content.topAnchor],
-		[_editor.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
-		[_editor.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
-		[_editor.bottomAnchor constraintEqualToAnchor:line.topAnchor],
-		[line.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
-		[line.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
-		[line.heightAnchor constraintEqualToConstant:1],
-		[line.bottomAnchor constraintEqualToAnchor:_status.topAnchor constant:-5],
-		[_status.leadingAnchor constraintEqualToAnchor:content.leadingAnchor constant:12],
-		[_status.trailingAnchor constraintLessThanOrEqualToAnchor:content.trailingAnchor constant:-12],
-		[_status.bottomAnchor constraintEqualToAnchor:content.bottomAnchor constant:-5],
+		[_chrome.topAnchor constraintEqualToAnchor:content.topAnchor],
+		[_chrome.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+		[_chrome.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+		_dockUnderChrome,
+		[dock.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+		[dock.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+		[dock.bottomAnchor constraintEqualToAnchor:_incremental.topAnchor],
+		[_incremental.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+		[_incremental.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+		_incrementalOverStatus,
+		_incrementalHeight,
+		[statusBar.leadingAnchor constraintEqualToAnchor:content.leadingAnchor],
+		[statusBar.trailingAnchor constraintEqualToAnchor:content.trailingAnchor],
+		[statusBar.bottomAnchor constraintEqualToAnchor:content.bottomAnchor],
 	]];
+	[self displaySearchReports:nil purge:NO match:nil visible:NO];
 	window.initialFirstResponder = _editor.content;
+
 	[self addWindowController:[[NSWindowController alloc] initWithWindow:window]];
 	[self applyTheme];
 	[self loadEditor];
 }
 
+- (void)applyPresentationMode:(NSInteger)mode
+{
+	_presentationMode = mode;
+	BOOL minimal = mode != 0;
+	_chrome.hidden = minimal;
+	if (minimal)
+	{
+		_chrome.statusBar.hidden = YES;
+		[_chrome setTabsHidden:YES];
+	}
+	else
+		[_chrome refreshAppearancePreferences];
+	(minimal ? _dockUnderChrome : _dockUnderTitle).active = NO;
+	(minimal ? _incrementalOverStatus : _incrementalAtBottom).active = NO;
+	(minimal ? _dockUnderTitle : _dockUnderChrome).active = YES;
+	(minimal ? _incrementalAtBottom : _incrementalOverStatus).active = YES;
+	NSWindow *window = self.windowControllers.firstObject.window;
+	window.titleVisibility = minimal ? NSWindowTitleHidden : NSWindowTitleVisible;
+	for (NSNumber *type in @[@(NSWindowCloseButton), @(NSWindowMiniaturizeButton), @(NSWindowZoomButton)])
+		[window standardWindowButton:(NSWindowButton)type.integerValue].hidden = minimal;
+	for (ScintillaView *view in _clone ? @[_editor, _clone] : @[_editor])
+	{
+		const auto padding = mode == 2 ? 56 : 1;
+		[view message:SCI_SETMARGINLEFT wParam:0 lParam:padding];
+		[view message:SCI_SETMARGINRIGHT wParam:0 lParam:padding];
+	}
+	if (minimal && !_presentationKeys)
+	{
+		__weak EditorDocument *weakSelf = self;
+		_presentationKeys = [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown handler:^NSEvent *(NSEvent *event) {
+			EditorDocument *document = weakSelf;
+			if (document && event.keyCode == 53 && event.window == document.windowControllers.firstObject.window)
+			{
+				[document leavePresentation];
+				return nil;
+			}
+			return event;
+		}];
+	}
+	else if (!minimal && _presentationKeys)
+	{
+		[NSEvent removeMonitor:_presentationKeys];
+		_presentationKeys = nil;
+	}
+}
+
+- (void)leavePresentation
+{
+	[self applyPresentationMode:0];
+	NSWindow *window = self.windowControllers.firstObject.window;
+	if (_presentationFullScreen && (window.styleMask & NSWindowStyleMaskFullScreen))
+		[window toggleFullScreen:nil];
+	_presentationFullScreen = NO;
+}
+
+- (IBAction)togglePresentationMode:(NSMenuItem *)sender
+{
+	EditorDocument *host = [(EditorDocumentController *)NSDocumentController.sharedDocumentController windowOwnerForDocument:self];
+	if (host->_presentationMode == sender.tag)
+		return [host leavePresentation];
+	[host applyPresentationMode:sender.tag];
+	NSWindow *window = host.windowControllers.firstObject.window;
+	if (sender.tag == 2 && !(window.styleMask & NSWindowStyleMaskFullScreen))
+	{
+		host->_presentationFullScreen = YES;
+		[window toggleFullScreen:nil];
+	}
+	else if (sender.tag == 1 && host->_presentationFullScreen && (window.styleMask & NSWindowStyleMaskFullScreen))
+	{
+		host->_presentationFullScreen = NO;
+		[window toggleFullScreen:nil];
+	}
+}
+
+- (void)attachEditorTo:(NSView *)host
+{
+	if (_editor.superview == host)
+		return;
+	[NSLayoutConstraint deactivateConstraints:_editorConstraints ?: @[]];
+	[_editor removeFromSuperview];
+	[host addSubview:_editor];
+	_editorConstraints = @[
+		[_editor.leadingAnchor constraintEqualToAnchor:host.leadingAnchor],
+		[_editor.trailingAnchor constraintEqualToAnchor:host.trailingAnchor],
+		[_editor.topAnchor constraintEqualToAnchor:host.topAnchor],
+		[_editor.bottomAnchor constraintEqualToAnchor:host.bottomAnchor],
+	];
+	[NSLayoutConstraint activateConstraints:_editorConstraints];
+}
+
+- (void)makeOtherPane
+{
+	_otherPane = [[EditorTabPane alloc] initWithFrame:_primaryEditorHost.frame];
+	_otherEditorHost = AddEditorHost(_otherPane, _chrome.secondaryTabs);
+}
+
+- (void)applySplitRotation:(NSInteger)rotation
+{
+	BOOL vertical = (rotation % 2) == 0;
+	BOOL flipped = rotation >= 2;
+	BOOL reordered = _editorSplit.arrangedSubviews.count == 2 &&
+		_editorSplit.arrangedSubviews.firstObject != (flipped ? _otherPane : _primaryPane);
+	if (_editorSplit.isVertical == vertical && !reordered)
+		return;
+	_editorSplit.vertical = vertical;
+	if (reordered)
+	{
+		NSView *first = flipped ? _otherPane : _primaryPane;
+		[_editorSplit removeArrangedSubview:first];
+		[_editorSplit insertArrangedSubview:first atIndex:0];
+	}
+	[_editorSplit adjustSubviews];
+	if (_editorSplit.arrangedSubviews.count == 2)
+		[_editorSplit setPosition:(vertical ? NSWidth(_editorSplit.bounds) : NSHeight(_editorSplit.bounds)) / 2 ofDividerAtIndex:0];
+}
+
+- (void)displayOtherDocument:(EditorDocument *)document
+{
+	if (_displayedOtherDocument == document)
+		return;
+	if (_displayedOtherDocument)
+	{
+		NSPanel *search = _displayedOtherDocument->_searchPanel;
+		[search orderOut:nil];
+		[search.parentWindow removeChildWindow:search];
+		[_displayedOtherDocument attachEditorTo:_displayedOtherDocument->_primaryEditorHost];
+	}
+	_displayedOtherDocument = document;
+	if (!document)
+	{
+		[_editorSplit removeArrangedSubview:_otherPane];
+		[_otherPane removeFromSuperview];
+		[_editorSplit adjustSubviews];
+		return;
+	}
+	[self closeClonedView];
+	if (!_otherPane)
+		[self makeOtherPane];
+	BOOL newlySplit = _otherPane.superview != _editorSplit;
+	if (newlySplit)
+		[_editorSplit addArrangedSubview:_otherPane];
+	[document attachEditorTo:_otherEditorHost];
+	[_chrome refreshTabs];
+	if (newlySplit)
+	{
+		[self applySplitRotation:((EditorDocumentController *)NSDocumentController.sharedDocumentController).splitRotation];
+		[_editorSplit setPosition:(_editorSplit.isVertical ? NSWidth(_editorSplit.bounds) : NSHeight(_editorSplit.bounds)) / 2 ofDividerAtIndex:0];
+	}
+}
+
+- (void)focusEditor
+{
+	ScintillaView *editor = self.editor;
+	NSWindow *window = editor.window;
+	[window makeKeyAndOrderFront:nil];
+	[window makeFirstResponder:editor.content];
+	[self updateStatus];
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	[[controller windowOwnerForDocument:self].chrome refreshToolbar];
+}
+
+- (NSWindow *)windowForSheet
+{
+	return _editor.window ?: [super windowForSheet];
+}
+
+- (void)focusPrimaryEditor
+{
+	[_editor.window makeFirstResponder:_editor.content];
+	[self focusEditor];
+}
+
+- (void)focusClonedEditor
+{
+	[_clone.window makeFirstResponder:_clone.content];
+	[self updateStatus];
+	[_chrome refreshToolbar];
+}
+
+- (IBAction)moveToOtherView:(id)sender
+{
+	[(EditorDocumentController *)NSDocumentController.sharedDocumentController showInOtherView:self];
+}
+
+- (IBAction)cloneToOtherView:(id)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	if ([controller windowOwnerForDocument:self] != self)
+		[controller showInOtherView:self];
+	if (!_clone)
+	{
+		[controller hideOtherView];
+		[self addClonedView];
+	}
+	[self focusClonedEditor];
+}
+
+- (void)addClonedView
+{
+	if (!_otherPane)
+		[self makeOtherPane];
+	EditorContextView *clone = [[EditorContextView alloc] initWithFrame:_primaryEditorHost.bounds];
+	clone.document = self;
+	_clone = clone;
+	_clone.translatesAutoresizingMaskIntoConstraints = NO;
+	[_clone message:SCI_SETDOCPOINTER wParam:0 lParam:[_editor message:SCI_GETDOCPOINTER]];
+	[self configureEditorView:_clone];
+	_cloneObserver = [[EditorCloneObserver alloc] init];
+	_cloneObserver.document = self;
+	_clone.delegate = _cloneObserver;
+	[_otherEditorHost addSubview:_clone];
+	[NSLayoutConstraint activateConstraints:@[
+		[_clone.leadingAnchor constraintEqualToAnchor:_otherEditorHost.leadingAnchor],
+		[_clone.trailingAnchor constraintEqualToAnchor:_otherEditorHost.trailingAnchor],
+		[_clone.topAnchor constraintEqualToAnchor:_otherEditorHost.topAnchor],
+		[_clone.bottomAnchor constraintEqualToAnchor:_otherEditorHost.bottomAnchor],
+	]];
+	[_editorSplit addArrangedSubview:_otherPane];
+	[self applySplitRotation:((EditorDocumentController *)NSDocumentController.sharedDocumentController).splitRotation];
+	[_editorSplit setPosition:(_editorSplit.isVertical ? NSWidth(_editorSplit.bounds) : NSHeight(_editorSplit.bounds)) / 2 ofDividerAtIndex:0];
+	[_clone message:SCI_SETSEL wParam:[_editor message:SCI_GETANCHOR] lParam:[_editor message:SCI_GETCURRENTPOS]];
+	[_clone message:SCI_SETFIRSTVISIBLELINE wParam:[_editor message:SCI_GETFIRSTVISIBLELINE]];
+	[_chrome refreshTabs];
+	[self applyTheme];
+}
+
+- (void)closeClonedView
+{
+	if (!_clone)
+		return;
+	_clone.delegate = nil;
+	[_clone removeFromSuperview];
+	_clone = nil;
+	_cloneObserver = nil;
+	[_editorSplit removeArrangedSubview:_otherPane];
+	[_otherPane removeFromSuperview];
+	[_editorSplit adjustSubviews];
+}
+
+- (void)clonedViewNotification:(SCNotification *)notification
+{
+	switch (notification->nmhdr.code)
+	{
+		case SCN_FOCUSIN:
+		case SCN_ZOOM:
+		case SCN_UPDATEUI:
+		case SCN_MARGINCLICK:
+			[self notification:notification];
+			break;
+	}
+}
+
+- (IBAction)closeOtherView:(id)sender
+{
+	[(EditorDocumentController *)NSDocumentController.sharedDocumentController hideOtherView];
+}
+
+- (IBAction)toggleZoomSync:(id)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	controller.syncZoom = !controller.syncZoom;
+	[controller syncZoomFromDocument:controller.focusedDocument];
+}
+
+- (IBAction)toggleVerticalScrollSync:(id)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	controller.syncVerticalScroll = !controller.syncVerticalScroll;
+	[controller syncScrollFromDocument:controller.focusedDocument changes:SC_UPDATE_V_SCROLL];
+}
+
+- (IBAction)toggleHorizontalScrollSync:(id)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	controller.syncHorizontalScroll = !controller.syncHorizontalScroll;
+	[controller syncScrollFromDocument:controller.focusedDocument changes:SC_UPDATE_H_SCROLL];
+}
+
+- (void)displaySearchReports:(NSArray<EditorSearchReport *> *)reports purge:(BOOL)purge match:(EditorSearchMatch *)match visible:(BOOL)visible
+{
+	_resultsView.reports = visible ? reports : nil;
+	_resultsView.purgeForEachSearch = purge;
+	_resultsPane.shown = visible;
+	if (visible)
+		[_resultsView selectMatch:match];
+}
+
+- (void)displayDocumentList:(NSArray<EditorDocument *> *)documents otherView:(NSArray<EditorDocument *> *)other
+	focused:(EditorDocument *)focused focusOther:(BOOL)focusOther groupByView:(BOOL)groupByView visible:(BOOL)visible
+{
+	_documentListPane.shown = visible;
+	if (visible)
+		[_documentList reloadDocuments:documents otherView:other selected:focused focusOther:focusOther groupByView:groupByView];
+}
+
+- (IBAction)toggleDocumentList:(id)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	controller.documentListVisible = !controller.documentListVisible;
+	[controller refreshDocumentTabs];
+}
+
+- (void)displayFolderWorkspace:(NSArray<NSURL *> *)folders visible:(BOOL)visible
+{
+	_folderPane.shown = visible;
+	if (visible)
+		[_folderWorkspace setDirectories:folders ?: @[]];
+}
+
+- (void)displayProjectPanels:(NSIndexSet *)visible
+{
+	for (NSUInteger index = 0; index < _projectPanes.count; ++index)
+	{
+		BOOL shown = [visible containsIndex:index];
+		_projectPanes[index].shown = shown;
+		if (shown)
+			[_projectPanels[index] reload];
+	}
+}
+
+- (IBAction)toggleSearchResults:(id)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	controller.searchResultsVisible = !controller.searchResultsVisible;
+}
+
+- (NSArray<NSToolbarItem *> *)toolbarCommands
+{
+	struct Command
+	{
+		NSString *identifier;
+		NSString *translation;
+		NSString *label;
+		NSString *symbol;
+		SEL action;
+		id target;
+		NSInteger tag = 0;
+	};
+	const Command commands[] = {
+		{@"new", @"41001", @"New", @"doc.badge.plus", @selector(newDocument:), NSDocumentController.sharedDocumentController},
+		{@"open", @"41002", @"Open…", @"folder", @selector(openFiles:), NSApp.delegate},
+		{@"save", @"41006", @"Save", @"square.and.arrow.down", @selector(saveDocument:), self},
+		{@"saveall", @"41007", @"Save All", @"square.stack", @selector(saveAllDocuments:), NSDocumentController.sharedDocumentController},
+		{@"close", @"41003", @"Close", @"xmark", @selector(closeEditorTab:), self},
+		{@"closeall", @"41004", @"Close All", @"xmark.rectangle", @selector(closeAll:), NSApp.delegate},
+		{@"print", @"41010", @"Print", @"printer", @selector(printDocument:), self},
+		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+		{@"cut", @"42001", @"Cut", @"scissors", @selector(cut:), _editor.content},
+		{@"copy", @"42002", @"Copy", @"doc.on.doc", @selector(copy:), _editor.content},
+		{@"paste", @"42005", @"Paste", @"clipboard", @selector(paste:), _editor.content},
+		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+		{@"undo", @"42003", @"Undo", @"arrow.uturn.backward", @selector(undo:), _editor.content},
+		{@"redo", @"42004", @"Redo", @"arrow.uturn.forward", @selector(redo:), _editor.content},
+		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+		{@"find", @"43001", @"Find…", @"magnifyingglass", @selector(findText:), self},
+		{@"findrep", @"43003", @"Replace…", @"arrow.left.arrow.right", @selector(replaceText:), self},
+		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+		{@"zoomIn", @"native-zoomIn", @"Zoom In", @"plus.magnifyingglass", @selector(runEditorCommand:), self, SCI_ZOOMIN},
+		{@"zoomOut", @"native-zoomOut", @"Zoom Out", @"minus.magnifyingglass", @selector(runEditorCommand:), self, SCI_ZOOMOUT},
+		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+		{@"syncV", @"44035", @"Synchronize Vertical Scrolling", @"arrow.up.and.down", @selector(toggleVerticalScrollSync:), self},
+		{@"syncH", @"44036", @"Synchronize Horizontal Scrolling", @"arrow.left.and.right", @selector(toggleHorizontalScrollSync:), self},
+		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+		{@"wrap", @"44022", @"Word Wrap", @"text.line.last.and.arrowtriangle.forward", @selector(toggleWrap:), self},
+		{@"allChars", @"44019", @"Show All Characters", @"paragraphsign", @selector(toggleInvisibles:), self},
+		{@"indentGuide", @"44020", @"Show Indent Guide", @"decrease.indent", @selector(toggleIndentGuides:), self},
+		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+		{@"docList", @"44070", @"Document List", @"sidebar.left", @selector(toggleDocumentList:), self},
+		{@"fileBrowser", @"44085", @"Folder as Workspace", @"folder", @selector(toggleFolderWorkspace:), NSDocumentController.sharedDocumentController},
+		{@"monitoring", @"44097", @"Monitoring (tail -f)", @"waveform.path", @selector(monitorFile:), self},
+		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+	};
+	NSMutableArray<NSToolbarItem *> *items = [NSMutableArray array];
+	for (const auto &command : commands)
+	{
+		NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:command.identifier];
+		[items addObject:item];
+		if (!command.action)
+			continue;
+		item.label = [EditorResources.shared label:command.translation fallback:command.label];
+		item.toolTip = item.label;
+		item.image = [NSImage imageWithSystemSymbolName:command.symbol accessibilityDescription:item.label];
+		item.tag = command.tag;
+		item.target = command.target;
+		item.action = command.action;
+	}
+	return items;
+}
+
+- (BOOL)isToolbarCommandEnabled:(NSToolbarItem *)command
+{
+	EditorDocument *focused = [self focusedToolbarDocument];
+	if (focused != self)
+		return [focused isToolbarCommandEnabled:command];
+	if (command.action == @selector(undo:))
+		return [self.editor message:SCI_CANUNDO] != 0;
+	if (command.action == @selector(redo:))
+		return [self.editor message:SCI_CANREDO] != 0;
+	if (command.action == @selector(cut:) || command.action == @selector(copy:))
+		return [self.editor message:SCI_GETSELECTIONEMPTY] == 0;
+	if (command.action == @selector(paste:))
+		return [self.editor message:SCI_CANPASTE] != 0;
+	if (command.action == @selector(saveDocument:))
+		return self.isDocumentEdited;
+	if (command.action == @selector(saveAllDocuments:))
+		return [NSDocumentController.sharedDocumentController hasEditedDocuments];
+	if (command.action == @selector(monitorFile:))
+		return self.fileURL && !self.isDocumentEdited;
+	if (command.action == @selector(toggleVerticalScrollSync:) || command.action == @selector(toggleHorizontalScrollSync:))
+		return [(EditorDocumentController *)NSDocumentController.sharedDocumentController hasOtherView];
+	return YES;
+}
+
+- (EditorDocument *)focusedToolbarDocument
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	EditorDocument *document = controller.focusedDocument;
+	return [controller windowOwnerForDocument:document] == self ? document : self;
+}
+
+- (id)targetForToolbarCommand:(NSToolbarItem *)command
+{
+	EditorDocument *document = [self focusedToolbarDocument];
+	if (command.target == self)
+		return document;
+	if (command.target == _editor.content)
+		return document.editor.content;
+	return command.target;
+}
+
+- (NSString *)displayName
+{
+	if (self.fileURL)
+		return [super displayName];
+	if (!_untitledName)
+	{
+		_untitledName = [NSString stringWithFormat:[EditorResources.shared label:@"native-untitled" fallback:@"new %lu"], NextUntitledNumber++];
+	}
+	return _untitledName;
+}
+
+- (void)showWindows
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	if ([controller focusOtherViewDocument:self])
+		return;
+	[controller prepareToShowDocument:self];
+	[super showWindows];
+	[self focusEditor];
+}
+
+- (IBAction)closeEditorTab:(id)sender
+{
+	NSWindow *window = self.windowControllers.firstObject.window;
+	if (!window.visible && !self.isDocumentEdited)
+	{
+		[self close];
+		return;
+	}
+	if (_editor.window && _editor.window != window)
+	{
+		[self canCloseDocumentWithDelegate:self shouldCloseSelector:@selector(document:shouldCloseOtherTab:contextInfo:) contextInfo:nullptr];
+		return;
+	}
+	if (!window.visible)
+		[self showWindows];
+	[window performClose:sender];
+}
+
+- (void)changeTabPin
+{
+	_tabPinned = !_tabPinned;
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	[controller refreshDocumentTabs];
+}
+
+- (void)changeTabColor:(NSInteger)index
+{
+	_tabColorIndex = std::clamp<NSInteger>(index, 0, 5);
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	[controller refreshDocumentTabs];
+}
+
+- (void)document:(NSDocument *)document shouldCloseOtherTab:(BOOL)shouldClose contextInfo:(void *)context
+{
+	if (shouldClose)
+		[self close];
+}
+
+- (void)refreshChromeMenus
+{
+	[self.chrome refreshMenus];
+	[_searchPanel close];
+	_searchPanel = nil;
+}
+
 - (void)setFileURL:(NSURL *)fileURL
 {
+	if (![self.fileURL isEqual:fileURL])
+	{
+		_diskState = nil;
+		_pendingDiskState = nil;
+		if (_monitoring)
+		{
+			_monitoring = NO;
+			[_editor message:SCI_SETREADONLY wParam:_readOnlyBeforeMonitoring];
+		}
+	}
 	[super setFileURL:fileURL];
 	[self applyTheme];
+	[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
+}
+
+- (NSDictionary *)currentDiskState
+{
+	if (!self.fileURL.isFileURL)
+		return nil;
+	NSDictionary *attributes = [NSFileManager.defaultManager attributesOfItemAtPath:self.fileURL.path error:nullptr];
+	if (![attributes[NSFileType] isEqual:NSFileTypeRegular] || !attributes[NSFileModificationDate])
+		return nil;
+	return @{@"date": attributes[NSFileModificationDate], @"size": attributes[NSFileSize] ?: @0,
+		@"fileNumber": attributes[NSFileSystemFileNumber] ?: @0};
+}
+
+- (void)reloadExternalFileFollowingEnd:(BOOL)follow
+{
+	const auto readOnly = [_editor message:SCI_GETREADONLY];
+	const auto line = [_editor message:SCI_LINEFROMPOSITION wParam:[_editor message:SCI_GETCURRENTPOS]];
+	[_editor message:SCI_SETREADONLY wParam:0];
+	NSError *error = nil;
+	BOOL loaded = [self revertToContentsOfURL:self.fileURL ofType:self.fileType error:&error];
+	[_editor message:SCI_SETREADONLY wParam:readOnly];
+	if (!loaded)
+	{
+		if (!follow && error)
+			[self presentError:error];
+		return;
+	}
+	[_editor message:follow ? SCI_DOCUMENTEND : SCI_GOTOLINE wParam:line];
+	[_editor message:SCI_SCROLLCARET];
+	if (_clone && follow)
+		[_clone message:SCI_DOCUMENTEND];
+}
+
+- (void)checkDiskChanges:(BOOL)checkNormal allowPrompt:(BOOL)allowPrompt
+{
+	if ((!checkNormal && !_monitoring) || !_editor || _loading || _askingAboutDisk)
+		return;
+	NSDictionary *current = self.currentDiskState;
+	if (!current)
+		return;
+	if (!_pendingDiskState)
+	{
+		if ([current isEqual:_diskState])
+			return;
+		BOOL changed = _diskState != nil || (self.fileModificationDate && ![current[@"date"] isEqual:self.fileModificationDate]);
+		BOOL wasSavedHere = _diskState && ![_diskState[@"date"] isEqual:self.fileModificationDate] &&
+			[current[@"date"] isEqual:self.fileModificationDate];
+		_diskState = current;
+		if (!changed || wasSavedHere)
+			return;
+		_pendingDiskState = current;
+	}
+	if (_monitoring || ([[EditorResources.shared setting:@"autoReload" fallback:@NO] boolValue] && !self.isDocumentEdited))
+	{
+		_pendingDiskState = nil;
+		[self reloadExternalFileFollowingEnd:_monitoring || [[EditorResources.shared setting:@"reloadToEnd" fallback:@NO] boolValue]];
+		return;
+	}
+	if (!allowPrompt)
+		return;
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	NSWindow *window = [controller selectedTabInOtherView:NO].windowControllers.firstObject.window;
+	if (!window)
+		return;
+	_askingAboutDisk = YES;
+	NSURL *url = self.fileURL;
+	NSAlert *alert = [NSAlert new];
+	alert.messageText = [NSString stringWithFormat:@"%@ changed on disk", self.displayName];
+	alert.informativeText = self.isDocumentEdited ? @"Reloading will discard the unsaved edits in this document." :
+		@"Reload the file to read the latest contents.";
+	[alert addButtonWithTitle:@"Keep Editor Contents"];
+	[alert addButtonWithTitle:@"Reload"];
+	[alert beginSheetModalForWindow:window completionHandler:^(NSModalResponse response) {
+		self->_askingAboutDisk = NO;
+		self->_pendingDiskState = nil;
+		if (response == NSAlertSecondButtonReturn && [self.fileURL isEqual:url])
+			[self reloadExternalFileFollowingEnd:[[EditorResources.shared setting:@"reloadToEnd" fallback:@NO] boolValue]];
+	}];
+}
+
+- (IBAction)monitorFile:(id)sender
+{
+	if (!self.fileURL || self.isDocumentEdited)
+		return;
+	if (!_monitoring)
+	{
+		_readOnlyBeforeMonitoring = [_editor message:SCI_GETREADONLY];
+		_diskState = self.currentDiskState;
+		[_editor message:SCI_DOCUMENTEND];
+	}
+	_monitoring = !_monitoring;
+	[_editor message:SCI_SETREADONLY wParam:_monitoring || _readOnlyBeforeMonitoring];
+	[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
+}
+
+- (BOOL)isMonitoring { return _monitoring; }
+
+- (IBAction)saveCopyAs:(id)sender
+{
+	NSSavePanel *panel = NSSavePanel.savePanel;
+	panel.nameFieldStringValue = self.displayName;
+	panel.directoryURL = self.fileURL.URLByDeletingLastPathComponent;
+	[panel beginSheetModalForWindow:self.windowForSheet completionHandler:^(NSModalResponse response) {
+		if (response != NSModalResponseOK)
+			return;
+		if ([panel.URL.URLByStandardizingPath isEqual:self.fileURL.URLByStandardizingPath])
+		{
+			NSBeep();
+			return;
+		}
+		NSError *error = nil;
+		NSData *data = [self dataOfType:self.fileType error:&error];
+		if (![data writeToURL:panel.URL options:NSDataWritingAtomic error:&error] && error)
+			[self presentError:error];
+	}];
+}
+
+- (IBAction)moveFileToTrash:(id)sender
+{
+	NSURL *url = self.fileURL;
+	if (!url)
+		return;
+	NSAlert *alert = [NSAlert new];
+	alert.messageText = [NSString stringWithFormat:@"Move %@ to the Trash?", self.displayName];
+	if (self.isDocumentEdited)
+		alert.informativeText = @"Moving this file to the Trash will also discard its unsaved edits.";
+	[alert addButtonWithTitle:@"Cancel"];
+	[alert addButtonWithTitle:@"Move to Trash"].hasDestructiveAction = YES;
+	[alert beginSheetModalForWindow:self.windowForSheet completionHandler:^(NSModalResponse response) {
+		if (response == NSAlertSecondButtonReturn && [self.fileURL isEqual:url])
+			[NSWorkspace.sharedWorkspace recycleURLs:@[url] completionHandler:^(NSDictionary *results, NSError *error) {
+				dispatch_async(dispatch_get_main_queue(), ^{
+					if (error)
+						[self presentError:error];
+					else if ([self.fileURL isEqual:url])
+						[self close];
+				});
+			}];
+	}];
 }
 
 - (void)applyTheme
 {
-	if (_editor)
-		[EditorResources.shared configure:_editor extension:self.fileURL.pathExtension.lowercaseString ?: @""];
+	if (!_editor)
+		return;
+	NSString *extension = self.fileURL.pathExtension.lowercaseString ?: @"";
+	NSString *identifier = nil;
+	const BOOL large = self.largeFileMode;
+	_statusLanguage = [EditorResources.shared configure:_editor extension:extension language:_languageOverride
+		syntaxHighlighting:!large identifier:&identifier];
+	_languageIdentifier = identifier;
+	[_editor message:SCI_SETMARGINWIDTHN wParam:2 lParam:[_editor message:SCI_GETLEXER] <= SCLEX_NULL ? 0 : 14];
+	if (_clone)
+	{
+		[EditorResources.shared configure:_clone extension:extension language:_languageOverride
+			syntaxHighlighting:!large identifier:nullptr];
+		[_clone message:SCI_SETMARGINWIDTHN wParam:2 lParam:[_clone message:SCI_GETLEXER] <= SCLEX_NULL ? 0 : 14];
+	}
+	if (large && [[EditorResources.shared setting:@"largeFileDisableWrap" fallback:@NO] boolValue])
+	{
+		for (ScintillaView *view in _clone ? @[_editor, _clone] : @[_editor])
+			[view message:SCI_SETWRAPMODE wParam:SC_WRAP_NONE];
+	}
+	for (int style = 0; style <= TokenMarkCount; ++style)
+	{
+		const int indicator = style ? FirstTokenMark + style - 1 : FindMark;
+		NSString *name = style ? [NSString stringWithFormat:@"Mark Style %d", style] : @"Find Mark Style";
+		NSArray<NSColor *> *defaults = @[NSColor.systemRedColor, NSColor.systemTealColor, NSColor.systemOrangeColor,
+			NSColor.systemYellowColor, NSColor.systemPurpleColor, NSColor.systemGreenColor];
+		NSColor *color = [EditorResources.shared widgetColor:name background:YES] ?: defaults[style];
+		color = [color colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+		const auto rgb = static_cast<unsigned>(color.redComponent * 255) |
+			(static_cast<unsigned>(color.greenComponent * 255) << 8) | (static_cast<unsigned>(color.blueComponent * 255) << 16);
+		for (ScintillaView *view in _clone ? @[_editor, _clone] : @[_editor])
+		{
+			[view message:SCI_INDICSETSTYLE wParam:indicator lParam:INDIC_STRAIGHTBOX];
+			[view message:SCI_INDICSETFORE wParam:indicator lParam:rgb];
+			[view message:SCI_INDICSETALPHA wParam:indicator lParam:75];
+			[view message:SCI_INDICSETUNDER wParam:indicator lParam:1];
+		}
+	}
+	[_chrome refreshColors];
+	[_resultsView refreshTheme];
+	self.windowControllers.firstObject.window.appearance = _chrome.appearance;
+	[self updateStatus];
+}
+
+- (IBAction)selectLanguage:(NSMenuItem *)sender
+{
+	_languageOverride = sender.representedObject;
+	[self applyTheme];
+}
+
+- (IBAction)setFoldState:(id)sender
+{
+	[self.editor message:SCI_FOLDALL wParam:[sender tag]];
+}
+
+- (IBAction)foldAtLevel:(NSMenuItem *)sender
+{
+	ScintillaView *editor = self.editor;
+	const BOOL expand = sender.tag < 0;
+	const NSInteger level = labs(sender.tag);
+	if (level == 9)
+	{
+		const auto line = [editor message:SCI_LINEFROMPOSITION wParam:[editor message:SCI_GETCURRENTPOS]];
+		[editor message:SCI_FOLDLINE wParam:line lParam:expand ? SC_FOLDACTION_EXPAND : SC_FOLDACTION_CONTRACT];
+		return;
+	}
+	for (sptr_t line = 0; line < [editor message:SCI_GETLINECOUNT]; ++line)
+	{
+		const auto current = [editor message:SCI_GETFOLDLEVEL wParam:line];
+		if ((current & SC_FOLDLEVELHEADERFLAG) && (current & SC_FOLDLEVELNUMBERMASK) == SC_FOLDLEVELBASE + level - 1)
+			[editor message:SCI_FOLDLINE wParam:line lParam:expand ? SC_FOLDACTION_EXPAND : SC_FOLDACTION_CONTRACT];
+	}
+}
+
+- (IBAction)hideSelectedLines:(id)sender
+{
+	ScintillaView *editor = self.editor;
+	const auto start = [editor message:SCI_GETSELECTIONSTART];
+	const auto end = [editor message:SCI_GETSELECTIONEND];
+	const auto first = MAX(1, [editor message:SCI_LINEFROMPOSITION wParam:start]);
+	const auto last = [editor message:SCI_LINEFROMPOSITION wParam:end > start ? end - 1 : end];
+	if (first <= last)
+	{
+		[editor message:SCI_HIDELINES wParam:first lParam:last];
+		[editor message:SCI_GOTOLINE wParam:first - 1];
+	}
+}
+
+- (IBAction)showHiddenLines:(id)sender
+{
+	ScintillaView *editor = self.editor;
+	[editor message:SCI_FOLDALL wParam:SC_FOLDACTION_EXPAND];
+	[editor message:SCI_SHOWLINES wParam:0 lParam:[editor message:SCI_GETLINECOUNT] - 1];
+}
+
+- (IBAction)showDocumentSummary:(id)sender
+{
+	NSString *text = self.editor.string ?: @"";
+	__block NSUInteger words = 0;
+	[text enumerateSubstringsInRange:NSMakeRange(0, text.length) options:NSStringEnumerationByWords | NSStringEnumerationSubstringNotRequired
+		usingBlock:^(NSString *substring, NSRange range, NSRange enclosing, BOOL *stop) { ++words; }];
+	NSAlert *summary = [NSAlert new];
+	summary.messageText = self.displayName;
+	const auto characters = [self.editor message:SCI_COUNTCHARACTERS wParam:0 lParam:[self.editor message:SCI_GETLENGTH]];
+	summary.informativeText = [NSString localizedStringWithFormat:@"Characters: %ld\nWords: %lu\nLines: %ld\nBytes (UTF-8): %ld",
+		characters, words, [self.editor message:SCI_GETLINECOUNT], [self.editor message:SCI_GETLENGTH]];
+	[summary beginSheetModalForWindow:self.windowForSheet completionHandler:nil];
+}
+
+- (NSPrintOperation *)printOperationWithSettings:(NSDictionary<NSPrintInfoAttributeKey, id> *)settings error:(NSError **)error
+{
+	NSPrintInfo *info = [self.printInfo copy];
+	[info.dictionary addEntriesFromDictionary:settings];
+	NSTextView *text = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, NSWidth(info.imageablePageBounds), 100)];
+	text.string = _editor.string ?: @"";
+	text.font = [NSFont monospacedSystemFontOfSize:10 weight:NSFontWeightRegular];
+	return [NSPrintOperation printOperationWithView:text printInfo:info];
+}
+
+- (BOOL)validateMenuItem:(NSMenuItem *)item
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	if (item.action == @selector(toggleZoomSync:))
+	{
+		item.state = controller.syncZoom ? NSControlStateValueOn : NSControlStateValueOff;
+		return controller.hasOtherView;
+	}
+	if (item.action == @selector(toggleAlwaysOnTop:))
+		item.state = self.windowForSheet.level == NSFloatingWindowLevel ? NSControlStateValueOn : NSControlStateValueOff;
+	if (item.action == @selector(focusAnotherView:))
+		return controller.hasOtherView;
+	if (item.action == @selector(toggleSymbolDisplay:))
+	{
+		unsigned message = item.tag == 44025 ? SCI_GETVIEWWS : item.tag == 44026 ? SCI_GETVIEWEOL : SCI_GETWRAPVISUALFLAGS;
+		item.state = [self.editor message:message] ? NSControlStateValueOn : NSControlStateValueOff;
+		return YES;
+	}
+	if (item.action == @selector(setTextDirection:))
+	{
+		auto direction = [self.editor message:SCI_GETBIDIRECTIONAL];
+		item.state = direction == item.tag || (item.tag == SC_BIDIRECTIONAL_L2R && direction == SC_BIDIRECTIONAL_DISABLED) ?
+			NSControlStateValueOn : NSControlStateValueOff;
+		return YES;
+	}
+	if (item.action == @selector(closeOtherView:))
+		return controller.hasOtherView;
+	if (item.action == @selector(toggleVerticalScrollSync:) || item.action == @selector(toggleHorizontalScrollSync:))
+	{
+		item.state = item.action == @selector(toggleVerticalScrollSync:) ? controller.syncVerticalScroll : controller.syncHorizontalScroll;
+		return controller.hasOtherView;
+	}
+	if (item.action == @selector(toggleDocumentList:))
+	{
+		item.state = controller.documentListVisible ? NSControlStateValueOn : NSControlStateValueOff;
+		return YES;
+	}
+	if (item.action == @selector(selectLanguage:))
+	{
+		item.state = (_languageOverride == item.representedObject || [_languageOverride isEqual:item.representedObject]) ?
+			NSControlStateValueOn : NSControlStateValueOff;
+		return YES;
+	}
+	if (item.action == @selector(toggleDocumentReadOnly:))
+	{
+		item.state = [self.editor message:SCI_GETREADONLY] ? NSControlStateValueOn : NSControlStateValueOff;
+		return self.editor != nil && !_monitoring;
+	}
+	if (item.action == @selector(monitorFile:))
+	{
+		item.state = _monitoring;
+		return self.fileURL != nil && !self.isDocumentEdited;
+	}
+	if (item.action == @selector(moveFileToTrash:))
+		return self.fileURL != nil;
+	if (item.action == @selector(reinterpretEncoding:))
+	{
+		item.state = _readerEncoding == item.tag ? NSControlStateValueOn : NSControlStateValueOff;
+		return self.fileURL != nil && !self.isDocumentEdited;
+	}
+	return [super validateMenuItem:item];
+}
+
+- (IBAction)convertEncoding:(NSMenuItem *)sender
+{
+	NSData *bom = sender.representedObject;
+	NSStringEncoding encoding = sender.tag;
+	if (_encoding == encoding && (_bom == bom || [_bom isEqual:bom]))
+		return;
+	if (![_editor.string canBeConvertedToEncoding:encoding])
+	{
+		[self presentError:[NSError errorWithDomain:NSCocoaErrorDomain code:NSFileWriteInapplicableStringEncodingError
+			userInfo:@{NSLocalizedDescriptionKey: @"The document contains characters that this encoding cannot represent."}]];
+		return;
+	}
+	_encoding = encoding;
+	_readerEncoding = 0;
+	_bom = bom;
+	_encodingChanged = YES;
+	if (!self.isDocumentEdited)
+		[self updateChangeCount:NSChangeDone];
+	[self updateStatus];
+	[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
+	[_chrome refreshToolbar];
+}
+
+- (void)setReaderEncoding:(NSStringEncoding)encoding
+{
+	_readerEncoding = encoding;
+}
+
+- (BOOL)reinterpretWithEncoding:(NSStringEncoding)encoding error:(NSError **)error
+{
+	if (!self.fileURL || self.isDocumentEdited || !IsAvailableEncoding(encoding))
+		return NO;
+	const auto oldEncoding = _readerEncoding;
+	_readerEncoding = encoding;
+	if ([self revertToContentsOfURL:self.fileURL ofType:self.fileType error:error])
+		return YES;
+	_readerEncoding = oldEncoding;
+	return NO;
+}
+
+- (IBAction)reinterpretEncoding:(NSMenuItem *)sender
+{
+	if (_readerEncoding == sender.tag)
+		return;
+	if ([self.editor message:SCI_CANUNDO])
+	{
+		NSAlert *alert = [[NSAlert alloc] init];
+		alert.messageText = @"Reopen the file in the selected character set?";
+		alert.informativeText = @"Reopening clears the undo history.";
+		[alert addButtonWithTitle:@"Cancel"];
+		[alert addButtonWithTitle:@"Reopen"];
+		if ([alert runModal] != NSAlertSecondButtonReturn)
+			return;
+	}
+	NSError *error = nil;
+	if (![self reinterpretWithEncoding:sender.tag error:&error] && error)
+		[self presentError:error];
 }
 
 - (void)loadEditor
 {
 	if (!_editor)
 		return;
+	_selectionStart.reset();
 	_loading = YES;
 	[_editor message:SCI_SETUNDOCOLLECTION wParam:0];
 	[_editor message:SCI_CLEARALL];
@@ -147,14 +2107,24 @@
 		[_editor message:SCI_ADDTEXT wParam:_loadedUTF8.length lParam:reinterpret_cast<sptr_t>(_loadedUTF8.bytes)];
 	[_editor message:SCI_SETUNDOCOLLECTION wParam:1];
 	[_editor message:SCI_EMPTYUNDOBUFFER];
+	const auto history = [_editor message:SCI_GETCHANGEHISTORY];
+	[_editor message:SCI_SETCHANGEHISTORY wParam:SC_CHANGE_HISTORY_DISABLED];
+	[_editor message:SCI_SETCHANGEHISTORY wParam:history];
 	[_editor message:SCI_SETSAVEPOINT];
 	[_editor message:SCI_GOTOPOS wParam:0];
 	[_editor message:SCI_COLOURISE wParam:0 lParam:-1];
 	std::string_view bytes(_loadedUTF8.length ? static_cast<const char *>(_loadedUTF8.bytes) : "", _loadedUTF8.length);
 	size_t eol = bytes.find_first_of("\r\n");
-	int eolMode = SC_EOL_LF;
-	if (eol != bytes.npos && bytes[eol] == '\r')
-		eolMode = eol + 1 < bytes.size() && bytes[eol + 1] == '\n' ? SC_EOL_CRLF : SC_EOL_CR;
+	int eolMode = SC_EOL_CRLF;
+	if (eol != bytes.npos)
+		eolMode = bytes[eol] == '\n' ? SC_EOL_LF :
+			eol + 1 < bytes.size() && bytes[eol + 1] == '\n' ? SC_EOL_CRLF : SC_EOL_CR;
+	else if (!self.fileURL)
+	{
+		static const int endings[] = {SC_EOL_CRLF, SC_EOL_CR, SC_EOL_LF};
+		NSInteger choice = [[EditorResources.shared setting:@"newDocumentEOL" fallback:@0] integerValue];
+		eolMode = endings[std::clamp<NSInteger>(choice, 0, 2)];
+	}
 	[_editor message:SCI_SETEOLMODE wParam:eolMode];
 	_loading = NO;
 	_loadedUTF8 = nil;
@@ -163,60 +2133,46 @@
 
 - (BOOL)readFromData:(NSData *)data ofType:(NSString *)typeName error:(NSError **)error
 {
-	const auto *bytes = static_cast<const unsigned char *>(data.bytes);
-	NSStringEncoding encoding = NSUTF8StringEncoding;
-	NSUInteger offset = 0;
-	if (data.length >= 3 && bytes[0] == 0xef && bytes[1] == 0xbb && bytes[2] == 0xbf)
-		offset = 3;
-	else if (data.length >= 2 && bytes[0] == 0xff && bytes[1] == 0xfe)
-	{
-		encoding = NSUTF16LittleEndianStringEncoding;
-		offset = 2;
-	}
-	else if (data.length >= 2 && bytes[0] == 0xfe && bytes[1] == 0xff)
-	{
-		encoding = NSUTF16BigEndianStringEncoding;
-		offset = 2;
-	}
-	NSData *payload = [data subdataWithRange:NSMakeRange(offset, data.length - offset)];
-	NSString *text = [[NSString alloc] initWithData:payload encoding:encoding];
-	if (!text || [text rangeOfString:[NSString stringWithFormat:@"%C", (unichar)0]].location != NSNotFound)
+	NSStringEncoding encoding = _readerEncoding;
+	NSData *bom = nil;
+	NSString *text = encoding ? DecodeEditorTextWithEncoding(data, encoding) : DecodeEditorText(data, &encoding, &bom);
+	if (!text)
 	{
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadInapplicableStringEncodingError
-				userInfo:@{NSLocalizedDescriptionKey: @"Open a UTF-8 or UTF-16 text file. Binary files are unsupported."}];
+				userInfo:@{NSLocalizedDescriptionKey: encoding ? @"The file cannot be decoded using the selected character set." :
+					@"Open text encoded as UTF-8, UTF-16 with BOM, or Windows-1252."}];
 		return NO;
 	}
 	_encoding = encoding;
-	_bom = offset ? [data subdataWithRange:NSMakeRange(0, offset)] : nil;
+	_encodingChanged = NO;
+	_bom = bom;
 	_loadedUTF8 = [text dataUsingEncoding:NSUTF8StringEncoding];
+	if (_editor)
+		[self applyTheme];
 	[self loadEditor];
 	return YES;
 }
 
+- (NSData *)editorUTF8
+{
+	if (!_editor)
+		return _loadedUTF8 ?: [NSData data];
+	const auto length = [_editor message:SCI_GETLENGTH];
+	const auto *bytes = reinterpret_cast<const void *>([_editor message:SCI_GETCHARACTERPOINTER]);
+	return [NSData dataWithBytes:bytes length:length];
+}
+
 - (NSData *)dataOfType:(NSString *)typeName error:(NSError **)error
 {
-	NSData *utf8 = _loadedUTF8 ?: [NSData data];
-	if (_editor)
-	{
-		const auto length = [_editor message:SCI_GETLENGTH];
-		const auto *bytes = reinterpret_cast<const void *>([_editor message:SCI_GETCHARACTERPOINTER]);
-		utf8 = [NSData dataWithBytes:bytes length:length];
-	}
-	NSData *data = utf8;
-	if (_encoding != NSUTF8StringEncoding)
-		data = [[[NSString alloc] initWithData:utf8 encoding:NSUTF8StringEncoding] dataUsingEncoding:_encoding];
+	NSData *data = EncodeEditorText([self editorUTF8], _encoding, _bom);
 	if (!data)
 	{
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileWriteInapplicableStringEncodingError userInfo:nil];
 		return nil;
 	}
-	if (!_bom)
-		return data;
-	NSMutableData *result = [_bom mutableCopy];
-	[result appendData:data];
-	return result;
+	return data;
 }
 
 - (void)saveToURL:(NSURL *)url ofType:(NSString *)typeName forSaveOperation:(NSSaveOperationType)operation
@@ -224,7 +2180,10 @@
 {
 	[super saveToURL:url ofType:typeName forSaveOperation:operation completionHandler:^(NSError *error) {
 		if (!error && operation != NSSaveToOperation)
+		{
+			self->_encodingChanged = NO;
 			[self.editor message:SCI_SETSAVEPOINT];
+		}
 		completionHandler(error);
 	}];
 }
@@ -235,143 +2194,1611 @@
 		return;
 	switch (notification->nmhdr.code)
 	{
+		case SCN_FOCUSIN:
+			[self updateStatus];
+			[[(EditorDocumentController *)NSDocumentController.sharedDocumentController windowOwnerForDocument:self].chrome refreshToolbar];
+			[[(EditorDocumentController *)NSDocumentController.sharedDocumentController windowOwnerForDocument:self].chrome refreshTabs];
+			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentList];
+			break;
+		case SCN_MODIFIED:
+			if (_selectionStart && notification->position < *_selectionStart)
+			{
+				if (notification->modificationType & SC_MOD_INSERTTEXT)
+					*_selectionStart += notification->length;
+				else if (notification->modificationType & SC_MOD_DELETETEXT)
+					*_selectionStart = std::max<sptr_t>(notification->position, *_selectionStart - notification->length);
+			}
+			break;
 		case SCN_SAVEPOINTLEFT:
 			[self updateChangeCount:NSChangeDone];
+			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
+			[_chrome refreshToolbar];
 			break;
 		case SCN_SAVEPOINTREACHED:
-			[self updateChangeCount:NSChangeCleared];
+			if (!_encodingChanged)
+				[self updateChangeCount:NSChangeCleared];
+			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
+			[_chrome refreshToolbar];
+			break;
+		case SCN_ZOOM:
+			[(EditorDocumentController *)NSDocumentController.sharedDocumentController syncZoomFromDocument:self];
 			break;
 		case SCN_UPDATEUI:
 			[self updateStatus];
+			[_chrome refreshToolbar];
+			if (notification->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
+				[(EditorDocumentController *)NSDocumentController.sharedDocumentController syncScrollFromDocument:self changes:notification->updated];
+			break;
+		case SCN_MARGINCLICK:
+			if (notification->margin == 1)
+				[self toggleBookmarkAtLine:[self.editor message:SCI_LINEFROMPOSITION wParam:notification->position]];
 			break;
 	}
 }
 
 - (void)updateStatus
 {
-	auto position = [_editor message:SCI_GETCURRENTPOS];
-	auto line = [_editor message:SCI_LINEFROMPOSITION wParam:position];
-	auto column = [_editor message:SCI_GETCOLUMN wParam:position];
-	auto eol = [_editor message:SCI_GETEOLMODE];
-	NSString *ending = eol == SC_EOL_CRLF ? @"CRLF" : eol == SC_EOL_CR ? @"CR" : @"LF";
-	NSString *encoding = _encoding == NSUTF8StringEncoding ? (_bom ? @"UTF-8 BOM" : @"UTF-8") :
-		_encoding == NSUTF16LittleEndianStringEncoding ? @"UTF-16 LE" : @"UTF-16 BE";
-	_status.stringValue = [NSString stringWithFormat:@"%ld:%ld    %@    %@", line + 1, column + 1, encoding, ending];
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	EditorDocument *focused = controller.focusedDocument;
+	EditorDocument *owner = [controller windowOwnerForDocument:self];
+	if (owner == self && focused != self && [controller windowOwnerForDocument:focused] == self)
+		return;
+	EditorChrome *chrome = focused == self ? owner.chrome : _chrome;
+	auto position = [self.editor message:SCI_GETCURRENTPOS];
+	auto line = [self.editor message:SCI_LINEFROMPOSITION wParam:position];
+	auto column = [self.editor message:SCI_GETCOLUMN wParam:position];
+	auto eol = [self.editor message:SCI_GETEOLMODE];
+	NSString *ending = eol == SC_EOL_CRLF ? @"Windows (CR LF)" : eol == SC_EOL_CR ? @"Macintosh (CR)" : @"Unix (LF)";
+	NSString *encoding = _encoding == NSUTF8StringEncoding ? (_bom ? @"UTF-8-BOM" : @"UTF-8") :
+		_encoding == NSUTF16LittleEndianStringEncoding ? (_bom ? @"UTF-16 LE BOM" : @"UTF-16 LE") :
+		_encoding == NSUTF16BigEndianStringEncoding ? (_bom ? @"UTF-16 BE BOM" : @"UTF-16 BE") :
+		_encoding == NSASCIIStringEncoding ? @"ASCII" : @"ANSI";
+	if (_readerEncoding)
+	{
+		auto encodingRef = CFStringConvertNSStringEncodingToEncoding(_readerEncoding);
+		CFStringRef name = CFStringConvertEncodingToIANACharSetName(encodingRef);
+		if (name)
+			encoding = [(__bridge NSString *)name uppercaseString];
+	}
+	auto length = [self.editor message:SCI_GETLENGTH];
+	auto lines = [self.editor message:SCI_GETLINECOUNT];
+	auto start = [self.editor message:SCI_GETSELECTIONSTART];
+	auto end = [self.editor message:SCI_GETSELECTIONEND];
+	EditorResources *resources = EditorResources.shared;
+	auto status = ^NSString *(NSString *key, NSString *fallback, long first, long second) {
+		NSString *text = [resources label:key fallback:fallback];
+		text = [text stringByReplacingOccurrencesOfString:@"$STR_REPLACE1$" withString:[@(first) stringValue]];
+		return [text stringByReplacingOccurrencesOfString:@"$STR_REPLACE2$" withString:[@(second) stringValue]];
+	};
+	NSString *positionText = [[resources label:@"statusbar-Pos" fallback:@"Pos: "] stringByAppendingString:[@(position + 1) stringValue]];
+	if (start != end)
+	{
+		auto selected = [self.editor message:SCI_COUNTCHARACTERS wParam:start lParam:end];
+		auto selectedLines = [self.editor message:SCI_LINEFROMPOSITION wParam:end - 1] -
+			[self.editor message:SCI_LINEFROMPOSITION wParam:start] + 1;
+		positionText = [[resources label:@"statusbar-Sel" fallback:@"Sel: "] stringByAppendingFormat:@"%ld | %ld", selected, selectedLines];
+	}
+	[chrome setStatusFields:@[
+		!_statusLanguage || [_statusLanguage isEqualToString:@"Normal text file"] ?
+			[resources label:@"status-normalText" fallback:@"Normal text file"] : _statusLanguage,
+		status(@"statusbar-length-lines", @"Length: $STR_REPLACE1$   Lines: $STR_REPLACE2$", length, lines),
+		[status(@"statusbar-Ln-Col", @"Ln: $STR_REPLACE1$   Col: $STR_REPLACE2$", line + 1, column + 1)
+			stringByAppendingFormat:@"   %@", positionText],
+		ending,
+		encoding,
+		[self.editor message:SCI_GETOVERTYPE] ? @"OVR" : @"INS",
+	]];
 }
 
-- (IBAction)toggleWrap:(id)sender
+- (void)toggleBookmarkAtLine:(sptr_t)line
 {
-	[_editor message:SCI_SETWRAPMODE wParam:[_editor message:SCI_GETWRAPMODE] ? SC_WRAP_NONE : SC_WRAP_WORD];
+	const BOOL marked = ([self.editor message:SCI_MARKERGET wParam:line] & (1 << Bookmark)) != 0;
+	[self.editor message:marked ? SCI_MARKERDELETE : SCI_MARKERADD wParam:line lParam:Bookmark];
 }
 
-- (IBAction)toggleLineNumbers:(id)sender
+- (IBAction)toggleBookmark:(id)sender
 {
-	[_editor message:SCI_SETMARGINWIDTHN wParam:0 lParam:[_editor message:SCI_GETMARGINWIDTHN wParam:0] ? 0 : 46];
+	[self toggleBookmarkAtLine:[self.editor message:SCI_LINEFROMPOSITION wParam:[self.editor message:SCI_GETCURRENTPOS]]];
 }
 
-- (IBAction)findText:(id)sender
+- (IBAction)navigateBookmark:(id)sender
 {
-	[self showSearch:NO];
+	const BOOL forward = [sender tag] > 0;
+	const auto line = [self.editor message:SCI_LINEFROMPOSITION wParam:[self.editor message:SCI_GETCURRENTPOS]];
+	const auto lineCount = [self.editor message:SCI_GETLINECOUNT];
+	const auto message = forward ? SCI_MARKERNEXT : SCI_MARKERPREVIOUS;
+	const auto start = line + (forward ? 1 : -1);
+	auto target = start >= 0 && start < lineCount ? [self.editor message:message wParam:start lParam:1 << Bookmark] : -1;
+	if (target < 0)
+		target = [self.editor message:message wParam:forward ? 0 : lineCount - 1 lParam:1 << Bookmark];
+	if (target >= 0)
+	{
+		[self.editor message:SCI_ENSUREVISIBLE wParam:target];
+		[self.editor message:SCI_GOTOLINE wParam:target];
+	}
 }
 
-- (IBAction)replaceText:(id)sender
+- (IBAction)clearBookmarks:(id)sender
 {
-	[self showSearch:YES];
+	[self.editor message:SCI_MARKERDELETEALL wParam:Bookmark];
 }
 
-- (void)showSearch:(BOOL)replace
+- (IBAction)goToLine:(id)sender
 {
 	NSAlert *alert = [[NSAlert alloc] init];
-	alert.messageText = replace ? @"Replace" : @"Find";
-	[alert addButtonWithTitle:replace ? @"Replace All" : @"Find Next"];
+	alert.messageText = [EditorResources.shared label:@"43004" fallback:@"Go to Line"];
+	[alert addButtonWithTitle:@"Go"];
 	[alert addButtonWithTitle:@"Cancel"];
-	NSTextField *query = [NSTextField textFieldWithString:_query ?: _editor.selectedString ?: @""];
-	query.placeholderString = @"Search for";
-	NSTextField *replacement = [NSTextField textFieldWithString:@""];
-	replacement.placeholderString = @"Replace with";
-	NSButton *match = [NSButton checkboxWithTitle:@"Match case" target:nil action:nil];
-	NSButton *regex = [NSButton checkboxWithTitle:@"Regular expression" target:nil action:nil];
-	match.state = _searchFlags & SCFIND_MATCHCASE ? NSControlStateValueOn : NSControlStateValueOff;
-	regex.state = _searchFlags & SCFIND_REGEXP ? NSControlStateValueOn : NSControlStateValueOff;
-	NSArray *fields = replace ? @[query, replacement, match, regex] : @[query, match, regex];
-	NSStackView *form = [NSStackView stackViewWithViews:fields];
-	form.orientation = NSUserInterfaceLayoutOrientationVertical;
-	form.alignment = NSLayoutAttributeLeading;
-	form.frame = NSMakeRect(0, 0, 320, replace ? 112 : 84);
-	[query.widthAnchor constraintEqualToConstant:320].active = YES;
-	if (replace)
-		[replacement.widthAnchor constraintEqualToAnchor:query.widthAnchor].active = YES;
-	alert.accessoryView = form;
-	alert.window.initialFirstResponder = query;
-	if ([alert runModal] != NSAlertFirstButtonReturn || !query.stringValue.length)
+	NSTextField *input = [NSTextField textFieldWithString:@""];
+	input.frame = NSMakeRect(0, 0, 200, 24);
+	input.placeholderString = @"Line number";
+	alert.accessoryView = input;
+	alert.window.initialFirstResponder = input;
+	if ([alert runModal] != NSAlertFirstButtonReturn)
 		return;
-	_query = query.stringValue;
-	_lastEmptyMatch = -1;
-	_searchFlags = (match.state == NSControlStateValueOn ? SCFIND_MATCHCASE : 0) |
-		(regex.state == NSControlStateValueOn ? SCFIND_REGEXP | SCFIND_CXX11REGEX : 0);
-	if (replace)
-		[self replaceAll:replacement.stringValue];
-	else
-		[self findNext:nil];
-}
-
-- (sptr_t)searchFrom:(sptr_t)start to:(sptr_t)end
-{
-	[_editor message:SCI_SETSEARCHFLAGS wParam:_searchFlags];
-	[_editor message:SCI_SETTARGETRANGE wParam:start lParam:end];
-	return [_editor message:SCI_SEARCHINTARGET wParam:[_query lengthOfBytesUsingEncoding:NSUTF8StringEncoding]
-		lParam:reinterpret_cast<sptr_t>(_query.UTF8String)];
-}
-
-- (IBAction)findNext:(id)sender
-{
-	if (!_query.length)
-	{
-		[self showSearch:NO];
-		return;
-	}
-	auto end = [_editor message:SCI_GETLENGTH];
-	auto start = [_editor message:SCI_GETSELECTIONEND];
-	BOOL skipEmpty = start == _lastEmptyMatch && [_editor message:SCI_GETSELECTIONEMPTY];
-	auto next = skipEmpty && start < end ? [_editor message:SCI_POSITIONAFTER wParam:start] : start;
-	auto result = skipEmpty && start == end ? -1 : [self searchFrom:next to:end];
-	if (result < 0 && start > 0)
-		result = [self searchFrom:0 to:start];
-	if (result < 0)
+	NSScanner *scanner = [NSScanner scannerWithString:input.stringValue];
+	long long line;
+	if (![scanner scanLongLong:&line] || !scanner.isAtEnd || line < 1 || line > [self.editor message:SCI_GETLINECOUNT])
 	{
 		NSBeep();
 		return;
 	}
-	auto matchEnd = [_editor message:SCI_GETTARGETEND];
+	[self.editor message:SCI_GOTOLINE wParam:line - 1];
+	[self.editor message:SCI_SCROLLCARET];
+}
+
+- (IBAction)runEditorCommand:(id)sender
+{
+	[self.editor message:static_cast<unsigned int>([sender tag])];
+}
+
+static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end)
+{
+	const auto *bytes = reinterpret_cast<const char *>([editor message:SCI_GETCHARACTERPOINTER]);
+	return [NSData dataWithBytes:bytes + start length:end - start];
+}
+
+- (IBAction)specialClipboard:(NSMenuItem *)sender
+{
+	static NSPasteboardType const binaryType = @"io.github.vt244.macpad-plus-plus.binary-text";
+	ScintillaView *editor = self.editor;
+	NSPasteboard *pasteboard = NSPasteboard.generalPasteboard;
+	const BOOL readOnly = [editor message:SCI_GETREADONLY] != 0;
+	if (sender.tag == 42048 || sender.tag == 42049)
+	{
+		if ([editor message:SCI_GETSELECTIONEMPTY] || (readOnly && sender.tag == 42049))
+			return;
+		const auto selections = [editor message:SCI_GETSELECTIONS];
+		std::vector<std::pair<sptr_t, sptr_t>> ranges;
+		for (sptr_t index = 0; index < selections; ++index)
+			ranges.emplace_back([editor message:SCI_GETSELECTIONNSTART wParam:index],
+				[editor message:SCI_GETSELECTIONNEND wParam:index]);
+		if ([editor message:SCI_SELECTIONISRECTANGLE])
+			std::sort(ranges.begin(), ranges.end());
+		NSMutableData *bytes = [NSMutableData data];
+		const auto ending = [editor message:SCI_GETEOLMODE];
+		const char *separator = ending == SC_EOL_CRLF ? "\r\n" : ending == SC_EOL_CR ? "\r" : "\n";
+		for (const auto &[start, end] : ranges)
+		{
+			[bytes appendData:DocumentBytes(editor, start, end)];
+			if (selections > 1)
+				[bytes appendBytes:separator length:strlen(separator)];
+		}
+		NSString *text = [[NSString alloc] initWithData:bytes encoding:NSUTF8StringEncoding];
+		NSPasteboardItem *item = [NSPasteboardItem new];
+		[item setData:bytes forType:binaryType];
+		if (text && memchr(bytes.bytes, 0, bytes.length) == nullptr)
+			[item setString:text forType:NSPasteboardTypeString];
+		[pasteboard clearContents];
+		if (![pasteboard writeObjects:@[item]])
+			return;
+		if (sender.tag == 42049)
+			[editor setStringProperty:SCI_REPLACESEL parameter:0 value:@""];
+		return;
+	}
+	if (readOnly)
+		return;
+	NSPasteboardType type = sender.tag == 42038 ? NSPasteboardTypeHTML :
+		sender.tag == 42039 ? NSPasteboardTypeRTF : binaryType;
+	NSData *bytes = [pasteboard dataForType:type];
+	if (!bytes && type == binaryType)
+		bytes = [[pasteboard stringForType:NSPasteboardTypeString] dataUsingEncoding:NSUTF8StringEncoding];
+	if (!bytes)
+	{
+		NSBeep();
+		return;
+	}
+	if (type != binaryType)
+	{
+		NSString *source = [[NSString alloc] initWithData:bytes encoding:NSUTF8StringEncoding] ?:
+			[[NSString alloc] initWithData:bytes encoding:NSWindowsCP1252StringEncoding];
+		bytes = [source dataUsingEncoding:NSUTF8StringEncoding];
+		if (!bytes)
+			return;
+	}
+	[editor message:SCI_BEGINUNDOACTION];
+	[editor setStringProperty:SCI_REPLACESEL parameter:0 value:@""];
+	[editor message:SCI_ADDTEXT wParam:bytes.length lParam:reinterpret_cast<sptr_t>(bytes.bytes ?: "")];
+	[editor message:SCI_ENDUNDOACTION];
+	[editor message:SCI_SCROLLCARET];
+}
+
+- (IBAction)toggleDocumentReadOnly:(id)sender
+{
+	if (_monitoring)
+		return;
+	[self.editor message:SCI_SETREADONLY wParam:![self.editor message:SCI_GETREADONLY]];
+	[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
+}
+
+- (IBAction)beginOrEndSelection:(NSMenuItem *)sender
+{
+	ScintillaView *editor = self.editor;
+	const auto caret = [editor message:SCI_GETCURRENTPOS];
+	if (!_selectionStart)
+	{
+		_selectionStart = caret;
+		return;
+	}
+	const auto anchor = std::min(*_selectionStart, [editor message:SCI_GETLENGTH]);
+	_selectionStart.reset();
+	if (sender.tag == 42089)
+	{
+		[editor message:SCI_CHANGESELECTIONMODE wParam:SC_SEL_RECTANGLE];
+		[editor message:SCI_SETRECTANGULARSELECTIONANCHOR wParam:anchor];
+		[editor message:SCI_SETRECTANGULARSELECTIONCARET wParam:caret];
+	}
+	else
+	{
+		[editor message:SCI_CHANGESELECTIONMODE wParam:SC_SEL_STREAM];
+		[editor message:SCI_SETSEL wParam:anchor lParam:caret];
+	}
+}
+
+- (IBAction)insertDateTime:(id)sender
+{
+	NSString *text;
+	if ([sender tag] == 42086)
+	{
+		NSDateFormatter *format = [NSDateFormatter new];
+		format.dateFormat = [EditorResources.shared setting:@"dateTimeFormat" fallback:@"yyyy-MM-dd HH:mm:ss"];
+		text = [format stringFromDate:NSDate.date];
+	}
+	else
+	{
+		NSDateFormatterStyle style = [sender tag] == 42085 ? NSDateFormatterLongStyle : NSDateFormatterShortStyle;
+		text = [NSDateFormatter localizedStringFromDate:NSDate.date dateStyle:style timeStyle:NSDateFormatterShortStyle];
+	}
+	[self.editor setStringProperty:SCI_REPLACESEL parameter:0 value:text ?: @""];
+}
+
+static void ReplaceBytes(ScintillaView *editor, sptr_t start, sptr_t end, NSData *data)
+{
+	[editor message:SCI_SETTARGETRANGE wParam:start lParam:end];
+	[editor message:SCI_REPLACETARGET wParam:data.length lParam:reinterpret_cast<sptr_t>(data.bytes ?: "")];
+}
+
+static NSString *TransformCase(NSString *original, NSInteger mode)
+{
+	if (mode == 42071 || mode == 42072)
+	{
+		NSMutableString *result = [NSMutableString string];
+		[original enumerateSubstringsInRange:NSMakeRange(0, original.length) options:NSStringEnumerationByComposedCharacterSequences
+			usingBlock:^(NSString *part, NSRange range, NSRange enclosing, BOOL *stop) {
+				BOOL upper = mode == 42072 ? arc4random_uniform(2) != 0 : [part isEqual:part.localizedLowercaseString];
+				[result appendString:upper ? part.localizedUppercaseString : part.localizedLowercaseString];
+			}];
+		return result;
+	}
+	NSString *base = mode == 42067 || mode == 42069 ? original.localizedLowercaseString : original;
+	NSMutableString *result = [base mutableCopy];
+	const auto unit = mode <= 42068 ? NSStringEnumerationByWords : NSStringEnumerationBySentences;
+	[base enumerateSubstringsInRange:NSMakeRange(0, base.length) options:unit | NSStringEnumerationReverse
+		usingBlock:^(NSString *part, NSRange range, NSRange enclosing, BOOL *stop) {
+			[part enumerateSubstringsInRange:NSMakeRange(0, part.length) options:NSStringEnumerationByComposedCharacterSequences
+				usingBlock:^(NSString *letter, NSRange character, NSRange bounds, BOOL *done) {
+					if ([letter.localizedLowercaseString isEqual:letter.localizedUppercaseString])
+						return;
+					[result replaceCharactersInRange:NSMakeRange(range.location + character.location, character.length)
+						withString:letter.localizedUppercaseString];
+					*done = YES;
+				}];
+		}];
+	return result;
+}
+
+- (IBAction)transformSelectionCase:(NSMenuItem *)sender
+{
+	ScintillaView *editor = self.editor;
+	if ([editor message:SCI_GETREADONLY] || [editor message:SCI_GETSELECTIONEMPTY])
+		return;
+	std::vector<std::pair<sptr_t, sptr_t>> ranges;
+	for (sptr_t i = 0; i < [editor message:SCI_GETSELECTIONS]; ++i)
+		ranges.emplace_back([editor message:SCI_GETSELECTIONNSTART wParam:i], [editor message:SCI_GETSELECTIONNEND wParam:i]);
+	std::sort(ranges.begin(), ranges.end());
+	[editor message:SCI_BEGINUNDOACTION];
+	for (auto i = ranges.rbegin(); i != ranges.rend(); ++i)
+	{
+		const auto [start, end] = *i;
+		NSString *before = [[NSString alloc] initWithData:DocumentBytes(editor, start, end) encoding:NSUTF8StringEncoding];
+		if (before)
+			ReplaceBytes(editor, start, end, [TransformCase(before, sender.tag) dataUsingEncoding:NSUTF8StringEncoding]);
+	}
+	[editor message:SCI_ENDUNDOACTION];
+}
+
+static void ConvertIndentation(ScintillaView *editor, NSInteger command)
+{
+	if ([editor message:SCI_GETREADONLY])
+		return;
+	const BOOL selected = ![editor message:SCI_GETSELECTIONEMPTY];
+	const auto start = selected ? [editor message:SCI_GETSELECTIONSTART] : 0;
+	const auto end = selected ? [editor message:SCI_GETSELECTIONEND] : [editor message:SCI_GETLENGTH];
+	const auto width = std::max<sptr_t>(1, [editor message:SCI_GETTABWIDTH]);
+	struct Edit { sptr_t start, end; std::string text; };
+	std::vector<Edit> edits;
+	for (auto cursor = start; cursor < end;)
+	{
+		const auto value = [editor message:SCI_GETCHARAT wParam:cursor];
+		if (command == 42046 && value == '\t')
+		{
+			const auto column = [editor message:SCI_GETCOLUMN wParam:cursor];
+			edits.push_back({cursor, cursor + 1, std::string(width - column % width, ' ')});
+			++cursor;
+		}
+		else if (command != 42046 && value == ' ')
+		{
+			const auto first = cursor;
+			while (cursor < end && [editor message:SCI_GETCHARAT wParam:cursor] == ' ')
+				++cursor;
+			const auto line = [editor message:SCI_LINEFROMPOSITION wParam:first];
+			if (command == 42053 && first >= [editor message:SCI_GETLINEINDENTPOSITION wParam:line])
+				continue;
+			auto column = [editor message:SCI_GETCOLUMN wParam:first];
+			auto count = cursor - first;
+			std::string tabs;
+			for (auto step = width - column % width; step <= count; step = width)
+			{
+				tabs += step == 1 ? ' ' : '\t';
+				count -= step;
+			}
+			tabs.append(count, ' ');
+			if (tabs.size() < cursor - first)
+				edits.push_back({first, cursor, std::move(tabs)});
+		}
+		else
+			++cursor;
+	}
+	[editor message:SCI_BEGINUNDOACTION];
+	for (auto i = edits.rbegin(); i != edits.rend(); ++i)
+		ReplaceBytes(editor, i->start, i->end, [NSData dataWithBytes:i->text.data() length:i->text.size()]);
+	[editor message:SCI_ENDUNDOACTION];
+}
+
+static sptr_t DeleteWhitespace(ScintillaView *editor, NSString *pattern, sptr_t start, sptr_t end)
+{
+	sptr_t position = start;
+	while (position < end)
+	{
+		[editor message:SCI_SETTARGETRANGE wParam:position lParam:end];
+		position = SearchEditorTarget(editor, pattern, SCFIND_REGEXP);
+		if (position < 0)
+			break;
+		const auto matchEnd = [editor message:SCI_GETTARGETEND];
+		if (matchEnd <= position)
+			break;
+		if ([editor message:SCI_REPLACETARGET wParam:0 lParam:reinterpret_cast<sptr_t>("")] < 0)
+			break;
+		end -= matchEnd - position;
+	}
+	return end;
+}
+
+- (void)applyWhitespaceCommand:(NSInteger)command
+{
+	ScintillaView *editor = self.editor;
+	const auto mode = [editor message:SCI_GETSELECTIONMODE];
+	if ([editor message:SCI_GETREADONLY] || mode == SC_SEL_RECTANGLE || mode == SC_SEL_THIN)
+		return;
+	auto start = [editor message:SCI_GETSELECTIONSTART];
+	auto end = [editor message:SCI_GETSELECTIONEND];
+	const auto originalLength = [editor message:SCI_GETLENGTH];
+	const auto firstVisible = [editor message:SCI_GETFIRSTVISIBLELINE];
+	const BOOL selection = start != end;
+	const BOOL reversed = [editor message:SCI_GETANCHOR] > [editor message:SCI_GETCURRENTPOS];
+	if (!selection)
+	{
+		start = 0;
+		end = originalLength;
+	}
+	if ((command == 42012 || command == 42013) && !selection)
+		return;
+
+	NSString *pattern = nil;
+	switch (command)
+	{
+	case 42024: pattern = @"[\\t ]+$"; break;
+	case 42042: pattern = @"^[\\t ]+"; break;
+	case 42043: case 42045: pattern = @"^[\\t ]+|[\\t ]+$"; break;
+	case 42055: pattern = @"^(?:\\r\\n|[\\r\\n])"; break;
+	case 42056: pattern = @"^[\\t ]*(?:\\r\\n|[\\r\\n])"; break;
+	}
+	const BOOL trimming = command == 42024 || command == 42042 || command == 42043 || command == 42045;
+	if (selection && (trimming || command == 42013))
+	{
+		auto first = [editor message:SCI_LINEFROMPOSITION wParam:start];
+		auto last = [editor message:SCI_LINEFROMPOSITION wParam:end];
+		if (command == 42013 && first == last)
+			return;
+		start = [editor message:SCI_POSITIONFROMLINE wParam:first];
+		if (command == 42013 || end != [editor message:SCI_POSITIONFROMLINE wParam:last])
+			end = MAX(end, [editor message:SCI_GETLINEENDPOSITION wParam:last]);
+	}
+
+	[editor message:SCI_BEGINUNDOACTION];
+	if (pattern)
+		end = DeleteWhitespace(editor, pattern, start, end);
+	if ((command == 42055 || command == 42056) && end == [editor message:SCI_GETLENGTH] && end)
+	{
+		auto last = [editor message:SCI_GETLINECOUNT] - 1;
+		const auto tailStart = [editor message:SCI_POSITIONFROMLINE wParam:MAX(0, last - 1)];
+		NSString *tail = command == 42056 ? @"(?:\\r\\n|[\\r\\n])+[\\t ]*\\z|^[\\t ]+\\z" : @"(?:\\r\\n|[\\r\\n])+\\z";
+		end = DeleteWhitespace(editor, tail, MAX(start, tailStart), end);
+	}
+	if (command == 42012 || command == 42013 || command == 42044 || command == 42045)
+	{
+		[editor message:SCI_SETTARGETRANGE wParam:start lParam:end];
+		[editor message:command == 42012 ? SCI_LINESSPLIT : SCI_LINESJOIN];
+		end = [editor message:SCI_GETTARGETEND];
+	}
+	[editor message:SCI_ENDUNDOACTION];
+	if (selection && (originalLength != [editor message:SCI_GETLENGTH] || command == 42013))
+		[editor message:SCI_SETSEL wParam:reversed ? end : start lParam:reversed ? start : end];
+	[editor message:SCI_SETFIRSTVISIBLELINE wParam:firstVisible];
+}
+
+- (IBAction)runWhitespaceCommand:(id)sender
+{
+	const auto command = [sender tag];
+	if (command == 42046 || command == 42053 || command == 42054)
+	{
+		ConvertIndentation(self.editor, command);
+		return;
+	}
+	[self applyWhitespaceCommand:command];
+}
+
+- (IBAction)convertLineEndings:(id)sender
+{
+	const auto mode = [sender tag];
+	[self.editor message:SCI_CONVERTEOLS wParam:mode];
+	[self.editor message:SCI_SETEOLMODE wParam:mode];
+	[self updateStatus];
+}
+
+- (IBAction)toggleInvisibles:(id)sender
+{
+	const bool show = [self.editor message:SCI_GETVIEWWS] == SCWS_INVISIBLE;
+	[self.editor message:SCI_SETVIEWWS wParam:show ? SCWS_VISIBLEALWAYS : SCWS_INVISIBLE];
+	[self.editor message:SCI_SETVIEWEOL wParam:show];
+}
+
+- (IBAction)toggleIndentGuides:(id)sender
+{
+	const bool show = [self.editor message:SCI_GETINDENTATIONGUIDES] == SC_IV_NONE;
+	[self.editor message:SCI_SETINDENTATIONGUIDES wParam:show ? SC_IV_LOOKBOTH : SC_IV_NONE];
+}
+
+- (IBAction)toggleWrap:(id)sender
+{
+	[self.editor message:SCI_SETWRAPMODE wParam:[self.editor message:SCI_GETWRAPMODE] ? SC_WRAP_NONE : SC_WRAP_WORD];
+}
+
+- (IBAction)toggleLineNumbers:(id)sender
+{
+	[self.editor message:SCI_SETMARGINWIDTHN wParam:0 lParam:[self.editor message:SCI_GETMARGINWIDTHN wParam:0] ? 0 : 32];
+}
+
+- (IBAction)toggleAlwaysOnTop:(id)sender
+{
+	NSWindow *window = self.windowForSheet;
+	window.level = window.level == NSFloatingWindowLevel ? NSNormalWindowLevel : NSFloatingWindowLevel;
+}
+
+- (IBAction)toggleEditorFullScreen:(id)sender
+{
+	[self.windowForSheet toggleFullScreen:sender];
+}
+
+- (IBAction)focusAnotherView:(id)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	EditorDocument *other = [controller selectedTabInOtherView:YES];
+	EditorDocument *primary = [controller selectedTabInOtherView:NO];
+	if (other)
+		[(self == other ? primary : other) focusEditor];
+	else if (_clone)
+	{
+		if (self.editor == _clone)
+			[self focusPrimaryEditor];
+		else
+			[self focusClonedEditor];
+	}
+}
+
+- (IBAction)toggleSymbolDisplay:(NSMenuItem *)sender
+{
+	ScintillaView *editor = self.editor;
+	if (sender.tag == 44025)
+		[editor message:SCI_SETVIEWWS wParam:[editor message:SCI_GETVIEWWS] ? SCWS_INVISIBLE : SCWS_VISIBLEALWAYS];
+	else if (sender.tag == 44026)
+		[editor message:SCI_SETVIEWEOL wParam:![editor message:SCI_GETVIEWEOL]];
+	else
+		[editor message:SCI_SETWRAPVISUALFLAGS wParam:[editor message:SCI_GETWRAPVISUALFLAGS] ? SC_WRAPVISUALFLAG_NONE : SC_WRAPVISUALFLAG_END];
+}
+
+- (IBAction)setTextDirection:(NSMenuItem *)sender
+{
+	[self.editor message:SCI_SETBIDIRECTIONAL wParam:sender.tag];
+}
+
+- (IBAction)findText:(id)sender
+{
+	[self showSearchMode:0];
+}
+
+- (IBAction)replaceText:(id)sender
+{
+	[self showSearchMode:1];
+}
+
+- (IBAction)findInFiles:(id)sender
+{
+	[self showSearchMode:2];
+}
+
+- (void)findInDirectory:(NSURL *)directory
+{
+	[self showSearchMode:2];
+	_searchFolder.stringValue = directory.path;
+}
+
+- (IBAction)findInProjects:(id)sender
+{
+	[self showSearchMode:4];
+}
+
+- (IBAction)incrementalSearch:(id)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	EditorDocument *owner = [controller windowOwnerForDocument:self];
+	owner->_incrementalDocument = self;
+	owner->_incremental.hidden = NO;
+	owner->_incrementalHeight.constant = 29;
+	[owner->_incremental beginInEditor:self.editor];
+}
+
+- (void)dismissIncrementalSearch
+{
+	[_incremental end];
+	_incremental.hidden = YES;
+	_incrementalHeight.constant = 0;
+	[_incrementalDocument focusEditor];
+	_incrementalDocument = nil;
+}
+
+- (IBAction)markText:(id)sender
+{
+	[self showSearchMode:3];
+}
+
+static void PlaceSearchControl(NSView *form, NSView *control, NSRect frame)
+{
+	control.frame = frame;
+	[form addSubview:control];
+}
+
+static void LoadSearchHistory(NSComboBox *control, NSString *key)
+{
+	NSString *text = control.stringValue;
+	[control removeAllItems];
+	for (id entry in [EditorResources.shared setting:key fallback:@[]])
+		if ([entry isKindOfClass:NSString.class])
+			[control addItemWithObjectValue:entry];
+	control.stringValue = text;
+}
+
+static void RememberSearchHistory(NSString *value, NSString *key)
+{
+	if (!value.length)
+		return;
+	EditorResources *resources = EditorResources.shared;
+	NSArray *previous = [resources setting:key fallback:@[]];
+	if ([previous.firstObject isEqual:value])
+		return;
+	NSMutableOrderedSet *history = [NSMutableOrderedSet orderedSetWithArray:previous];
+	[history removeObject:value];
+	[history insertObject:value atIndex:0];
+	if (history.count > 24)
+		[history removeObjectsInRange:NSMakeRange(24, history.count - 24)];
+	[resources setSetting:history.array forName:key];
+}
+
+- (void)makeSearchPanel
+{
+	_searchPanel = [[NSPanel alloc] initWithContentRect:NSMakeRect(0, 0, 618, 304)
+		styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskUtilityWindow
+		backing:NSBackingStoreBuffered defer:NO];
+	_searchPanel.releasedWhenClosed = NO;
+	_searchPanel.restorable = NO;
+	_searchPanel.hidesOnDeactivate = YES;
+	_searchPanel.appearance = self.chrome.appearance;
+	NSView *form = _searchPanel.contentView;
+	EditorResources *resources = EditorResources.shared;
+	auto label = ^NSString *(NSString *key, NSString *fallback) { return [resources findLabel:key fallback:fallback]; };
+	_searchMode = [NSSegmentedControl segmentedControlWithLabels:@[label(@"titleFind", @"Find"), label(@"titleReplace", @"Replace"),
+		label(@"titleFindInFiles", @"Find in Files"), label(@"titleMark", @"Mark"), label(@"titleFindInProjects", @"Find in Projects")]
+		trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(updateSearchMode:)];
+	PlaceSearchControl(form, _searchMode, NSMakeRect(12, 269, 594, 26));
+
+	_searchInput = [[NSComboBox alloc] initWithFrame:NSZeroRect];
+	_replaceInput = [[NSComboBox alloc] initWithFrame:NSZeroRect];
+	_searchInput.numberOfVisibleItems = _replaceInput.numberOfVisibleItems = 8;
+	LoadSearchHistory(_searchInput, @"findHistory");
+	LoadSearchHistory(_replaceInput, @"replaceHistory");
+	_searchInput.stringValue = _query ?: [[resources setting:@"findHistory" fallback:@[]] firstObject] ?: @"";
+	_replaceInput.stringValue = [[resources setting:@"replaceHistory" fallback:@[]] firstObject] ?: @"";
+	NSArray<NSString *> *titles = @[label(@"1620", @"Find what:"), label(@"1611", @"Replace with:")];
+	for (NSUInteger i = 0; i < titles.count; ++i)
+	{
+		CGFloat y = 236 - 31 * i;
+		NSTextField *fieldLabel = [NSTextField labelWithString:titles[i]];
+		if (i == 1)
+			_replaceLabel = fieldLabel;
+		PlaceSearchControl(form, fieldLabel, NSMakeRect(14, y + 2, 126, 21));
+		NSTextField *input = i == 0 ? _searchInput : _replaceInput;
+		[input setAccessibilityLabel:titles[i]];
+		PlaceSearchControl(form, input, NSMakeRect(143, y, 275, 24));
+	}
+
+	NSString *folder = self.fileURL.URLByDeletingLastPathComponent.path ?: NSHomeDirectory();
+	_searchFolder = [NSTextField textFieldWithString:folder];
+	_searchFilters = [NSTextField textFieldWithString:@"*.*"];
+	NSTextField *directoryLabel = [NSTextField labelWithString:label(@"1655", @"Directory:")];
+	NSTextField *filtersLabel = [NSTextField labelWithString:label(@"1654", @"Filters:")];
+	[_searchFolder setAccessibilityLabel:directoryLabel.stringValue];
+	[_searchFilters setAccessibilityLabel:filtersLabel.stringValue];
+	NSButton *browse = [NSButton buttonWithTitle:@"…" target:self action:@selector(browseSearchDirectory:)];
+	[browse setAccessibilityLabel:@"Select Search Directory"];
+	PlaceSearchControl(form, filtersLabel, NSMakeRect(14, 173, 126, 21));
+	PlaceSearchControl(form, _searchFilters, NSMakeRect(143, 171, 275, 24));
+	PlaceSearchControl(form, directoryLabel, NSMakeRect(14, 142, 126, 21));
+	PlaceSearchControl(form, _searchFolder, NSMakeRect(143, 140, 243, 24));
+	PlaceSearchControl(form, browse, NSMakeRect(385, 137, 35, 28));
+	_recursive = [NSButton checkboxWithTitle:label(@"1658", @"In all sub-folders") target:nil action:nil];
+	_includeHidden = [NSButton checkboxWithTitle:label(@"1659", @"In hidden folders") target:nil action:nil];
+	_recursive.state = [[EditorResources.shared setting:@"findRecursive" fallback:@YES] boolValue];
+	PlaceSearchControl(form, _recursive, NSMakeRect(14, 62, 220, 21));
+	PlaceSearchControl(form, _includeHidden, NSMakeRect(14, 38, 220, 21));
+	_fileSearchControls = @[filtersLabel, _searchFilters];
+	_directoryControls = @[directoryLabel, _searchFolder, browse, _recursive, _includeHidden];
+	NSMutableArray *projectControls = [NSMutableArray array];
+	for (NSUInteger index = 0; index < 3; ++index)
+	{
+		NSString *panelName = [NSString stringWithFormat:@"Project Panel %lu", index + 1];
+		NSButton *checkbox = [NSButton checkboxWithTitle:label([@(1662 + index) stringValue], panelName) target:nil action:nil];
+		checkbox.state = NSControlStateValueOn;
+		PlaceSearchControl(form, checkbox, NSMakeRect(14 + index * 142, 138, 140, 21));
+		[projectControls addObject:checkbox];
+	}
+	_projectSearchControls = [projectControls copy];
+	_matchCase = [NSButton checkboxWithTitle:label(@"1604", @"Match case") target:nil action:nil];
+	_wholeWord = [NSButton checkboxWithTitle:label(@"1603", @"Match whole word only") target:nil action:nil];
+	_wrapSearch = [NSButton checkboxWithTitle:label(@"1606", @"Wrap around") target:nil action:nil];
+	_regularExpression = [NSButton checkboxWithTitle:label(@"1605", @"Regular expression") target:self action:@selector(toggleRegex:)];
+	_extendedSearch = [NSButton checkboxWithTitle:label(@"1626", @"Extended (\\n, \\t, …)") target:self action:@selector(toggleExtended:)];
+	_inSelection = [NSButton checkboxWithTitle:label(@"1632", @"In selection") target:self action:@selector(captureSearchSelection:)];
+	_matchNewline = [NSButton checkboxWithTitle:label(@"1703", @". matches newline") target:nil action:nil];
+	_matchCase.state = _query.length ? (_searchFlags & SCFIND_MATCHCASE) != 0 :
+		[[EditorResources.shared setting:@"findMatchCase" fallback:@NO] boolValue];
+	_wholeWord.state = _query.length ? (_searchFlags & SCFIND_WHOLEWORD) != 0 :
+		[[EditorResources.shared setting:@"findWholeWord" fallback:@NO] boolValue];
+	_wrapSearch.state = [[EditorResources.shared setting:@"findWrap" fallback:@YES] boolValue];
+	_regularExpression.state = (_searchFlags & SCFIND_REGEXP) != 0;
+	_matchNewline.state = (_searchFlags & SCFIND_REGEXP_DOTMATCHESNL) != 0;
+	NSArray<NSButton *> *options = @[_wholeWord, _matchCase, _wrapSearch];
+	for (NSUInteger i = 0; i < options.count; ++i)
+		PlaceSearchControl(form, options[i], NSMakeRect(14, 110 - 24 * i, 224, 21));
+	PlaceSearchControl(form, _regularExpression, NSMakeRect(240, 110, 180, 21));
+	PlaceSearchControl(form, _matchNewline, NSMakeRect(240, 86, 180, 21));
+	PlaceSearchControl(form, _extendedSearch, NSMakeRect(240, 62, 185, 21));
+	PlaceSearchControl(form, _inSelection, NSMakeRect(14, 143, 220, 21));
+	_bookmarkMatches = [NSButton checkboxWithTitle:label(@"1616", @"Bookmark line") target:nil action:nil];
+	_purgeMarks = [NSButton checkboxWithTitle:label(@"1618", @"Purge for each search") target:nil action:nil];
+	_purgeMarks.state = NSControlStateValueOn;
+	PlaceSearchControl(form, _bookmarkMatches, NSMakeRect(14, 62, 220, 21));
+	PlaceSearchControl(form, _purgeMarks, NSMakeRect(14, 38, 220, 21));
+
+	NSArray<NSString *> *actions = @[label(@"1", @"Find Next"), [resources label:@"43010" fallback:@"Find Previous"],
+		label(@"1608", @"Replace"), label(@"1609", @"Replace All"), label(@"2", @"Close"), label(@"1656", @"Find All"),
+		label(@"1660", @"Replace in Files"), label(@"1615", @"Mark All"), label(@"1633", @"Clear All Marks"),
+		label(@"1725", @"Copy Marked Text"), label(@"1614", @"Count")];
+	NSMutableArray *markControls = [NSMutableArray arrayWithArray:@[_bookmarkMatches, _purgeMarks]];
+	for (NSUInteger i = 0; i < actions.count; ++i)
+	{
+		NSButton *button = [NSButton buttonWithTitle:actions[i] target:self action:@selector(performSearch:)];
+		button.tag = i;
+		if (i == 0)
+			_findForward = button;
+		if (i == 1)
+			_findBackward = button;
+		if (i == 2)
+			_replaceButton = button;
+		if (i == 3)
+			_replaceAllButton = button;
+		if (i == 4)
+			button.keyEquivalent = @"\033";
+		if (i == 5)
+			_findAll = button;
+		if (i == 6)
+			_replaceFiles = button;
+		if (i >= 7 && i <= 9)
+			[markControls addObject:button];
+		if (i == 10)
+			_countMatches = button;
+		NSInteger row = i <= 4 ? i : i <= 6 ? i - 5 : i <= 9 ? i - 7 : 2;
+		PlaceSearchControl(form, button, NSMakeRect(432, 232 - 30 * row, 172, 29));
+	}
+	_markControls = [markControls copy];
+	_findInDocument = [NSButton buttonWithTitle:label(@"1641", @"Find All in Current Document") target:self action:@selector(performSearch:)];
+	_findInOpenDocuments = [NSButton buttonWithTitle:label(@"1636", @"Find All in All Opened Documents") target:self action:@selector(performSearch:)];
+	_replaceInOpenDocuments = [NSButton buttonWithTitle:label(@"1635", @"Replace All in All Opened Documents") target:self action:@selector(performSearch:)];
+	_findInDocument.tag = 11;
+	_findInOpenDocuments.tag = 12;
+	_replaceInOpenDocuments.tag = 13;
+	PlaceSearchControl(form, _findInDocument, NSMakeRect(157, 42, 225, 28));
+	PlaceSearchControl(form, _findInOpenDocuments, NSMakeRect(386, 42, 218, 28));
+	PlaceSearchControl(form, _replaceInOpenDocuments, NSMakeRect(354, 42, 250, 28));
+	_searchStatus = [NSTextField labelWithString:@""];
+	PlaceSearchControl(form, _searchStatus, NSMakeRect(14, 12, 408, 22));
+	[_searchPanel center];
+}
+
+- (void)showSearchMode:(NSInteger)mode
+{
+	if (!_searchPanel)
+		[self makeSearchPanel];
+	_searchMode.selectedSegment = mode;
+	LoadSearchHistory(_searchInput, @"findHistory");
+	LoadSearchHistory(_replaceInput, @"replaceHistory");
+	EditorResources *resources = EditorResources.shared;
+	if ([[resources setting:@"fillFindSelection" fallback:@YES] boolValue])
+	{
+		NSString *selection = self.editor.selectedString;
+		if (!selection.length && [[resources setting:@"fillFindWord" fallback:@NO] boolValue])
+		{
+			const auto [start, end] = TokenRange(self.editor);
+			if (end > start)
+				selection = [[NSString alloc] initWithData:DocumentBytes(self.editor, start, end) encoding:NSUTF8StringEncoding];
+		}
+		if (selection.length && [selection rangeOfCharacterFromSet:NSCharacterSet.newlineCharacterSet].location == NSNotFound)
+			_searchInput.stringValue = selection;
+	}
+	[self updateSearchMode:nil];
+	NSWindow *documentWindow = self.windowForSheet;
+	[documentWindow addChildWindow:_searchPanel ordered:NSWindowAbove];
+	[_searchPanel makeKeyAndOrderFront:nil];
+	[_searchInput selectText:nil];
+}
+
+- (void)close
+{
+	[(EditorDocumentController *)NSDocumentController.sharedDocumentController prepareToCloseDocument:self];
+	_documentListPane.shown = _resultsPane.shown = NO;
+	_folderPane.shown = NO;
+	[self displayProjectPanels:nil];
+	[_incremental end];
+	[self closeClonedView];
+	[_fileSearch cancel];
+	[_searchPanel close];
+	_editor.delegate = nil;
+	[super close];
+}
+
+- (void)updateSearchMode:(id)sender
+{
+	const BOOL replace = _searchMode.selectedSegment == 1;
+	const BOOL fileSearch = _searchMode.selectedSegment == 2;
+	const BOOL mark = _searchMode.selectedSegment == 3;
+	const BOOL projectSearch = _searchMode.selectedSegment == 4;
+	const BOOL multiFile = fileSearch || projectSearch;
+	_searchPanel.title = [_searchMode labelForSegment:_searchMode.selectedSegment];
+	_replaceLabel.hidden = _replaceInput.hidden = !replace && !multiFile;
+	_replaceButton.hidden = _replaceAllButton.hidden = !replace;
+	_wrapSearch.hidden = _findForward.hidden = _findBackward.hidden = multiFile || mark;
+	_findAll.hidden = !multiFile;
+	_replaceFiles.hidden = !multiFile;
+	_replaceFiles.title = projectSearch ? [EditorResources.shared findLabel:@"1665" fallback:@"Replace in Projects"] :
+		[EditorResources.shared findLabel:@"1660" fallback:@"Replace in Files"];
+	_countMatches.hidden = _searchMode.selectedSegment != 0;
+	_replaceFiles.enabled = _findInDocument.enabled = _findInOpenDocuments.enabled = _replaceInOpenDocuments.enabled = !_fileSearch;
+	_findInDocument.hidden = _findInOpenDocuments.hidden = _searchMode.selectedSegment != 0;
+	_replaceInOpenDocuments.hidden = !replace;
+	_inSelection.hidden = multiFile;
+	_findForward.keyEquivalent = (multiFile || mark) ? @"" : @"\r";
+	_findAll.keyEquivalent = multiFile ? @"\r" : @"";
+	for (NSView *control in _fileSearchControls)
+		control.hidden = !multiFile;
+	for (NSView *control in _directoryControls)
+		control.hidden = !fileSearch;
+	for (NSView *control in _projectSearchControls)
+		control.hidden = !projectSearch;
+	for (NSView *control in _markControls)
+		control.hidden = !mark;
+	((NSButton *)_markControls[2]).keyEquivalent = mark ? @"\r" : @"";
+	_wholeWord.enabled = _regularExpression.state != NSControlStateValueOn;
+	_matchNewline.enabled = !_wholeWord.enabled;
+}
+
+- (void)toggleRegex:(id)sender
+{
+	if (_regularExpression.state == NSControlStateValueOn)
+		_extendedSearch.state = NSControlStateValueOff;
+	[self updateSearchMode:nil];
+}
+
+- (void)toggleExtended:(id)sender
+{
+	if (_extendedSearch.state == NSControlStateValueOn)
+		_regularExpression.state = NSControlStateValueOff;
+	[self updateSearchMode:nil];
+}
+
+- (void)captureSearchSelection:(id)sender
+{
+	auto start = [self.editor message:SCI_GETSELECTIONSTART];
+	auto end = [self.editor message:SCI_GETSELECTIONEND];
+	if (end == start && _inSelection.state == NSControlStateValueOn)
+	{
+		_searchStatus.stringValue = [EditorResources.shared label:@"search-selectRange" fallback:@"Select a range of text first."];
+		_inSelection.state = NSControlStateValueOff;
+	}
+	_searchSelection = NSMakeRange(start, end - start);
+}
+
+- (NSRange)searchScope
+{
+	const auto length = static_cast<NSUInteger>([self.editor message:SCI_GETLENGTH]);
+	if (_inSelection.state != NSControlStateValueOn || _inSelection.hidden)
+		return NSMakeRange(0, length);
+	const auto start = MIN(length, _searchSelection.location);
+	return NSMakeRange(start, MIN(length - start, _searchSelection.length));
+}
+
+- (void)browseSearchDirectory:(id)sender
+{
+	NSOpenPanel *panel = NSOpenPanel.openPanel;
+	panel.canChooseDirectories = YES;
+	panel.canChooseFiles = NO;
+	panel.directoryURL = [NSURL fileURLWithPath:_searchFolder.stringValue.stringByExpandingTildeInPath isDirectory:YES];
+	[panel beginSheetModalForWindow:_searchPanel completionHandler:^(NSModalResponse response) {
+		if (response == NSModalResponseOK)
+			self->_searchFolder.stringValue = panel.URL.path;
+	}];
+}
+
+- (void)startFileSearchWithQuery:(NSString *)query flags:(NSUInteger)flags replacement:(NSString *)replacement
+{
+	NSString *path = _searchFolder.stringValue.stringByExpandingTildeInPath;
+	if (!path.isAbsolutePath)
+	{
+		_searchStatus.stringValue = [EditorResources.shared label:@"search-absoluteDirectory" fallback:@"Choose an absolute directory path."];
+		return;
+	}
+	NSURL *folder = [NSURL fileURLWithPath:path isDirectory:YES];
+	NSString *filters = _searchFilters.stringValue;
+	BOOL recursive = _recursive.state == NSControlStateValueOn;
+	BOOL hidden = _includeHidden.state == NSControlStateValueOn;
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	NSMutableDictionary<NSURL *, NSData *> *snapshots = [NSMutableDictionary dictionary];
+	for (EditorDocument *document in controller.documents)
+		if (document.editor && document.fileURL &&
+			(replacement || ![[EditorResources.shared setting:@"findFilesOnDisk" fallback:@NO] boolValue]))
+			snapshots[document.fileURL.URLByStandardizingPath] = [document editorUTF8];
+
+	[self startSearchReplacing:replacement != nil mayWriteToDisk:YES worker:^EditorSearchReport *(NSProgress *progress, NSError **error) {
+		return SearchDirectory(folder, query, filters, flags, recursive, hidden, snapshots, replacement, progress, error);
+	}];
+}
+
+- (void)startDocumentSearch:(NSString *)query flags:(NSUInteger)flags replacement:(NSString *)replacement
+	all:(BOOL)all projects:(BOOL)projects
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	NSMutableArray<EditorSearchSource *> *sources = [NSMutableArray array];
+	if (projects)
+	{
+		NSMutableOrderedSet<NSURL *> *paths = [NSMutableOrderedSet orderedSet];
+		for (NSUInteger index = 0; index < controller.projectWorkspaces.count; ++index)
+			if (_projectSearchControls[index].state == NSControlStateValueOn)
+				[paths addObjectsFromArray:controller.projectWorkspaces[index].files];
+		for (NSURL *url in paths)
+		{
+			EditorDocument *document = (EditorDocument *)[controller documentForURL:url];
+			[sources addObject:[[EditorSearchSource alloc] initWithName:url.path url:url document:document utf8:[document editorUTF8]
+				range:NSMakeRange(NSNotFound, 0)]];
+		}
+		if (!paths.count)
+		{
+			_searchStatus.stringValue = [EditorResources.shared label:@"search-noProjectFiles" fallback:@"The selected project panels contain no files."];
+			return;
+		}
+	}
+	else
+		for (EditorDocument *document in all ? controller.tabDocuments : @[self])
+			[sources addObject:[[EditorSearchSource alloc] initWithName:document.fileURL.path ?: document.displayName
+				url:document.fileURL document:document utf8:[document editorUTF8]
+				range:all ? NSMakeRange(NSNotFound, 0) : self.searchScope]];
+	NSString *filters = projects ? _searchFilters.stringValue : nil;
+	[self startSearchReplacing:replacement != nil mayWriteToDisk:projects worker:^EditorSearchReport *(NSProgress *progress, NSError **error) {
+		return SearchSources(sources, query, filters, flags, replacement, progress, error);
+	}];
+}
+
+- (void)refineSearchReports:(NSArray<EditorSearchReport *> *)reports
+{
+	if (_fileSearch)
+		return;
+	NSAlert *alert = [[NSAlert alloc] init];
+	alert.messageText = @"Find in these search results";
+	[alert addButtonWithTitle:@"Find All"];
+	[alert addButtonWithTitle:@"Cancel"];
+	NSTextField *queryField = [NSTextField textFieldWithString:@""];
+	queryField.placeholderString = @"Find what";
+	NSButton *linesOnly = [NSButton checkboxWithTitle:@"Search only in found lines" target:nil action:nil];
+	NSButton *matchCase = [NSButton checkboxWithTitle:@"Match case" target:nil action:nil];
+	NSButton *regex = [NSButton checkboxWithTitle:@"Regular expression" target:nil action:nil];
+	NSView *controls = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 330, 92)];
+	PlaceSearchControl(controls, queryField, NSMakeRect(0, 64, 330, 24));
+	PlaceSearchControl(controls, linesOnly, NSMakeRect(0, 40, 330, 21));
+	PlaceSearchControl(controls, matchCase, NSMakeRect(0, 18, 140, 21));
+	PlaceSearchControl(controls, regex, NSMakeRect(142, 18, 185, 21));
+	alert.accessoryView = controls;
+	alert.window.initialFirstResponder = queryField;
+	if ([alert runModal] != NSAlertFirstButtonReturn || !queryField.stringValue.length)
+		return;
+
+	NSMutableDictionary<id<NSCopying>, EditorSearchSource *> *byFile = [NSMutableDictionary dictionary];
+	NSMutableDictionary<id<NSCopying>, NSMutableIndexSet *> *matchedLines = [NSMutableDictionary dictionary];
+	NSMutableArray<EditorSearchSource *> *sources = [NSMutableArray array];
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	for (EditorSearchReport *report in reports)
+		for (EditorSearchFile *file in report.files)
+		{
+			EditorDocument *document = file.document;
+			if (document && ![controller.documents containsObject:document])
+				document = nil;
+			if (!document && file.url)
+				document = (EditorDocument *)[controller documentForURL:file.url];
+			if (!document && !file.url)
+				continue;
+			id<NSCopying> key = file.url.URLByStandardizingPath ?: [NSValue valueWithNonretainedObject:document];
+			EditorSearchSource *source = byFile[key];
+			if (!source)
+			{
+				source = [[EditorSearchSource alloc] initWithName:file.name url:file.url document:document
+					utf8:[document editorUTF8] range:NSMakeRange(NSNotFound, 0)];
+				byFile[key] = source;
+				matchedLines[key] = [NSMutableIndexSet indexSet];
+				[sources addObject:source];
+			}
+			if (linesOnly.state == NSControlStateValueOn)
+				for (EditorSearchMatch *match in file.matches)
+					[matchedLines[key] addIndex:match.line - 1];
+		}
+	if (linesOnly.state == NSControlStateValueOn)
+		for (id<NSCopying> key in byFile)
+			byFile[key].lines = matchedLines[key];
+	NSString *query = queryField.stringValue;
+	NSUInteger flags = matchCase.state == NSControlStateValueOn ? SCFIND_MATCHCASE : 0;
+	if (regex.state == NSControlStateValueOn)
+		flags |= SCFIND_REGEXP | SCFIND_REGEXP_EMPTYMATCH_ALL | SCFIND_REGEXP_SKIPCRLFASONE;
+	[self startSearchReplacing:NO mayWriteToDisk:NO worker:^EditorSearchReport *(NSProgress *progress, NSError **error) {
+		return SearchSources(sources, query, nil, flags, nil, progress, error);
+	}];
+}
+
+- (void)startSearchReplacing:(BOOL)replacing mayWriteToDisk:(BOOL)mayWriteToDisk
+	worker:(EditorSearchReport *(^)(NSProgress *, NSError **))worker
+{
+	if (_fileSearch)
+		return;
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	NSProgress *progress = [NSProgress progressWithTotalUnitCount:-1];
+	progress.cancellable = YES;
+	_fileSearch = progress;
+	_findAll.title = @"Cancel Search";
+	[self updateSearchMode:nil];
+	_searchStatus.stringValue = [EditorResources.shared label:@"search-searching" fallback:@"Searching…"];
+	__weak EditorDocument *weakSelf = self;
+	void (^finish)(EditorSearchReport *, NSError *) = ^(EditorSearchReport *report, NSError *error) {
+		EditorDocument *document = weakSelf;
+		if (!document || document->_fileSearch != progress)
+			return;
+		document->_fileSearch = nil;
+		document->_findAll.title = [EditorResources.shared findLabel:@"1656" fallback:@"Find All"];
+		[document updateSearchMode:nil];
+		if (progress.cancelled)
+			document->_searchStatus.stringValue = [EditorResources.shared label:@"search-cancelled" fallback:@"Search cancelled."];
+		else if (!report)
+		{
+			NSString *message = error.localizedDescription ?: @"The search could not finish.";
+			if (document->_searchPanel.visible)
+				document->_searchStatus.stringValue = message;
+			else if (error)
+				[NSApp presentError:error];
+		}
+		else
+		{
+			document->_searchStatus.stringValue = [NSString localizedStringWithFormat:@"%lu hits in %lu files", report.hits, report.files.count];
+			[controller showSearchReport:report];
+			if (replacing && report.hits)
+				[document confirmFileReplacement:report mayWriteToDisk:mayWriteToDisk];
+			else if (!replacing)
+				[document->_searchPanel orderOut:nil];
+		}
+	};
+	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+			NSError *error = nil;
+			EditorSearchReport *report = worker(progress, &error);
+			dispatch_async(dispatch_get_main_queue(), ^{ finish(report, error); });
+		});
+}
+
+- (void)confirmFileReplacement:(EditorSearchReport *)report mayWriteToDisk:(BOOL)mayWriteToDisk
+{
+	NSAlert *confirmation = [[NSAlert alloc] init];
+	confirmation.messageText = [NSString localizedStringWithFormat:@"Replace %lu matches in %lu files?", report.hits, report.files.count];
+	confirmation.informativeText = mayWriteToDisk ? @"Open tabs receive undoable edits. Closed files are updated on disk." :
+		@"The replacement is undoable in each open document.";
+	[confirmation addButtonWithTitle:@"Cancel"];
+	NSButton *replace = [confirmation addButtonWithTitle:@"Replace All"];
+	replace.hasDestructiveAction = YES;
+	if ([confirmation runModal] == NSAlertSecondButtonReturn)
+		[self applyFileReplacement:report];
+	[report discardReplacementSnapshots];
+}
+
+- (void)applyFileReplacement:(EditorSearchReport *)report
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	NSMutableArray<NSString *> *failures = [NSMutableArray array];
+	NSUInteger replaced = 0;
+	for (EditorSearchFile *file in report.files)
+	{
+		EditorDocument *document = file.document;
+		if (document && ![controller.documents containsObject:document])
+			document = nil;
+		if (!document && file.url)
+			document = (EditorDocument *)[controller documentForURL:file.url];
+		if (document)
+		{
+			ScintillaView *editor = document.editor;
+			if (!editor || [editor message:SCI_GETREADONLY] || ![[document editorUTF8] isEqualToData:file.originalUTF8])
+			{
+				[failures addObject:[NSString stringWithFormat:@"%@ — the open buffer changed or is read-only.", file.name]];
+				continue;
+			}
+			[editor message:SCI_BEGINUNDOACTION];
+			for (EditorSearchMatch *match in file.matches.reverseObjectEnumerator)
+			{
+				NSData *replacement = match.replacementBytes;
+				[editor message:SCI_SETTARGETRANGE wParam:match.byteRange.location lParam:NSMaxRange(match.byteRange)];
+				[editor message:SCI_REPLACETARGET wParam:replacement.length lParam:reinterpret_cast<sptr_t>(replacement.bytes ?: "")];
+			}
+			[editor message:SCI_ENDUNDOACTION];
+		}
+		else
+		{
+			NSError *error = nil;
+			if (![file replaceOnDisk:&error])
+			{
+				[failures addObject:[NSString stringWithFormat:@"%@ — %@", file.name, error.localizedDescription ?: @"Could not write the file."]];
+				continue;
+			}
+		}
+		replaced += file.matches.count;
+	}
+	_searchStatus.stringValue = [NSString localizedStringWithFormat:@"%lu replacements", replaced];
+	if (failures.count)
+	{
+		NSAlert *alert = [[NSAlert alloc] init];
+		alert.messageText = [NSString localizedStringWithFormat:@"Could not update %lu files", failures.count];
+		alert.informativeText = [failures componentsJoinedByString:@"\n"];
+		[alert beginSheetModalForWindow:self.windowForSheet completionHandler:nil];
+	}
+}
+
+- (void)performSearch:(NSButton *)sender
+{
+	if (sender.tag == 4)
+	{
+		[_searchPanel close];
+		return;
+	}
+	if (sender.tag == 5 && _fileSearch)
+	{
+		[_fileSearch cancel];
+		_searchStatus.stringValue = [EditorResources.shared label:@"search-cancelling" fallback:@"Cancelling…"];
+		return;
+	}
+	if (sender.tag == 8 || sender.tag == 9)
+	{
+		if (sender.tag == 8)
+		{
+			[self clearSearchMarks];
+		}
+		else
+			[self copySearchMarks];
+		return;
+	}
+	NSString *query = _searchInput.stringValue;
+	NSString *replacement = _replaceInput.stringValue;
+	if (_extendedSearch.state == NSControlStateValueOn)
+	{
+		query = DecodeExtendedSearchText(query);
+		replacement = DecodeExtendedSearchText(replacement);
+	}
+	if (!query.length)
+	{
+		_searchStatus.stringValue = [EditorResources.shared label:@"search-emptyQuery" fallback:@"Enter text to find."];
+		return;
+	}
+	RememberSearchHistory(_searchInput.stringValue, @"findHistory");
+	if (sender.tag == 2 || sender.tag == 3 || sender.tag == 6 || sender.tag == 13)
+		RememberSearchHistory(_replaceInput.stringValue, @"replaceHistory");
+	NSInteger flags = (_matchCase.state == NSControlStateValueOn ? SCFIND_MATCHCASE : 0) |
+		(_wholeWord.enabled && _wholeWord.state == NSControlStateValueOn ? SCFIND_WHOLEWORD : 0);
+	if (_regularExpression.state == NSControlStateValueOn)
+	{
+		flags |= SCFIND_REGEXP | SCFIND_REGEXP_EMPTYMATCH_ALL | SCFIND_REGEXP_SKIPCRLFASONE;
+		if (_matchNewline.state == NSControlStateValueOn)
+			flags |= SCFIND_REGEXP_DOTMATCHESNL;
+	}
+	if (![_query isEqualToString:query] || _searchFlags != flags)
+		_lastEmptyMatch = -1;
+	_query = query;
+	_searchFlags = flags;
+	_searchStatus.stringValue = @"";
+	[self.editor message:SCI_SETSTATUS wParam:SC_STATUS_OK];
+	switch (sender.tag)
+	{
+		case 0: [self findNext:nil]; break;
+		case 1: [self findPrevious:nil]; break;
+		case 2: [self replaceNextWith:replacement]; break;
+		case 3: [self replaceAll:replacement]; break;
+		case 5:
+		case 6:
+			if (_searchMode.selectedSegment == 4)
+				[self startDocumentSearch:_query flags:_searchFlags replacement:sender.tag == 6 ? replacement : nil all:NO projects:YES];
+			else
+				[self startFileSearchWithQuery:_query flags:_searchFlags replacement:sender.tag == 6 ? replacement : nil];
+			return;
+		case 7: [self countMatchesAndMark:YES]; break;
+		case 10: [self countMatchesAndMark:NO]; break;
+		case 11: case 12: case 13:
+			[self startDocumentSearch:_query flags:_searchFlags replacement:sender.tag == 13 ? replacement : nil
+				all:sender.tag != 11 projects:NO];
+			return;
+	}
+	if ([self.editor message:SCI_GETSTATUS] == SC_STATUS_WARN_REGEX)
+		_searchStatus.stringValue = [EditorResources.shared label:@"search-invalidRegex" fallback:@"Invalid regular expression."];
+}
+
+static void ClearMark(ScintillaView *editor, int indicator)
+{
+	[editor message:SCI_SETINDICATORCURRENT wParam:indicator];
+	[editor message:SCI_INDICATORCLEARRANGE wParam:0 lParam:[editor message:SCI_GETLENGTH]];
+}
+
+static std::vector<std::pair<sptr_t, sptr_t>> MarkRanges(ScintillaView *editor, int indicator)
+{
+	std::vector<std::pair<sptr_t, sptr_t>> ranges;
+	const auto length = [editor message:SCI_GETLENGTH];
+	for (sptr_t start = 0; start < length;)
+	{
+		const auto end = [editor message:SCI_INDICATOREND wParam:indicator lParam:start];
+		if (end <= start || end > length)
+			break;
+		if ([editor message:SCI_INDICATORVALUEAT wParam:indicator lParam:start])
+			ranges.emplace_back(start, end);
+		start = end;
+	}
+	return ranges;
+}
+
+static void CopyMarks(ScintillaView *editor, int first, int count)
+{
+	std::vector<std::pair<sptr_t, sptr_t>> ranges;
+	for (int indicator = first; indicator < first + count; ++indicator)
+	{
+		auto marks = MarkRanges(editor, indicator);
+		ranges.insert(ranges.end(), marks.begin(), marks.end());
+	}
+	std::sort(ranges.begin(), ranges.end());
+	ranges.erase(std::unique(ranges.begin(), ranges.end()), ranges.end());
+	NSMutableArray<NSString *> *parts = [NSMutableArray array];
+	for (const auto &[start, end] : ranges)
+	{
+		NSString *part = [[NSString alloc] initWithData:DocumentBytes(editor, start, end) encoding:NSUTF8StringEncoding];
+		if (part)
+			[parts addObject:part];
+	}
+	if (parts.count)
+	{
+		NSPasteboard *pasteboard = NSPasteboard.generalPasteboard;
+		[pasteboard clearContents];
+		[pasteboard setString:[parts componentsJoinedByString:@"\n"] forType:NSPasteboardTypeString];
+	}
+}
+
+static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor)
+{
+	auto start = [editor message:SCI_GETSELECTIONSTART];
+	auto end = [editor message:SCI_GETSELECTIONEND];
+	if (start == end)
+	{
+		start = [editor message:SCI_WORDSTARTPOSITION wParam:start lParam:1];
+		end = [editor message:SCI_WORDENDPOSITION wParam:end lParam:1];
+	}
+	return {start, end};
+}
+
+- (IBAction)showCharacterRangeSearch:(id)sender
+{
+	EditorResources *resources = EditorResources.shared;
+	NSAlert *dialog = [NSAlert new];
+	dialog.messageText = [resources label:@"43052" fallback:@"Find Characters in Range"];
+	[dialog addButtonWithTitle:[resources label:@"character-range-find" fallback:@"Find"]];
+	[dialog addButtonWithTitle:[resources label:@"app-ok" fallback:@"Close"]];
+	NSTextField *first = [NSTextField textFieldWithString:@"0"];
+	NSTextField *last = [NSTextField textFieldWithString:@"127"];
+	NSButton *backward = [NSButton checkboxWithTitle:[resources label:@"character-range-backward" fallback:@"Search backwards"] target:nil action:nil];
+	NSButton *wrap = [NSButton checkboxWithTitle:[resources label:@"character-range-wrap" fallback:@"Wrap around"] target:nil action:nil];
+	wrap.state = NSControlStateValueOn;
+	NSStackView *form = [NSStackView stackViewWithViews:@[
+		[NSTextField labelWithString:[resources label:@"character-range-first" fallback:@"First Unicode code point"]],
+		first, [NSTextField labelWithString:[resources label:@"character-range-last" fallback:@"Last Unicode code point"]],
+		last, backward, wrap]];
+	form.orientation = NSUserInterfaceLayoutOrientationVertical;
+	form.alignment = NSLayoutAttributeLeading;
+	form.frame = NSMakeRect(0, 0, 270, 160);
+	dialog.accessoryView = form;
+	dialog.window.initialFirstResponder = first;
+	while ([dialog runModal] == NSAlertFirstButtonReturn)
+	{
+		NSInteger lower = 0, upper = 0;
+		NSScanner *from = [NSScanner scannerWithString:first.stringValue];
+		NSScanner *to = [NSScanner scannerWithString:last.stringValue];
+		if (![from scanInteger:&lower] || !from.isAtEnd || ![to scanInteger:&upper] || !to.isAtEnd ||
+			lower < 0 || upper < lower || upper > 0x10FFFF)
+		{
+			dialog.informativeText = [resources label:@"character-range-invalid" fallback:@"Enter an ordered range from 0 to 1114111."];
+			continue;
+		}
+		ScintillaView *editor = self.editor;
+		const auto length = [editor message:SCI_GETLENGTH];
+		const BOOL reverse = backward.state == NSControlStateValueOn;
+		const auto anchor = [editor message:reverse ? SCI_GETSELECTIONSTART : SCI_GETSELECTIONEND];
+		auto match = [&](sptr_t start, sptr_t end) -> bool {
+			for (auto boundary = start; reverse ? boundary > end : boundary < end;)
+			{
+				const auto position = reverse ? [editor message:SCI_POSITIONBEFORE wParam:boundary] : boundary;
+				const auto next = reverse ? boundary : [editor message:SCI_POSITIONAFTER wParam:position];
+				if (next <= position)
+					break;
+				auto lead = [editor message:SCI_GETCHARAT wParam:position];
+				auto code = lead;
+				if (next - position > 1)
+				{
+					code &= (1 << (7 - (next - position))) - 1;
+					for (auto byte = position + 1; byte < next; ++byte)
+						code = (code << 6) | ([editor message:SCI_GETCHARAT wParam:byte] & 0x3f);
+				}
+				if (code >= lower && code <= upper)
+				{
+					[editor message:SCI_SETSEL wParam:position lParam:next];
+					[editor message:SCI_SCROLLCARET];
+					return true;
+				}
+				boundary = reverse ? position : next;
+			}
+			return false;
+		};
+		const BOOL found = match(anchor, reverse ? 0 : length) ||
+			(wrap.state == NSControlStateValueOn && match(reverse ? length : 0, anchor));
+		dialog.informativeText = found ? @"" : [resources label:@"search-noMatches" fallback:@"No matches found."];
+	}
+}
+
+- (IBAction)findMatchingBrace:(NSMenuItem *)sender
+{
+	if (self.largeFileMode && ![[EditorResources.shared setting:@"largeFileBraceMatch" fallback:@NO] boolValue])
+		return;
+	ScintillaView *editor = self.editor;
+	const auto caret = [editor message:SCI_GETCURRENTPOS];
+	const auto previous = [editor message:SCI_POSITIONBEFORE wParam:caret];
+	for (const auto position : {caret, previous})
+	{
+		const auto other = [editor message:SCI_BRACEMATCH wParam:position lParam:0];
+		if (other < 0)
+			continue;
+		if (sender.tag == 43053)
+			[editor message:SCI_SETSEL wParam:std::min(position, other) lParam:std::max(position, other) + 1];
+		else
+			[editor message:SCI_GOTOPOS wParam:other];
+		[editor message:SCI_CHOOSECARETX];
+		[editor message:SCI_SCROLLCARET];
+		return;
+	}
+}
+
+- (IBAction)findSelectedText:(NSMenuItem *)sender
+{
+	ScintillaView *editor = self.editor;
+	const auto [start, end] = TokenRange(editor);
+	if (start == end)
+		return;
+	NSString *query = [[NSString alloc] initWithData:DocumentBytes(editor, start, end) encoding:NSUTF8StringEncoding];
+	if (!query.length)
+		return;
+	const BOOL forward = sender.tag == 43014 || sender.tag == 43048;
+	const BOOL remember = sender.tag == 43048 || sender.tag == 43049;
+	const NSInteger flags = remember ? _searchFlags & (SCFIND_MATCHCASE | SCFIND_WHOLEWORD) : 0;
+	const BOOL wrap = !remember || !_wrapSearch || _wrapSearch.state == NSControlStateValueOn;
+	if (remember)
+	{
+		RememberSearchHistory(query, @"findHistory");
+		_query = query;
+		_searchFlags = flags;
+		_lastEmptyMatch = -1;
+		_searchInput.stringValue = query;
+		_matchCase.state = (flags & SCFIND_MATCHCASE) != 0;
+		_wholeWord.state = (flags & SCFIND_WHOLEWORD) != 0;
+		_regularExpression.state = _extendedSearch.state = NSControlStateValueOff;
+	}
+	const auto bound = [editor message:SCI_GETLENGTH];
+	[editor message:SCI_SETTARGETRANGE wParam:forward ? end : start lParam:forward ? bound : 0];
+	auto match = SearchEditorTarget(editor, query, flags);
+	if (match < 0 && wrap)
+	{
+		[editor message:SCI_SETTARGETRANGE wParam:forward ? 0 : bound lParam:forward ? end : start];
+		match = SearchEditorTarget(editor, query, flags);
+	}
+	if (match >= 0)
+	{
+		[editor message:SCI_SETSEL wParam:match lParam:[editor message:SCI_GETTARGETEND]];
+		[editor message:SCI_SCROLLCARET];
+	}
+	else
+		NSBeep();
+}
+
+- (IBAction)useMarkStyle:(NSMenuItem *)sender
+{
+	ScintillaView *editor = self.editor;
+	const NSInteger command = sender.tag;
+	if (command >= 43022 && command <= 43031 && command % 2)
+	{
+		ClearMark(editor, FirstTokenMark + (command - 43023) / 2);
+		return;
+	}
+	if (command == 43032)
+	{
+		for (int i = 0; i < TokenMarkCount; ++i)
+			ClearMark(editor, FirstTokenMark + i);
+		return;
+	}
+	if (command >= 43055 && command <= 43061)
+	{
+		CopyMarks(editor, command == 43061 ? FindMark : command == 43060 ? FirstTokenMark : FirstTokenMark + command - 43055,
+			command == 43060 ? TokenMarkCount : 1);
+		return;
+	}
+	if (command >= 43033 && command <= 43044)
+	{
+		const BOOL forward = command >= 43039;
+		const NSInteger style = command - (forward ? 43039 : 43033);
+		auto ranges = MarkRanges(editor, style == TokenMarkCount ? FindMark : FirstTokenMark + style);
+		if (ranges.empty())
+			return;
+		const auto caret = [editor message:SCI_GETSELECTIONSTART];
+		auto next = forward ? std::find_if(ranges.begin(), ranges.end(), [caret](auto range) { return range.first > caret; }) :
+			std::find_if(ranges.rbegin(), ranges.rend(), [caret](auto range) { return range.first < caret; }).base();
+		const auto [start, end] = forward ? (next == ranges.end() ? ranges.front() : *next) :
+			(next == ranges.begin() ? ranges.back() : *std::prev(next));
+		[editor message:SCI_SETSEL wParam:start lParam:end];
+		[editor message:SCI_SCROLLCARET];
+		return;
+	}
+	const auto [start, end] = TokenRange(editor);
+	if (start == end)
+		return;
+	const BOOL single = command >= 43062;
+	[editor message:SCI_SETINDICATORCURRENT wParam:FirstTokenMark + (single ? command - 43062 : (command - 43022) / 2)];
+	if (single)
+	{
+		[editor message:SCI_INDICATORFILLRANGE wParam:start lParam:end - start];
+		return;
+	}
+	NSString *query = [[NSString alloc] initWithData:DocumentBytes(editor, start, end) encoding:NSUTF8StringEncoding];
+	if (!query.length)
+		return;
+	const auto limit = [editor message:SCI_GETLENGTH];
+	const NSInteger flags = SCFIND_MATCHCASE | ([editor message:SCI_GETSELECTIONEMPTY] ? SCFIND_WHOLEWORD : 0);
+	for (auto position = static_cast<sptr_t>(0); position < limit;)
+	{
+		[editor message:SCI_SETTARGETRANGE wParam:position lParam:limit];
+		const auto match = SearchEditorTarget(editor, query, flags);
+		if (match < 0)
+			break;
+		position = [editor message:SCI_GETTARGETEND];
+		if (position <= match)
+			break;
+		[editor message:SCI_INDICATORFILLRANGE wParam:match lParam:position - match];
+	}
+}
+
+- (void)clearSearchMarks
+{
+	ClearMark(self.editor, FindMark);
+	_searchStatus.stringValue = @"";
+}
+
+- (void)copySearchMarks
+{
+	CopyMarks(self.editor, FindMark, 1);
+}
+
+- (NSUInteger)countMatchesAndMark:(BOOL)mark
+{
+	if (!_query.length)
+		return 0;
+	ScintillaView *editor = self.editor;
+	if (mark && _purgeMarks.state == NSControlStateValueOn)
+		[self clearSearchMarks];
+	const NSRange scope = self.searchScope;
+	const auto length = static_cast<sptr_t>(NSMaxRange(scope));
+	NSUInteger matches = 0;
+	for (sptr_t position = scope.location; position <= length;)
+	{
+		auto start = [self searchFrom:position to:length];
+		if (start < 0)
+			break;
+		const auto end = [editor message:SCI_GETTARGETEND];
+		++matches;
+		if (mark && end > start)
+		{
+			[editor message:SCI_SETINDICATORCURRENT wParam:FindMark];
+			[editor message:SCI_INDICATORFILLRANGE wParam:start lParam:end - start];
+		}
+		if (mark && _bookmarkMatches.state == NSControlStateValueOn)
+		{
+			auto line = [editor message:SCI_LINEFROMPOSITION wParam:start];
+			if (!([editor message:SCI_MARKERGET wParam:line] & (1 << Bookmark)))
+				[editor message:SCI_MARKERADD wParam:line lParam:Bookmark];
+		}
+		if (end == start && end == length)
+			break;
+		position = end > start ? end : [editor message:SCI_POSITIONAFTER wParam:start];
+	}
+	_searchStatus.stringValue = [NSString localizedStringWithFormat:[EditorResources.shared label:@"search-count" fallback:@"%lu matches"], matches];
+	return matches;
+}
+
+- (sptr_t)searchFrom:(sptr_t)start to:(sptr_t)end
+{
+	[self.editor message:SCI_SETTARGETRANGE wParam:start lParam:end];
+	return SearchEditorTarget(self.editor, _query, _searchFlags);
+}
+
+- (IBAction)findNext:(id)sender
+{
+	[self findInDirection:YES];
+}
+
+- (IBAction)findPrevious:(id)sender
+{
+	[self findInDirection:NO];
+}
+
+- (void)findInDirection:(BOOL)forward
+{
+	if (!_query.length)
+	{
+		[self showSearchMode:0];
+		return;
+	}
+	const NSRange scope = self.searchScope;
+	const auto lower = static_cast<sptr_t>(scope.location), upper = static_cast<sptr_t>(NSMaxRange(scope));
+	auto end = forward ? upper : lower;
+	auto start = std::clamp([self.editor message:forward ? SCI_GETSELECTIONEND : SCI_GETSELECTIONSTART], lower, upper);
+	BOOL skipEmpty = start == _lastEmptyMatch && [self.editor message:SCI_GETSELECTIONEMPTY];
+	auto next = skipEmpty && start != end ? [self.editor message:forward ? SCI_POSITIONAFTER : SCI_POSITIONBEFORE wParam:start] : start;
+	auto result = skipEmpty && start == end ? -1 : [self searchFrom:next to:end];
+	if (result < 0 && (!_searchPanel || _wrapSearch.state == NSControlStateValueOn) && start != (forward ? lower : upper))
+		result = [self searchFrom:forward ? lower : upper to:start];
+	if (result < 0)
+	{
+		_searchStatus.stringValue = [EditorResources.shared label:@"search-noMatches" fallback:@"No matches found."];
+		NSBeep();
+		return;
+	}
+	auto matchEnd = [self.editor message:SCI_GETTARGETEND];
 	_lastEmptyMatch = matchEnd == result ? result : -1;
-	[_editor message:SCI_SETSEL wParam:result lParam:matchEnd];
-	[_editor message:SCI_SCROLLCARET];
+	[self.editor message:SCI_SETSEL wParam:result lParam:matchEnd];
+	[self.editor message:SCI_SCROLLCARET];
+}
+
+- (void)replaceNextWith:(NSString *)replacement
+{
+	const NSRange scope = self.searchScope;
+	const auto lower = static_cast<sptr_t>(scope.location), upper = static_cast<sptr_t>(NSMaxRange(scope));
+	auto selection = std::clamp([self.editor message:SCI_GETSELECTIONSTART], lower, upper);
+	auto start = [self searchFrom:selection to:upper];
+	if (start < 0 && selection > lower && (!_searchPanel || _wrapSearch.state == NSControlStateValueOn))
+		start = [self searchFrom:lower to:selection];
+	if (start < 0)
+	{
+		NSBeep();
+		return;
+	}
+	const auto previousEnd = [self.editor message:SCI_GETTARGETEND];
+	auto replaced = [self.editor message:_searchFlags & SCFIND_REGEXP ? SCI_REPLACETARGETRE : SCI_REPLACETARGET
+		wParam:[replacement lengthOfBytesUsingEncoding:NSUTF8StringEncoding]
+		lParam:reinterpret_cast<sptr_t>(replacement.UTF8String)];
+	if (replaced >= 0)
+	{
+		if (_inSelection.state == NSControlStateValueOn && !_inSelection.hidden)
+			_searchSelection.length = scope.length + replaced - (previousEnd - start);
+		[self.editor message:SCI_SETSEL wParam:start lParam:start + replaced];
+		[self.editor message:SCI_SCROLLCARET];
+	}
 }
 
 - (void)replaceAll:(NSString *)replacement
 {
-	[_editor message:SCI_BEGINUNDOACTION];
+	[self.editor message:SCI_BEGINUNDOACTION];
 	const auto length = [replacement lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	const auto *bytes = replacement.UTF8String;
-	sptr_t position = 0;
-	while (position <= [_editor message:SCI_GETLENGTH])
+	const NSRange scope = self.searchScope;
+	sptr_t position = scope.location;
+	sptr_t boundary = NSMaxRange(scope);
+	NSUInteger replacedCount = 0;
+	while (position <= boundary)
 	{
-		auto start = [self searchFrom:position to:[_editor message:SCI_GETLENGTH]];
+		auto start = [self searchFrom:position to:boundary];
 		if (start < 0)
 			break;
-		BOOL emptyMatch = start == [_editor message:SCI_GETTARGETEND];
-		auto replaced = [_editor message:_searchFlags & SCFIND_REGEXP ? SCI_REPLACETARGETRE : SCI_REPLACETARGET
+		const auto previousEnd = [self.editor message:SCI_GETTARGETEND];
+		BOOL emptyMatch = start == previousEnd;
+		auto replaced = [self.editor message:_searchFlags & SCFIND_REGEXP ? SCI_REPLACETARGETRE : SCI_REPLACETARGET
 			wParam:length lParam:reinterpret_cast<sptr_t>(bytes)];
 		if (replaced < 0)
 			break;
+		++replacedCount;
+		boundary += replaced - (previousEnd - start);
 		position = start + replaced;
 		if (emptyMatch)
 		{
-			if (position >= [_editor message:SCI_GETLENGTH])
+			if (position >= boundary)
 				break;
-			position = [_editor message:SCI_POSITIONAFTER wParam:position];
+			position = [self.editor message:SCI_POSITIONAFTER wParam:position];
 		}
 	}
-	[_editor message:SCI_ENDUNDOACTION];
+	[self.editor message:SCI_ENDUNDOACTION];
+	if (_inSelection.state == NSControlStateValueOn && !_inSelection.hidden)
+		_searchSelection.length = boundary - scope.location;
+	_searchStatus.stringValue = [NSString localizedStringWithFormat:@"%lu replacements", replacedCount];
 }
 @end

@@ -12,8 +12,10 @@ in the source and the application bundle. [LICENSE](LICENSE)
 | --- | --- |
 | Scintilla Cocoa | Neil Hodgson, Oracle, Sun Microsystems and other contributors. Files that offer both LGPL 2.1 and the Scintilla license are used under the Scintilla license. [Scintilla license](scintilla/License.txt) |
 | Lexilla | Neil Hodgson and contributors. [Lexilla license](lexilla/License.txt) |
+| Boost.Regex | [Boost Software License 1.0](licenses/Boost-1.0.txt) |
 | pugixml | Arseny Kapoulkine and contributors. [MIT license](PowerEditor/src/pugixml/LICENSE.md) |
-| Localizations and language data | Original contributors' notices remain in the resource files. |
+| Toolbar and tab icons | Original editor artwork in the source tree. [GPLv3](LICENSE) |
+| Localizations and language data | Original contributors' notices remain in the resource files, including the bundled Function List and Auto-Completion XML. |
 | Themes | Separate XML works distributed with their original notices. See the details below. |
 | App icon | Artwork supplied for this fork. The supplied image has no documented redistribution license and depicts the Apple logo. Verify the art and trademark rights before public redistribution. [Apple trademark guidelines](https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html) |
 | Plugins | Added separately by users under their own terms. |
@@ -45,7 +47,6 @@ in the source and the application bundle. [LICENSE](LICENSE)
 | Windows dark-mode code | MIT notices for [win32-darkmode](licenses/win32-darkmode.txt), [UAHMenuBar](licenses/UAHMenuBar.txt) and [PolyHook 2.0](licenses/PolyHook-2.0.txt). |
 | Directory change monitor | James E Beveridge. [MIT license](licenses/ReadDirectoryChanges.txt) |
 | Hash implementations | The MD5 code is derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm. Dominik Reichl's SHA-1 implementation is marked public domain. The SHA-256 code cites Wikipedia for its pseudocode and comments. [RSA MD5 notice](licenses/RSA-MD5.txt) · [SHA-2 article](https://en.wikipedia.org/wiki/SHA-2) |
-| Markdown language definitions | Edditoria and contributors. [MIT license](licenses/markdown-plus-plus.txt) |
 
 ## Distributing builds
 

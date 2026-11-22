@@ -2,12 +2,15 @@
 #import "EditorResources.h"
 #import "ScintillaView.h"
 
+#include <algorithm>
 #include <charconv>
 #include <optional>
+#include <sstream>
 #include <string_view>
 
 #include "ILexer.h"
 #include "Lexilla.h"
+#include "SciLexer.h"
 #include "pugiconfig.hpp"
 // The Windows fork enables floating-point charconv, which needs newer macOS libraries.
 #undef PUGIXML_CHARCONV_FLOAT
@@ -53,6 +56,8 @@ static void CollectLabels(pugi::xml_node node, NSMutableDictionary<NSString *, N
 	{
 		auto key = node.attribute("menuId");
 		if (!key)
+			key = node.attribute("subMenuId");
+		if (!key)
 			key = node.attribute("id");
 		if (key && !name.empty())
 			labels[String(key.value())] = MenuLabel(String(name.value()));
@@ -93,9 +98,18 @@ static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes
 	[view message:SCI_STYLESETUNDERLINE wParam:index lParam:(flags.as_int() & 4) != 0];
 }
 
+static void SetProperty(ScintillaView *view, const char *key, NSString *value)
+{
+	[view message:SCI_SETPROPERTY wParam:reinterpret_cast<uptr_t>(key)
+		lParam:reinterpret_cast<sptr_t>(value.UTF8String)];
+}
+
 @implementation EditorResources
 {
 	NSDictionary<NSString *, NSString *> *_labels;
+	NSDictionary<NSString *, NSString *> *_englishLabels;
+	NSDictionary<NSString *, NSString *> *_findLabels;
+	NSMutableDictionary<NSString *, id> *_settings;
 	pugi::xml_document _languages;
 	pugi::xml_document _theme;
 }
@@ -117,7 +131,13 @@ static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes
 		_profile = override.isAbsolutePath ? [NSURL fileURLWithPath:override isDirectory:YES] :
 			[support URLByAppendingPathComponent:@"macpad++/profile" isDirectory:YES];
 		LoadXML(_languages, [NSBundle.mainBundle URLForResource:@"langs.model" withExtension:@"xml"]);
+		pugi::xml_document english;
+		NSMutableDictionary *englishLabels = [NSMutableDictionary dictionary];
+		if (LoadXML(english, [NSBundle.mainBundle URLForResource:@"english" withExtension:@"xml" subdirectory:@"localization"]))
+			CollectLabels(TranslationRoot(english).child("Menu").child("Main"), englishLabels);
+		_englishLabels = [englishLabels copy];
 		NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfURL:[_profile URLByAppendingPathComponent:@"native-settings.plist"]];
+		_settings = [preferences mutableCopy] ?: [NSMutableDictionary dictionary];
 		NSURL *theme = [preferences[@"theme"] isKindOfClass:NSString.class] ? self.themes[preferences[@"theme"]] : nil;
 		NSURL *translation = [preferences[@"translation"] isKindOfClass:NSString.class] ? self.translations[preferences[@"translation"]] : nil;
 		[self loadTheme:theme];
@@ -155,6 +175,28 @@ static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes
 	return [self catalog:@"localization"];
 }
 
+- (NSDictionary<NSString *, NSString *> *)languages
+{
+	NSMutableDictionary *languages = [NSMutableDictionary dictionary];
+	for (auto entry : _theme.child("NotepadPlus").child("LexerStyles").children("LexerType"))
+	{
+		NSString *name = String(entry.attribute("name").value());
+		NSString *description = String(entry.attribute("desc").value());
+		if (name.length && description.length)
+			languages[name] = description;
+	}
+	languages[@"normal"] = @"Normal Text";
+	return languages;
+}
+
+- (NSArray<NSString *> *)commentSymbolsForLanguage:(NSString *)identifier
+{
+	auto language = _languages.child("NotepadPlus").child("Languages").find_child_by_attribute("Language", "name",
+		(identifier ?: @"normal").UTF8String);
+	return @[String(language.attribute("commentLine").value()), String(language.attribute("commentStart").value()),
+		String(language.attribute("commentEnd").value())];
+}
+
 - (void)loadTheme:(NSURL *)url
 {
 	_selectedTheme = url;
@@ -170,23 +212,107 @@ static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes
 	_selectedTranslation = url;
 	pugi::xml_document document;
 	NSMutableDictionary *labels = [NSMutableDictionary dictionary];
+	NSMutableDictionary *findLabels = [NSMutableDictionary dictionary];
 	NSURL *existing = [_profile URLByAppendingPathComponent:@"nativeLang.xml"];
 	if (LoadXML(document, url ?: existing))
-		CollectLabels(TranslationRoot(document).child("Menu").child("Main"), labels);
+	{
+		auto root = TranslationRoot(document);
+		auto menu = root.child("Menu");
+		CollectLabels(menu.child("Main"), labels);
+		for (auto item : menu.child("TabBar").children("Item"))
+		{
+			if (auto id = item.attribute("CMDID"))
+			{
+				NSString *key = [@"tab:" stringByAppendingString:String(id.value())];
+				labels[key] = MenuLabel(String(item.attribute("name").value()));
+				if (auto alternative = item.attribute("alternativeName"))
+					labels[[@"alt:" stringByAppendingString:key]] = MenuLabel(String(alternative.value()));
+			}
+		}
+		for (auto item : root.child("DocList").children())
+			labels[[@"docList:" stringByAppendingString:String(item.name())]] = String(item.attribute("name").value());
+		for (const char *section : {"ClipboardHistory", "AsciiInsertion", "DocumentMap", "FunctionList", "FolderAsWorkspace", "ProjectManager"})
+			for (auto item : root.child(section).children())
+				if (auto name = item.attribute("name"))
+					labels[[NSString stringWithFormat:@"%s:%s", section, item.name()]] = String(name.value());
+		for (const char *section : {"StyleConfig", "ShortcutMapper", "Preference", "UserDefine", "ColumnEditor", "FindInFinder"})
+		{
+			auto dialog = root.child("Dialog").child(section);
+			labels[[NSString stringWithFormat:@"%s:title", section]] = String(dialog.attribute("title").value());
+			NSMutableDictionary *controls = [NSMutableDictionary dictionary];
+			CollectLabels(dialog, controls);
+			for (NSString *identifier in controls)
+				labels[[NSString stringWithFormat:@"%s:%@", section, identifier]] = controls[identifier];
+		}
+		auto misc = root.child("MiscStrings");
+		labels[@"find-result-caption"] = String(misc.child("find-result-caption").attribute("value").value());
+		for (auto item : misc.children())
+			if (std::string_view(item.name()).starts_with("finder-") || std::string_view(item.name()).starts_with("statusbar-"))
+				labels[String(item.name())] = String(item.attribute("value").value());
+		auto find = root.child("Dialog").child("Find");
+		CollectLabels(find, findLabels);
+		for (const char *title : {"titleFind", "titleReplace", "titleFindInFiles", "titleFindInProjects", "titleMark"})
+			if (auto value = find.attribute(title); value && *value.value())
+				findLabels[String(title)] = String(value.value());
+	}
+	_findLabels = [findLabels copy];
 	_labels = [labels copy];
 }
 
 - (void)savePreferences
 {
 	[NSFileManager.defaultManager createDirectoryAtURL:_profile withIntermediateDirectories:YES attributes:nil error:nullptr];
-	NSDictionary *preferences = @{@"theme": _selectedTheme.lastPathComponent ?: @"",
-		@"translation": _selectedTranslation.lastPathComponent ?: @""};
-	[preferences writeToURL:[_profile URLByAppendingPathComponent:@"native-settings.plist"] error:nullptr];
+	_settings[@"theme"] = _selectedTheme.lastPathComponent ?: @"";
+	_settings[@"translation"] = _selectedTranslation.lastPathComponent ?: @"";
+	[_settings writeToURL:[_profile URLByAppendingPathComponent:@"native-settings.plist"] error:nullptr];
+}
+
+- (id)setting:(NSString *)name fallback:(id)fallback
+{
+	id value = _settings[name];
+	for (Class type in @[NSString.class, NSNumber.class, NSArray.class, NSDictionary.class, NSData.class])
+		if ([fallback isKindOfClass:type])
+			return [value isKindOfClass:type] ? value : fallback;
+	return fallback;
+}
+
+- (void)setSetting:(id)value forName:(NSString *)name
+{
+	_settings[name] = value;
+	[self savePreferences];
+}
+
+- (void)setSettings:(NSDictionary<NSString *, id> *)settings
+{
+	[_settings addEntriesFromDictionary:settings];
+	[self savePreferences];
 }
 
 - (NSString *)label:(NSString *)identifier fallback:(NSString *)fallback
 {
 	NSString *label = _labels[identifier];
+	return label.length ? label : fallback;
+}
+
+- (NSString *)englishMenuLabel:(NSString *)identifier { return _englishLabels[identifier]; }
+
+- (NSArray<NSString *> *)commandIDsWithEnglishTitle:(NSString *)title
+{
+	NSString *(^normalized)(NSString *) = ^NSString *(NSString *value) {
+		return [[MenuLabel(value) stringByReplacingOccurrencesOfString:@"..." withString:@"…"]
+			stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet].lowercaseString;
+	};
+	NSString *wanted = normalized(title);
+	NSMutableArray *identifiers = [NSMutableArray array];
+	for (NSString *key in _englishLabels)
+		if (key.integerValue > 0 && [normalized(_englishLabels[key]) isEqualToString:wanted])
+			[identifiers addObject:key];
+	return [identifiers sortedArrayUsingSelector:@selector(compare:)];
+}
+
+- (NSString *)findLabel:(NSString *)identifier fallback:(NSString *)fallback
+{
+	NSString *label = _findLabels[identifier];
 	return label.length ? label : fallback;
 }
 
@@ -237,7 +363,86 @@ static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes
 	return destination;
 }
 
-- (void)configure:(ScintillaView *)view extension:(NSString *)extension
+- (NSColor *)widgetColor:(NSString *)name background:(BOOL)background
+{
+	auto widgets = _theme.child("NotepadPlus").child("GlobalStyles");
+	auto widget = widgets.find_child_by_attribute("WidgetStyle", "name", name.UTF8String);
+	auto color = Color(widget.attribute(background ? "bgColor" : "fgColor"));
+	if (!color)
+		return nil;
+	return [NSColor colorWithSRGBRed:(*color & 255) / 255.0
+		green:((*color >> 8) & 255) / 255.0 blue:((*color >> 16) & 255) / 255.0 alpha:1];
+}
+
+- (BOOL)usesDarkColors
+{
+	NSColor *color = [[self widgetColor:@"Default Style" background:YES] colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+	return color && (0.2126 * color.redComponent + 0.7152 * color.greenComponent + 0.0722 * color.blueComponent) < 0.4;
+}
+
+- (void)styleSearchResults:(ScintillaView *)view
+{
+	auto root = _theme.child("NotepadPlus");
+	auto widgets = root.child("GlobalStyles");
+	[view message:SCI_STYLERESETDEFAULT];
+	[view setStringProperty:SCI_STYLESETFONT parameter:STYLE_DEFAULT value:@"Menlo"];
+	[view message:SCI_STYLESETSIZE wParam:STYLE_DEFAULT lParam:11];
+	ApplyStyle(view, STYLE_DEFAULT, widgets.find_child_by_attribute("WidgetStyle", "styleID", "32"));
+	[view message:SCI_STYLECLEARALL];
+	auto type = root.child("LexerStyles").find_child_by_attribute("LexerType", "name", "searchResult");
+	if (!type)
+	{
+		[view message:SCI_STYLESETFORE wParam:1 lParam:0x800000];
+		[view message:SCI_STYLESETBACK wParam:1 lParam:0xFFBBBB];
+		[view message:SCI_STYLESETFORE wParam:2 lParam:0x008000];
+		[view message:SCI_STYLESETBACK wParam:2 lParam:0xD5FFD5];
+		[view message:SCI_STYLESETFORE wParam:3 lParam:0x4080FF];
+		[view message:SCI_STYLESETFORE wParam:4 lParam:0x0000FF];
+		[view message:SCI_STYLESETBACK wParam:4 lParam:0xBFFFFF];
+	}
+	for (auto style : type.children("WordsStyle"))
+	{
+		const int id = style.attribute("styleID").as_int();
+		if (id >= 1 && id <= 6)
+			ApplyStyle(view, id, style);
+	}
+	[view message:SCI_STYLESETEOLFILLED wParam:1 lParam:1];
+	[view message:SCI_STYLESETEOLFILLED wParam:2 lParam:1];
+	ApplyStyle(view, STYLE_LINENUMBER, widgets.find_child_by_attribute("WidgetStyle", "styleID", "33"));
+}
+
+- (pugi::xml_node)lexerStylesForExtension:(NSString *)extension
+{
+	if (!extension.length)
+		return {};
+	auto styles = _theme.child("NotepadPlus").child("LexerStyles");
+	for (auto entry : styles.children("LexerType"))
+	{
+		auto extensions = [String(entry.attribute("ext").value()) componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+		if ([extensions containsObject:extension])
+			return entry;
+	}
+	return {};
+}
+
+- (pugi::xml_node)languageForExtension:(NSString *)extension
+{
+	auto languages = _languages.child("NotepadPlus").child("Languages");
+	if (!extension.length)
+		return {};
+	if (auto styles = [self lexerStylesForExtension:extension])
+		return languages.find_child_by_attribute("Language", "name", styles.attribute("name").value());
+	for (auto entry : languages.children("Language"))
+	{
+		auto extensions = [String(entry.attribute("ext").value()) componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+		if ([extensions containsObject:extension])
+			return entry;
+	}
+	return {};
+}
+
+- (NSString *)configure:(ScintillaView *)view extension:(NSString *)extension language:(NSString *)mode
+	syntaxHighlighting:(BOOL)highlight identifier:(NSString **)identifier
 {
 	auto root = _theme.child("NotepadPlus");
 	auto widgets = root.child("GlobalStyles");
@@ -252,39 +457,56 @@ static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes
 		if (index > STYLE_DEFAULT && index <= STYLE_LASTPREDEFINED)
 			ApplyStyle(view, index, style);
 	}
-
-	pugi::xml_node language;
-	pugi::xml_node lexerStyles;
-	if (extension.length)
+	auto selected = widgets.find_child_by_attribute("WidgetStyle", "name", "Selected text colour");
+	if (auto color = Color(selected.attribute("bgColor")))
+		[view message:SCI_SETSELBACK wParam:1 lParam:*color];
+	else
+		[view message:SCI_SETSELBACK wParam:0 lParam:0];
+	auto currentLine = widgets.find_child_by_attribute("WidgetStyle", "name", "Current line background colour");
+	if (auto color = Color(currentLine.attribute("bgColor")))
 	{
-		for (auto entry : root.child("LexerStyles").children("LexerType"))
-		{
-			auto extensions = [String(entry.attribute("ext").value()) componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
-			if ([extensions containsObject:extension])
-			{
-				lexerStyles = entry;
-				language = _languages.child("NotepadPlus").child("Languages").find_child_by_attribute("Language", "name", entry.attribute("name").value());
-				break;
-			}
-		}
-		for (auto entry : _languages.child("NotepadPlus").child("Languages").children("Language"))
-		{
-			if (language || lexerStyles)
-				break;
-			auto extensions = [String(entry.attribute("ext").value()) componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
-			if ([extensions containsObject:extension])
-				language = entry;
-		}
+		[view message:SCI_SETCARETLINEBACK wParam:*color];
+		[view message:SCI_SETCARETLINEVISIBLE wParam:1];
 	}
+	else
+		[view message:SCI_SETCARETLINEVISIBLE wParam:0];
+	[view message:SCI_SETCARETFORE wParam:[view message:SCI_STYLEGETFORE wParam:STYLE_DEFAULT]];
+	auto foldMargin = widgets.find_child_by_attribute("WidgetStyle", "name", "Fold margin");
+	if (auto color = Color(foldMargin.attribute("bgColor")))
+		[view message:SCI_SETFOLDMARGINCOLOUR wParam:1 lParam:*color];
+	else
+		[view message:SCI_SETFOLDMARGINCOLOUR wParam:0 lParam:0];
+	if (auto color = Color(foldMargin.attribute("fgColor")))
+		[view message:SCI_SETFOLDMARGINHICOLOUR wParam:1 lParam:*color];
+	else
+		[view message:SCI_SETFOLDMARGINHICOLOUR wParam:0 lParam:0];
+	auto whitespace = widgets.find_child_by_attribute("WidgetStyle", "name", "White space symbol");
+	if (auto color = Color(whitespace.attribute("fgColor")))
+		[view message:SCI_SETWHITESPACEFORE wParam:1 lParam:*color];
+	else
+		[view message:SCI_SETWHITESPACEFORE wParam:0 lParam:0];
+	const char *changes[] = {"Change History revert origin", "Change History saved", "Change History modified",
+		"Change History revert modified"};
+	for (int i = 0; i < std::size(changes); ++i)
+		if (auto color = Color(widgets.find_child_by_attribute("WidgetStyle", "name", changes[i]).attribute("bgColor")))
+			[view message:SCI_MARKERSETBACK wParam:SC_MARKNUM_HISTORY_REVERTED_TO_ORIGIN + i lParam:*color];
+
+	auto language = mode ? _languages.child("NotepadPlus").child("Languages").find_child_by_attribute("Language", "name", mode.UTF8String) :
+		[self languageForExtension:extension];
+	auto lexerStyles = mode ? root.child("LexerStyles").find_child_by_attribute("LexerType", "name", mode.UTF8String) :
+		[self lexerStylesForExtension:extension];
 	NSString *name = String(language ? language.attribute("name").value() : lexerStyles.attribute("name").value());
+	if (identifier)
+		*identifier = name.length ? name : @"normal";
 	if (!lexerStyles && name.length)
 		lexerStyles = root.child("LexerStyles").find_child_by_attribute("LexerType", "name", name.UTF8String);
 	NSDictionary *aliases = @{@"c": @"cpp", @"cs": @"cpp", @"java": @"cpp", @"javascript": @"cpp", @"javascript.js": @"cpp",
 		@"rc": @"cpp", @"objc": @"cpp", @"go": @"cpp", @"php": @"hypertext", @"html": @"hypertext", @"sh": @"bash",
 		@"batch": @"batch", @"tex": @"latex", @"js": @"cpp", @"typescript": @"cpp", @"shell": @"bash"};
 	NSString *lexerName = aliases[name] ?: name;
-	Scintilla::ILexer5 *lexer = lexerName.length ? CreateLexer(lexerName.UTF8String) : nullptr;
+	Scintilla::ILexer5 *lexer = highlight && lexerName.length ? CreateLexer(lexerName.UTF8String) : nullptr;
 	[view message:SCI_SETILEXER wParam:0 lParam:reinterpret_cast<sptr_t>(lexer)];
+	SetProperty(view, "fold", @"1");
 	NSArray<NSString *> *keywords = @[@"instre1", @"instre2", @"type1", @"type2", @"type3", @"type4", @"type5", @"type6", @"type7", @"type8"];
 	for (NSUInteger i = 0; i < keywords.count; ++i)
 	{
@@ -297,12 +519,11 @@ static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes
 		if (index >= 0 && index <= STYLE_MAX)
 			ApplyStyle(view, index, style);
 	}
-	auto selected = widgets.find_child_by_attribute("WidgetStyle", "name", "Selected text colour");
-	if (auto color = Color(selected.attribute("bgColor")))
-		[view message:SCI_SETSELBACK wParam:1 lParam:*color];
+	if (highlight)
+		[view message:SCI_COLOURISE wParam:0 lParam:-1];
 	else
-		[view message:SCI_SETSELBACK wParam:0 lParam:0];
-	[view message:SCI_SETCARETFORE wParam:[view message:SCI_STYLEGETFORE wParam:STYLE_DEFAULT]];
-	[view message:SCI_COLOURISE wParam:0 lParam:-1];
+		[view message:SCI_CLEARDOCUMENTSTYLE];
+	NSString *description = String(lexerStyles.attribute("desc").value());
+	return description.length ? description : @"Normal text file";
 }
 @end
