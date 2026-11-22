@@ -331,17 +331,17 @@ The comments are here for explanation, it's not necessary to translate them.
 					<Item id="46001" name="Канфігуратар стылю..."/>
 					<Item id="46250" name="Вызначыце сваю мову..."/>
 					<Item id="46300" name="Адкрыць карыстальніцкую папку мовы..."/>
-					<Item id="46301" name="Калекцыя моў вызначаных карыстальнікамі Notepad++"/>
+					<Item id="46301" name="Калекцыя моў вызначаных карыстальнікамі macpad++"/>
 					<Item id="46180" name="Вызначана карыстальнікам"/>
-					<Item id="47000" name="Пра Notepad++"/>
+					<Item id="47000" name="Пра macpad++"/>
 					<Item id="47010" name="Аргументы каманднага радка..."/>
-					<Item id="47001" name="Хатняя старонка Notepad++"/>
-					<Item id="47002" name="Старонка праекта Notepad++"/>
-					<Item id="47003" name="Дакументацыя па Notepad++"/>
-					<Item id="47004" name="Форум супольнасці Notepad++"/>
+					<Item id="47001" name="Хатняя старонка macpad++"/>
+					<Item id="47002" name="Старонка праекта macpad++"/>
+					<Item id="47003" name="Дакументацыя па macpad++"/>
+					<Item id="47004" name="Форум супольнасці macpad++"/>
 					<Item id="47012" name="Адладачная інфармацыя..."/>
 					<Item id="47005" name="Атрымаць больш убудоў"/>
-					<Item id="47006" name="Абнавіць Notepad++"/>
+					<Item id="47006" name="Абнавіць macpad++"/>
 					<Item id="47009" name="Задаць проксі абнаўлення..."/>
 					<Item id="48005" name="Імпартаванне ўбудоў..."/>
 					<Item id="48006" name="Імпартаванне тэм стыляў..."/>
@@ -1269,8 +1269,8 @@ The comments are here for explanation, it's not necessary to translate them.
 			</DoSaveAll><!-- HowToReproduce: Check the 'Enable Save All confirm dialog' checkbox in Preference->MISC, now click 'Save all' -->
 		</Dialog>
 		<MessageBox><!-- $INT_REPLACE$ is a place holder, don't translate it -->
-			<ContextMenuXmlEditWarning title="Праўка contextMenu" message="Праўка contextMenu.xml дазволіць вам змяніць усплывальнае меню Notepad++.
-Пасля змянення contextMenu.xml неабходна перазапусціць Notepad++, каб адбыліся змены."/>
+			<ContextMenuXmlEditWarning title="Праўка contextMenu" message="Праўка contextMenu.xml дазволіць вам змяніць усплывальнае меню macpad++.
+Пасля змянення contextMenu.xml неабходна перазапусціць macpad++, каб адбыліся змены."/>
 			<SaveCurrentModifWarning title="Захаваць бягучую мадыфікацыю" message="Вы павінны захаваць бягучую мадыфікацыю.
 Аднавіць усе зробленыя вамі змяненні будзе немагчыма.
 
@@ -1279,10 +1279,10 @@ The comments are here for explanation, it's not necessary to translate them.
 Аднавіць усе зробленыя вамі змяненні будзе немагчыма.
 
 Працягнуць?"/><!-- HowToReproduce: when you openned file is modified and saved, then you are changing file encoding. -->
-			<CannotMoveDoc title="Перамясціць у новы экзэмпляр Notepad++" message="Дакумент зменены. Захавайце яго і паспрабуйце зноў."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
-			<DocReloadWarning title="Перазагрузіць" message="Вы ўпэўнены, што хочаце перазагрузіць бягучы файл і згубіць усе змены, якія былі зробленыя ў Notepad++?"/>
+			<CannotMoveDoc title="Перамясціць у новы экзэмпляр macpad++" message="Дакумент зменены. Захавайце яго і паспрабуйце зноў."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
+			<DocReloadWarning title="Перазагрузіць" message="Вы ўпэўнены, што хочаце перазагрузіць бягучы файл і згубіць усе змены, якія былі зробленыя ў macpad++?"/>
 			<FileLockedWarning title="Збой захавання" message="Праверце, ці не адкрыты гэты файл у іншай праграме"/>
-			<FileAlreadyOpenedInNpp title="" message="Файл ужо адкрыты ў Notepad++."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
+			<FileAlreadyOpenedInNpp title="" message="Файл ужо адкрыты ў macpad++."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
 			<RenameTabTemporaryNameAlreadyInUse title="Збой перайменавання" message="Азначаная назва ўжо выкарыстоўваецца на іншай укладцы."/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
 			<DeleteFileFailed title="Выдаліць файл" message="Збой выдалення файла"/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
 
@@ -1310,13 +1310,13 @@ The comments are here for explanation, it's not necessary to translate them.
 			<DoReloadOrNotAndLooseChange title="Перазагрузіць" message="&quot;$STR_REPLACE$&quot;
 
 Файл быў мадыфікаваны іншай праграмай.
-Хочаце перазагрузіць яго са стратай змен зробленых у Notepad++?"/>
+Хочаце перазагрузіць яго са стратай змен зробленых у macpad++?"/>
 			<PrehistoricSystemDetected title="Выяўлена састарэлая сістэма" message="Відавочна, што вы ўсё яшчэ выкарыстоўваеце састарэлую сістэму. Прабачце, але гэта функцыя працуе толькі ў сучаснай сістэме."/><!-- HowToReproduce: Launch "Document Map" under Windows XP. -->
-			<XpUpdaterProblem title="Сістэма абнаўлення Notepad++" message="Сістэма абнаўлення Notepad++ несумяшчальная з АС Windows XP з-за састарэлага ўзроўню бяспекі ў гэтай сістэме.
-Перайсці на старонку Notepad++ для таго, каб спампаваць апошнюю версію праграмы?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
+			<XpUpdaterProblem title="Сістэма абнаўлення macpad++" message="Сістэма абнаўлення macpad++ несумяшчальная з АС Windows XP з-за састарэлага ўзроўню бяспекі ў гэтай сістэме.
+Перайсці на старонку macpad++ для таго, каб спампаваць апошнюю версію праграмы?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
 			<DocTooDirtyToMonitor title="Праблема маніторынгу" message="Дакументы зменены. Калі ласка, захавайце змяненні перад пачаткам яго маніторынгу."/>
 			<DocNoExistToMonitor title="Праблема маніторынгу" message="Файл павінен існаваць для яго маніторынгу."/>
-			<FileTooBigToOpen title="Праблема памеру файла" message="Надта вялікі файл для адкрыцця ў Notepad++"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
+			<FileTooBigToOpen title="Праблема памеру файла" message="Надта вялікі файл для адкрыцця ў macpad++"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
 			<FileLoadingException title="Код выключэння: $STR_REPLACE$" message="Падчас загрузкі файла ўзнікла памылка!"/>
 			<WantToOpenHugeFile title="Папярэджанне аб адкрыцці вялікага файла" message="Адкрыццё вялікага файла (больш за 2 ГБ) можа заняць некалькі хвілін.
 Вы хочаце яго адкрыць?"/>
@@ -1353,10 +1353,10 @@ The comments are here for explanation, it's not necessary to translate them.
 			<SCMapperDoDeleteOrNot title="Вы ўпэўнены?" message="Вы ўпэўнены, што хочаце выдаліць гэту камбінацыю клавіш?"/>
 			<FindCharRangeValueError title="Праблема ў дыяпазоне значэнняў" message="Увядзіце значэнне ад 0 да 255."/>
 			<OpenInAdminMode title="Збой захавання" message="Не атрымалася захаваць файл. Магчыма ён абаронены.
-Запусціць Notepad++ у рэжыме адміністратара?"/>
+Запусціць macpad++ у рэжыме адміністратара?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Збой захавання" message="Не атрымалася захаваць файл. Магчыма ён абаронены.
-Запусціць Notepad++ у рэжыме адміністратара?"/>
-			<OpenInAdminModeFailed title="Збой запуску ў рэжыме адміністратара" message="Notepad++ не можа быць адкрыты ў рэжыме адміністратара."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
+Запусціць macpad++ у рэжыме адміністратара?"/>
+			<OpenInAdminModeFailed title="Збой запуску ў рэжыме адміністратара" message="macpad++ не можа быць адкрыты ў рэжыме адміністратара."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
 			<ViewInBrowser title="Паглядзець бягучы файл у браўзеры" message="У вашай сістэме не атрымалася знайсці праграму."/>
 			<ExitToUpdatePlugins title="Вы збіраецеся закрыць праграму" message="Калі вы націсніце ТАК, то вы выйдзеце з праграмы, каб працягнуць аперацыю. 
 Пасля таго, як усе аперацыі будуць завершаны праграма запусціцца зноў. 
@@ -1479,8 +1479,8 @@ The comments are here for explanation, it's not necessary to translate them.
 			<word-chars-list-warning-end value="  у вашым спісе сімвалаў."/><!-- HowToReproduce: In "Delimiter" section of Preferences dialog, check "Add your character as part of word\r(don't choose it unless you know what you're doing)", then type a white-space in the text field. -->
 			<backup-select-folder value="Выбраць папку для рэзервовай копіі"/><!-- HowToReproduce: Settings > Preferences > Backup > [...] -->
 			<cloud-invalid-warning value="Памылковы шлях."/>
-			<cloud-restart-warning value="Перазапусціце Notepad++, каб адбыліся змены."/>
-			<cloud-select-folder value="Выберыце папку, адкуль/куды ў Notepad++ чытаць/запісваць свае налады"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
+			<cloud-restart-warning value="Перазапусціце macpad++, каб адбыліся змены."/>
+			<cloud-select-folder value="Выберыце папку, адкуль/куды ў macpad++ чытаць/запісваць свае налады"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
 			<default-open-save-select-folder value="Выбраць папку як прадвызначаны каталог"/><!-- HowToReproduce: Settings > Preferences > Default Directory > [...] -->
 			<shift-change-direction-tip value="Выкарыстоўвайце Shift+Enter для пошуку ў адваротным напрамку"/>
 			<two-find-buttons-tip value="2-клавішны рэжым пошуку"/>

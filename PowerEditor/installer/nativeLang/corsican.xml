@@ -74,7 +74,7 @@ Additionnal information about Corsican localization:
 					<Item subMenuId="edit-onSelection" name="Per &amp;a selezzione"/>
 					<Item subMenuId="edit-multiSelectALL" name="Selezzione multiple di tuttu"/>
 					<Item subMenuId="edit-multiSelectNext" name="Selezzione multiple di a prossima"/>
-					<Item subMenuId="edit-readonlyInNotepad++" name="Lettura sola in Notepad++"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="Lettura sola in macpad++"/>
 					<Item subMenuId="search-changeHistory" name="Cronolugia di i cambiamenti"/>
 					<Item subMenuId="search-markAll" name="Marcà &amp;tutte l’occurenze di testu"/>
 					<Item subMenuId="search-markOne" name="Stilizà una occu&amp;renza di testu"/>
@@ -402,17 +402,17 @@ Additionnal information about Corsican localization:
 					<Item id="46016" name="Nisunu (Testu nurmale)"/>
 					<Item id="46250" name="Definisce u vostru linguaghju…"/>
 					<Item id="46300" name="Apre u cartulare di i linguaghji definiti da l’utilizatore…"/>
-					<Item id="46301" name="Cullezzione di i linguaghji Notepad++ definiti da l’utilizatore"/>
+					<Item id="46301" name="Cullezzione di i linguaghji macpad++ definiti da l’utilizatore"/>
 					<Item id="46180" name="Definitu da l’utilizatore"/>
-					<Item id="47000" name="Apprupositu di Notepad++"/>
+					<Item id="47000" name="Apprupositu di macpad++"/>
 					<Item id="47010" name="Argumenti di linea di cumanda…"/>
-					<Item id="47001" name="Pagina d’accolta di Notepad++…"/>
-					<Item id="47002" name="Pagina di prughjettu Notepad++"/>
+					<Item id="47001" name="Pagina d’accolta di macpad++…"/>
+					<Item id="47002" name="Pagina di prughjettu macpad++"/>
 					<Item id="47003" name="Manuale in linea di l’utilizatore"/>
-					<Item id="47004" name="Cumunità Notepad++ (Foru)"/>
+					<Item id="47004" name="Cumunità macpad++ (Foru)"/>
 					<Item id="47012" name="Infurmazioni di diagnosticu…"/>
 					<Item id="47005" name="Ottene più d’estensioni"/>
-					<Item id="47006" name="Rinnovà Notepad++"/>
+					<Item id="47006" name="Rinnovà macpad++"/>
 					<Item id="47009" name="Parametri di u proxy di l’Updater…"/>
 					<Item id="48005" name="Impurtà unu o parechji moduli d’estensione…"/>
 					<Item id="48006" name="Impurtà unu o parechji temi di stilu…"/>
@@ -483,7 +483,7 @@ Additionnal information about Corsican localization:
 				<Item CMDID="41016" name="Dispiazzà in a curbella"/>
 				<Item CMDID="41014" name="Ricaricà"/>
 				<Item CMDID="41010" name="Stampà…"/>
-				<Item CMDID="42028" name="Lettura sola in Notepad++"/>
+				<Item CMDID="42028" name="Lettura sola in macpad++"/>
 				<Item CMDID="42033" name="Attributu di lettura sola in Windows"/>		  
 				<Item CMDID="2" name="Cupià in u preme’papei"/>
 				<Item CMDID="42029" name="Cupià u chjassu cumpletu di schedariu"/>
@@ -1007,7 +1007,7 @@ Additionnal information about Corsican localization:
 					<Item id="6132" name="Piattà l’&amp;accurtatoghji di diritta ＋ ▼ ✕"/>
 					<Item id="6133" name="Barra di statu"/>
 					<Item id="6134" name="P&amp;iattà"/>
-					<Item id="7165" name="Grafia di u dialogu (Richiede di rilancià Notepad++)"/>
+					<Item id="7165" name="Grafia di u dialogu (Richiede di rilancià macpad++)"/>
 					<Item id="7166" name="&amp;Dimensione :"/>
 					<Item id="7168" name="Nome :"/>
 				</Global>
@@ -1177,7 +1177,7 @@ Additionnal information about Corsican localization:
 				</DefaultDir>
 
 				<FileAssoc title="Associu di schedariu">
-					<Item id="4008" name="Ci vole à piantà Notepad++ è rilancià Notepad++ in modu Amministratore per impiegà sta funzione."/>
+					<Item id="4008" name="Ci vole à piantà macpad++ è rilancià macpad++ in modu Amministratore per impiegà sta funzione."/>
 					<Item id="4009" name="Estensioni accettate :"/>
 					<Item id="4010" name="Estensioni inscritte :"/>
 				</FileAssoc>
@@ -1262,7 +1262,7 @@ Additionnal information about Corsican localization:
 				</Print>
 
 				<Searching title="Ricerche">
-					<Item id="6902" name="Impiegà a grafia à spaziamentu fissu in u dialogu di ricerca (Richiede di rilancià Notepad++)"/>
+					<Item id="6902" name="Impiegà a grafia à spaziamentu fissu in u dialogu di ricerca (Richiede di rilancià macpad++)"/>
 					<Item id="6903" name="U dialogu di ricerca sta apertu dopu una ricerca chì s’affisseghja in a finestra di risultati"/>
 					<Item id="6906" name="Risultati di ricerca : affissà un elementu unicu à a linea trova, s’ella hè pussibule"/>
 					<Item id="6907" name="Quandu u dialogu di ricerca hè chjamatu"/>
@@ -1329,7 +1329,7 @@ Additionnal information about Corsican localization:
 					<Item id="6152" name="Apre una sessione in una finestra nova (è arregistralla autumaticamente à l’esce)"/>
 					<Item id="6153" name="Sempre in modu à finestre multiple"/>
 					<Item id="6154" name="Modu predefinitu (finestra unica)"/>
-					<Item id="6155" name="* A mudificazione di stu parametru richiede di rilancià Notepad++"/>
+					<Item id="6155" name="* A mudificazione di stu parametru richiede di rilancià macpad++"/>
 					<Item id="6171" name="Persunalizazione d’inserzione di a data è l’ora"/>
 					<Item id="6175" name="Invertisce l’ordine predefinitu di a data è l’ora (furmatu cortu è longu)"/>
 					<Item id="6172" name="Furmatu persunalizatu :"/>
@@ -1414,8 +1414,8 @@ Additionnal information about Corsican localization:
 					</ComboBox>
 					<ComboBox id="6364">
 						<Element name="Disattivà"/>
-						<Element name="Attivà à u lanciu di Notepad++"/>
-						<Element name="Attivà à l’esce di Notepad++"/>
+						<Element name="Attivà à u lanciu di macpad++"/>
+						<Element name="Attivà à l’esce di macpad++"/>
 					</ComboBox>
 					<Item id="6308" name="u spaziu di nutific. sistema"/><!-- Spaziu appena cortu, 28 car. -->
 					<Item id="6363" name="modu di restituzione"/>
@@ -1503,7 +1503,7 @@ Pudete attivà torna st’ozzione in u dialogu di e preferenze."/>
 				<Item id="7" name="&amp;Nò"/>
 				<Item id="4" name="S&amp;empre sì"/>
 			</DoSaveAll><!-- HowToReproduce: Check the "Enable Save All confirm dialog" checkbox in Preference->MISC, now click "Save all" -->
-			<NetworkPathWarning title="Caricamentu di a sessione Notepad++" title2="Liame file:// clicchevule" title3="Caricamentu di toolbarButtonsConf.xml" title4="Caricamentu di u schedariu XML di u panellu di prughjettu">
+			<NetworkPathWarning title="Caricamentu di a sessione macpad++" title2="Liame file:// clicchevule" title3="Caricamentu di toolbarButtonsConf.xml" title4="Caricamentu di u schedariu XML di u panellu di prughjettu">
 				<Item id="1771" name="Avertimentu apprupositu di u chjassu di reta :
 
 $STR_REPLACE$
@@ -1523,8 +1523,8 @@ Caricallu quantunque ?"/>
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ and $STR_REPLACE$ are place holders, don't translate these place holders. -->
-			<ContextMenuXmlEditWarning title="Mudificazione di u listinu cuntestuale" message="A mudificazione di contextMenu.xml vi permette di cambià l’ozzioni di u listinu cuntestuale di Notepad++.
-Ci vole à rilancià Notepad++ per piglià in contu e mudificazioni di contextMenu.xml."/>
+			<ContextMenuXmlEditWarning title="Mudificazione di u listinu cuntestuale" message="A mudificazione di contextMenu.xml vi permette di cambià l’ozzioni di u listinu cuntestuale di macpad++.
+Ci vole à rilancià macpad++ per piglià in contu e mudificazioni di contextMenu.xml."/>
 			<SaveCurrentModifWarning title="Arregistrà a mudificazione currente" message="Ci vuleria à arregistrà e mudificazioni currente.
 Tutte e mudificazioni arregistrate ùn pudenu micca esse disfatte.
 
@@ -1533,10 +1533,10 @@ Cuntinuà ?"/><!-- HowToReproduce: when you opened file is modified but unsaved
 Tutte e mudificazioni arregistrate ùn pudenu micca esse disfatte.
 
 Cuntinuà ?"/><!-- HowToReproduce: when you opened file is modified and saved, then you are changing file encoding. -->
-			<CannotMoveDoc title="Dispiazzà in una finestra Notepad++ nova" message="U ducumentu hè mudificatu, arregistratelu è pruvate torna."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
-			<DocReloadWarning title="Ricaricà" message="Da veru, vulete ricaricà u schedariu currente è perde cusì i cambiamenti fatti cù Notepad++ ?"/>
+			<CannotMoveDoc title="Dispiazzà in una finestra macpad++ nova" message="U ducumentu hè mudificatu, arregistratelu è pruvate torna."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
+			<DocReloadWarning title="Ricaricà" message="Da veru, vulete ricaricà u schedariu currente è perde cusì i cambiamenti fatti cù macpad++ ?"/>
 			<FileLockedWarning title="Arregistramentu fiascatu" message="Ci vole à verificà s’è stu schedariu hè dighjà apertu in un altru prugramma"/>
-			<FileAlreadyOpenedInNpp title="" message="U schedariu hè dighjà apertu in Notepad++."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
+			<FileAlreadyOpenedInNpp title="" message="U schedariu hè dighjà apertu in macpad++."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
 			<RenameTabTemporaryNameAlreadyInUse title="Rinuminazione fiascata" message="U nome specificatu hè dighjà impiegatu in un’altra unghjetta."/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
 			<RenameTabTemporaryNameIsEmpty title="Fiascu per cambià u nome" message="U nome specificatu ùn pò micca esse viotu, o ùn pò micca cuntene solu spaziu(i) o tabulazione(i)."/><!-- HowToReproduce: Rename the tab of an untitled document and provide an empty string or only some white spaces. -->
 			<DeleteFileFailed title="Squassatura di schedariu" message="Fiascu di a squassatura di u schedariu"/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
@@ -1584,13 +1584,13 @@ Vulete ricaricallu ?"/>
 			<DoReloadOrNotAndLooseChange title="Ricaricà" message="« $STR_REPLACE$ »
 
 Stu schedariu hè statu mudificatu da un’altru prugramma.
-Vulete ricaricallu è perde cusì i cambiamenti fatti cù Notepad++ ?"/>
+Vulete ricaricallu è perde cusì i cambiamenti fatti cù macpad++ ?"/>
 			<PrehistoricSystemDetected title="Sistema prestoricu identificatu" message="Pare chì voi impiegate sempre un sistema prestoricu. Per disgrazia, sta funzione funziuneghja solu cù un sistema mudernu."/><!-- HowToReproduce: Launch "Document Map" under Windows XP. -->
-			<XpUpdaterProblem title="Rinnovu di Notepad++" message="U rinnovu di Notepad++ ùn funziuneghja micca cù XP per via di u so livellu di sicurità à l’anticogna.
-Vulete andà nant’à a pagina di Notepad++ per scaricà l’ultima versione ?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
+			<XpUpdaterProblem title="Rinnovu di macpad++" message="U rinnovu di macpad++ ùn funziuneghja micca cù XP per via di u so livellu di sicurità à l’anticogna.
+Vulete andà nant’à a pagina di macpad++ per scaricà l’ultima versione ?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
 			<DocTooDirtyToMonitor title="Penseru d’appustamentu" message="U ducumentu hè brutu. Ci vole à arregistrà a mudificazione nanzu à appustallu."/>
 			<DocNoExistToMonitor title="Penseru d’appustamentu" message="U schedariu deve esiste per esse appustatu."/>
-			<FileTooBigToOpen title="Penseru di dimensione di schedariu" message="U schedariu hè troppu maiò per esse apertu da Notepad++"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
+			<FileTooBigToOpen title="Penseru di dimensione di schedariu" message="U schedariu hè troppu maiò per esse apertu da macpad++"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
 			<FileLoadingException title="Codice di sbagliu : $STR_REPLACE$" message="Un sbagliu hè accadutu durante u caricamentu di u schedariu !"/>
 			<WantToOpenHugeFile title="Avertimentu d’apertura di schedariu maiò" message="L’apertura d’un schedariu più maiò chè 2 Go pò piglià parechji minuti.
 Vulete aprelu ?"/>
@@ -1633,22 +1633,22 @@ ci vole à dà un altru."/>
 			<SCMapperDoDeleteOrNot title="Cunfirmazione" message="Da veru, vulete squassà st’accurtatoghju ?"/>
 			<FindCharRangeValueError title="Penseru di valore di stesa" message="Ci vole à stampittà trà 0 è 255."/> <!-- HowToReproduce: Search menu, then Find characters in range, select Custom range, enter 999 in either edit box, press Find. -->
 			<OpenInAdminMode title="Arregistramentu fiascatu" message="U schedariu ùn pò micca esse arregistratu, forse hè prutettu.
-Vulete dimarrà Notepad++ in modu Amministratore ?"/>
+Vulete dimarrà macpad++ in modu Amministratore ?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Arregistramentu fiascatu" message="U schedariu ùn pò micca esse arregistratu, forse hè prutettu.
-Vulete dimarrà Notepad++ in modu Amministratore ?"/>
-			<OpenInAdminModeFailed title="Apertura fiascata in modu Amministratore" message="Notepad++ ùn pò micca esse apertu in modu Amministratore."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
+Vulete dimarrà macpad++ in modu Amministratore ?"/>
+			<OpenInAdminModeFailed title="Apertura fiascata in modu Amministratore" message="macpad++ ùn pò micca esse apertu in modu Amministratore."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
 			<ViewInBrowser title="Fighjà u schedariu attuale in u navigatore" message="L’appiecazione ùn si trova micca in u sistema."/>
-			<ExitToUpdatePlugins title="Notepad++ stà per esce" message="S’è vo fate un cliccu nant’à « Sì », Notepad++ hà da piantassi per cuntinuà l’operazioni.
-Notepad++ serà rilanciatu quandu st’operazioni seranu compie.
+			<ExitToUpdatePlugins title="macpad++ stà per esce" message="S’è vo fate un cliccu nant’à « Sì », macpad++ hà da piantassi per cuntinuà l’operazioni.
+macpad++ serà rilanciatu quandu st’operazioni seranu compie.
 Cuntinuà ?"/>
-			<NeedToRestartToLoadPlugins title="Notepad++ richiede d’esse rilanciatu" message="Ci vole à rilancià Notepad++ per caricà l’estensioni chì sò state installate."/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
-			<ChangeHistoryEnabledWarning title="Notepad++ richiede d’esse rilanciatu" message="Ci vole à rilancià Notepad++ per permette l’affissera di a cronolugia di i cambiamenti."/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
-			<WindowsSessionExit title="Notepad++ - Fine di a sessione Windows" message="A sessione Windows stà per piantassi ma ci hè qualchì datu chì ùn hè micca arregistratu. Vulete esce di Notepad++ subitu ?"/>
+			<NeedToRestartToLoadPlugins title="macpad++ richiede d’esse rilanciatu" message="Ci vole à rilancià macpad++ per caricà l’estensioni chì sò state installate."/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
+			<ChangeHistoryEnabledWarning title="macpad++ richiede d’esse rilanciatu" message="Ci vole à rilancià macpad++ per permette l’affissera di a cronolugia di i cambiamenti."/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
+			<WindowsSessionExit title="macpad++ - Fine di a sessione Windows" message="A sessione Windows stà per piantassi ma ci hè qualchì datu chì ùn hè micca arregistratu. Vulete esce di macpad++ subitu ?"/>
 			<LanguageMenuCompactWarning title="Cumpattà l’affissera di u listinu" message="St’ozzione serà cambiata à u prossimu lanciu."/><!-- HowToReproduce: toggle "Make language menu compact" via Preferences dialog "Language/Language Menu. -->
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="I cambiamenti micca arregistrati stanu per esse squassati !
 Vulete arregistrà i vostri cambiamenti nanzu di cambià di tema ?"/><!-- HowToReproduce: In the Style Configurator dialog change some theme and switch to other theme without saving. -->
 			<FullReadOnlySavingForbidden title="Fiascu di l’arregistramentu" message="Ùn si pò arregistrà u schedariu.
-U modu d’arregistramentu tutale in lettura sola di Notepad++ hà impeditu d’arregistrà u schedariu."/>
+U modu d’arregistramentu tutale in lettura sola di macpad++ hà impeditu d’arregistrà u schedariu."/>
 			<NotEnoughRoom4Saving title="Fiascu di l’arregistramentu" message="Fiascu à l’arregistramentu di u schedariu.
 Pare ch’ella ùn ci sia abbastanza piazza nant’à u discu per arregistrà u schedariu. U vostru schedariu ùn hè micca arregistratu."/>
 			<FileInaccessibleUserSession title="Schedariu inaccessibile" message="Certi schedarii di a vostra sessione arregistrata manualmente « $STR_REPLACE$ » sò inaccessibile. Ponu esse aperti cum’è ducumenti vioti è in lettura sola tale spazii riservati.
@@ -1661,8 +1661,8 @@ NOTA : S’è vo sciglite d’ùn micca creà i spazii riservati o di chjodeli 
 Vulete creà sti spazii riservati per elli ?
 
 NOTA : S’è vo sciglite d’ùn micca creà i spazii riservati o di chjodeli dopu, u vostru schedariu di sessione serà mudificatu à l’esce. Vi ricumandemu di fà subitu una salvaguardia di u vostru schedariu di sessione « session.xml »."/>
-			<RTLvsDirectWrite title="Ùn si pò lancià a cumanda « Testu da diritta à manca »" message="« Testu da diritta à manca » ùn hè micca cumpatibile cù u modu « DirectWrite ». Ci vole à disattivà stu modu in a sezzione « Diversi » di e Preferenze eppò rilancià Notepad++."/>
-			<FileMemoryAllocationFailed title="Sbagliu : fiascu d’attribuzione di memoria" message="Forse ùn ci hè abbastanza memoria quanciana libera per chì u schedariu sia caricatu da Notepad++."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
+			<RTLvsDirectWrite title="Ùn si pò lancià a cumanda « Testu da diritta à manca »" message="« Testu da diritta à manca » ùn hè micca cumpatibile cù u modu « DirectWrite ». Ci vole à disattivà stu modu in a sezzione « Diversi » di e Preferenze eppò rilancià macpad++."/>
+			<FileMemoryAllocationFailed title="Sbagliu : fiascu d’attribuzione di memoria" message="Forse ùn ci hè abbastanza memoria quanciana libera per chì u schedariu sia caricatu da macpad++."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
 			<FindRegexBackwardDisabled title="Ricerca RegEx à l’arritrosa disattivata" message="Di regula, a ricerca RegEx à l’arritrosa hè disattivata per via di risultati imprevisti pussibule. Per effettuà una ricerca à l’arritrosa, aprite a finestra di dialogu di ricerca è selezziunate, sia u modu di ricerca nurmale, sia u modu espertu, invece chì l’espressione regulare.
 Appughjate nant’à u buttone Vai per apre a finestra di dialogu di ricerca o piazzateci u puntu fucale.
 			
@@ -1670,8 +1670,8 @@ S’è vo avete bisognu di a funzione di ricerca RegEx à l’arritrosa, lighjit
 			<PrintError title="0" message="Ùn si pò lancià u ducumentu di stampetta."/><!-- Use title="0" to use Windows OS default translated "Error" title. -->
 			<FindAutoChangeOfInSelectionWarning title="Avertimentu di ricerca" message="U statu di l’ozzione « In a selezzione » hè statu mudificatu autumaticamente.
 Ci vole à verificà a cundizione di ricerca prima di fà l’azzione."/> <!-- HowToReproduce: https://github.com/notepad-plus-plus/notepad-plus-plus/issues/14897#issuecomment-2564316224 -->
-			<Need2Restart2ShowMenuShortcuts title="Notepad++ richiede d’esse rilanciatu" message="Ci vole à rilancià Notepad++ per affissà l’accurtatoghji di u listinu di diritta."/>
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="Fiascu di u cambiamentu d’attributu di lettura sola di u schedariu" message="Ci vole à lancià Notepad++ in modu Amministratore per cambià l’attributi di u schedariu."/>
+			<Need2Restart2ShowMenuShortcuts title="macpad++ richiede d’esse rilanciatu" message="Ci vole à rilancià macpad++ per affissà l’accurtatoghji di u listinu di diritta."/>
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="Fiascu di u cambiamentu d’attributu di lettura sola di u schedariu" message="Ci vole à lancià macpad++ in modu Amministratore per cambià l’attributi di u schedariu."/>
 			<ReadOnlyFileCannotBeSaved title="Fiascu d’arregistramentu ; schedariu in lettura sola" message="« $STR_REPLACE$ »
 U schedariu hè in lettura sola è ùn pò micca esse arregistratu.
 Ci vole à caccià a lettura sola eppò arregistrà u vostru schedariu."/>
@@ -1681,7 +1681,7 @@ Per raghjoni di sicurità, l’integrità di shortcuts.xml hà da esse verificat
 			<ShortcutsXmlTampered title="Avertimentu di sicurità" message="U schedariu shortcuts.xml pare esse statu mudificatu manualmente.
 
 Per raghjoni di sicurità, ci vole à esaminà u schedariu shortcuts.xml chì hè apertu. S’è u so cuntenutu hè currettu, impiegate l’ozzione « Cunvalidà shortcuts.xml » di u listinu « Lancià » per cunfirmallu."/>
-			<SymlinkLoadingWarning title="Avertimentu : u caricamentu di i liami simbolichi pò cagiunà un blucchime" message="L’attivazione di u caricamentu di i liami simbulichi in u cartulare cum’è spaziu di travagliu pò fà entre Notepad++ in un ciclu senza fine è si finisce da un blucchime.
+			<SymlinkLoadingWarning title="Avertimentu : u caricamentu di i liami simbolichi pò cagiunà un blucchime" message="L’attivazione di u caricamentu di i liami simbulichi in u cartulare cum’è spaziu di travagliu pò fà entre macpad++ in un ciclu senza fine è si finisce da un blucchime.
 Què pò accade quandu certi liami simbolichi si facenu versu cartulari di livellu superiore o creanu referenze circulare.
 Cuntinuate solu s’è vo capite i risichi."/>
 		</MessageBox>
@@ -1804,8 +1804,8 @@ Cuntinuate solu s’è vo capite i risichi."/>
 			<word-chars-list-warning-end value="  in a vostra lista di caratteri."/><!-- HowToReproduce: In "Delimiter" section of Preferences dialog, check "Add your character as part of word\r(don't choose it unless you know what you're doing)", then type a white-space in the text field. -->
 			<backup-select-folder value="Selezziunà u cartulare induve arregistrà a salvaguardia"/><!-- HowToReproduce: Settings > Preferences > Backup > [...] -->
 			<cloud-invalid-warning value="Chjassu inaccettevule."/>
-			<cloud-restart-warning value="Ci vole à rilancià Notepad++ per piglià in contu stu cambiamentu."/>
-			<cloud-select-folder value="Selezziunà un cartulare induve Notepad++ leghje è scrive i so parametri"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
+			<cloud-restart-warning value="Ci vole à rilancià macpad++ per piglià in contu stu cambiamentu."/>
+			<cloud-select-folder value="Selezziunà un cartulare induve macpad++ leghje è scrive i so parametri"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
 			<default-open-save-select-folder value="Selezziunà u cartulare chì serà quellu predefinitu"/><!-- HowToReproduce: Settings > Preferences > Default Directory > [...] -->
 			<shift-change-direction-tip value="Impiegà Maiusc+Entre per circà in a direzzione opposta."/>
 			<two-find-buttons-tip value="Modu di 2 buttoni per circà"/>
@@ -1961,7 +1961,7 @@ S’è vo selezziunate u modu espertu ma ùn mudificate micca i schedarii in i l
 
 			<!-- Don't translate "Global override" and "Default Style" -->
 			<global-override-tip value="Attivà quì l’ozzione « Global override » supranerà sti parametri à tutti i stili di tutti i linguaghji di prugrammazione. Preferiscerete di sicuru impiegà piuttostu i parametri « Default Style »"/>
-			<scintillaRenderingTechnology-tip value="Puderia amendà a trasfurmazione di i caratteri speziali o currege certi prublemi grafichi ; rilancià Notepad++ per piglià in contu i cambiamenti."/>
+			<scintillaRenderingTechnology-tip value="Puderia amendà a trasfurmazione di i caratteri speziali o currege certi prublemi grafichi ; rilancià macpad++ per piglià in contu i cambiamenti."/>
 
 			<!-- Due to the limited space on the status bar, if the translations for 'length' & 'lines' are much longer than the English words, please leave them in English instead of translating them. -->
 			<statusbar-length-lines value="longh : $STR_REPLACE1$    linee : $STR_REPLACE2$"/>
@@ -1979,7 +1979,7 @@ S’è vo selezziunate u modu espertu ma ùn mudificate micca i schedarii in i l
 			<max-len-on-save-tip value="A lunghezza di a vostra stampittera hè longa longa è puderia ùn esse arregistrata per a prossima sessione."/>
 			<goto-setting-tip value="Mudificà u parametru quì"/>
 			<tabbar-tabcompactlabellen-tip value="Limiteghja a lunghezza visibule di i nomi longhi d’unghjetta. Stampittà per appiecà u valore datu. Intervallu di valori : 1-257 caratteri (0 disattiveghja a truncatura)."/>
-			<networkpathwarning-serverwhitelist-tip value="Aghjunghje u servitore di u schedariu attuale in serverWhiteList.xml di Notepad++.
+			<networkpathwarning-serverwhitelist-tip value="Aghjunghje u servitore di u schedariu attuale in serverWhiteList.xml di macpad++.
 
 Per sapene di più, cliccu nant’à stu buttone per apre u situ web è fighjà a sezzione chì currisponde in u manuale di l’utilizatore."/>
 		</MiscStrings>

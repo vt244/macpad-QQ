@@ -2322,7 +2322,7 @@ void Notepad_plus::command(int id)
 					// Not in admin mode, and file might be protected. So we can't change the file attributes.
 					_nativeLangSpeaker.messageBox("NoAdminRight2ChangeReadOnlyFileAttribute",
 						_pPublicInterface->getHSelf(),
-						L"Please run Notepad++ as administrator to change the file attributes.",
+						L"Please run macpad++ as administrator to change the file attributes.",
 						L"Changing file read-only attribute failed",
 						MB_OK | MB_ICONWARNING);
 				}
@@ -3434,7 +3434,7 @@ void Notepad_plus::command(int id)
 		case IDM_SETTING_IMPORTPLUGIN :
         {
 			// Copy plugins to Plugins Home
-            const wchar_t *extFilterName = L"Notepad++ plugin";
+            const wchar_t *extFilterName = L"macpad++ plugin";
             const wchar_t *extFilter = L".dll";
             vector<wstring> copiedFiles = addNppPlugins(extFilterName, extFilter);
 
@@ -3444,8 +3444,8 @@ void Notepad_plus::command(int id)
 				NativeLangSpeaker *pNativeSpeaker = (NppParameters::getInstance()).getNativeLangSpeaker();
 				pNativeSpeaker->messageBox("NeedToRestartToLoadPlugins",
 					_pPublicInterface->getHSelf(),
-					L"You have to restart Notepad++ to load plugins you installed.",
-					L"Notepad++ needs to be relaunched",
+					L"You have to restart macpad++ to load plugins you installed.",
+					L"macpad++ needs to be relaunched",
 					MB_OK | MB_APPLMODAL);
 			}
             break;
@@ -3454,7 +3454,7 @@ void Notepad_plus::command(int id)
         case IDM_SETTING_IMPORTSTYLETHEMES :
         {
             // get plugin source path
-            const wchar_t *extFilterName = L"Notepad++ style theme";
+            const wchar_t *extFilterName = L"macpad++ style theme";
             const wchar_t *extFilter = L".xml";
             const wchar_t *destDir = L"themes";
 
@@ -3527,7 +3527,7 @@ void Notepad_plus::command(int id)
         {
 			_nativeLangSpeaker.messageBox("ContextMenuXmlEditWarning",
 				_pPublicInterface->getHSelf(),
-				L"Editing contextMenu.xml allows you to modify your Notepad++ popup context menu on edit zone.\rYou have to restart your Notepad++ to take effect after modifying contextMenu.xml.",
+				L"Editing contextMenu.xml allows you to modify your macpad++ popup context menu on edit zone.\rYou have to restart your macpad++ to take effect after modifying contextMenu.xml.",
 				L"Editing contextMenu",
 				MB_OK|MB_APPLMODAL);
 
@@ -3791,12 +3791,12 @@ void Notepad_plus::command(int id)
 
 		case IDM_HOMESWEETHOME :
 		{
-			::ShellExecute(NULL, L"open", L"https://notepad-plus-plus.org/", NULL, NULL, SW_SHOWNORMAL);
+			::ShellExecute(NULL, L"open", L"https://github.com/vt244/macpad-plus-plus#readme", NULL, NULL, SW_SHOWNORMAL);
 			break;
 		}
 		case IDM_PROJECTPAGE :
 		{
-			::ShellExecute(NULL, L"open", L"https://github.com/notepad-plus-plus/notepad-plus-plus/", NULL, NULL, SW_SHOWNORMAL);
+			::ShellExecute(NULL, L"open", L"https://github.com/vt244/macpad-plus-plus", NULL, NULL, SW_SHOWNORMAL);
 			break;
 		}
 
@@ -3828,8 +3828,8 @@ void Notepad_plus::command(int id)
 			{
 				long res = _nativeLangSpeaker.messageBox("XpUpdaterProblem",
 					_pPublicInterface->getHSelf(),
-					L"Notepad++ updater is not compatible with XP due to the obsolete security layer under XP.\rDo you want to go to Notepad++ page to download the latest version?",
-					L"Notepad++ Updater",
+					L"macpad++ updater is not compatible with XP due to the obsolete security layer under XP.\rDo you want to go to the Notepad++ downloads page?",
+					L"macpad++ Updater",
 					MB_YESNO);
 
 				if (res == IDYES)
