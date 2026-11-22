@@ -8,6 +8,7 @@
 #import "EditorChrome.h"
 #import "EditorContextMenus.h"
 #import "EditorLaunchOptions.h"
+#import "EditorMacros.h"
 #import "EditorPlugins.h"
 #import "EditorResources.h"
 #import "EditorSettings.h"
@@ -154,7 +155,9 @@ static void AddCharacterSets(NSMenu *menu)
 @implementation MacpadApp
 {
 	EditorPlugins *_plugins;
+	NSMenu *_macroMenu;
 	NSMenu *_recentMenu;
+	NSInteger _macroMenuBaseItems;
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification
@@ -175,6 +178,8 @@ static void AddCharacterSets(NSMenu *menu)
 			}
 	}
 	[self buildMenu];
+	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(macroLibraryChanged:)
+		name:EditorMacroLibraryDidChange object:EditorMacroLibrary.shared];
 	if (!self.launchOptions.noSession && [[EditorResources.shared setting:@"rememberSession" fallback:@YES] boolValue] &&
 		![NSProcessInfo.processInfo.arguments containsObject:@"--smoke-test"])
 	{
@@ -607,6 +612,7 @@ static void AddCharacterSets(NSMenu *menu)
 	NSMenu *settings = AddMenu(main, Label(@"settings", @"Settings"));
 	AddItem(settings, Label(@"48011", @"Preferences…"), @selector(showPreferences:), @"", self);
 	AddItem(settings, Label(@"46001", @"Style Configurator…"), @selector(showStyleConfigurator:), @"", self);
+	AddItem(settings, Label(@"48009", @"Shortcut Mapper…"), @selector(showShortcutMapper:), @"", self);
 	AddItem(settings, Label(@"native-importConfig", @"Import Notepad++ Configuration…"), @selector(importWindowsConfiguration:), @"", self);
 	AddItem(settings, Label(@"native-editEditorMenu", @"Edit Editor Context Menu…"), @selector(editContextMenu:), @"", self);
 	AddItem(settings, Label(@"native-editTabMenu", @"Edit Tab Context Menu…"), @selector(editContextMenu:), @"", self).tag = 1;
@@ -614,6 +620,21 @@ static void AddCharacterSets(NSMenu *menu)
 	NSMenuItem *standardLanguage = AddItem(translations, Label(@"native-defaultLanguage", @"Default / nativeLang.xml"), @selector(selectTranslation:), @"", self);
 	standardLanguage.state = EditorResources.shared.selectedTranslation ? NSControlStateValueOff : NSControlStateValueOn;
 	[self fillCatalog:translations theme:NO];
+
+	NSMenu *macro = AddMenu(main, Label(@"macro", @"Macro"));
+	_macroMenu = macro;
+	AddItem(macro, Label(@"42018", @"Start Recording"), @selector(startRecordingMacro:), @"");
+	AddItem(macro, Label(@"42019", @"Stop Recording"), @selector(stopRecordingMacro:), @"");
+	AddItem(macro, Label(@"42021", @"Playback"), @selector(playRecordedMacro:), @"");
+	AddItem(macro, Label(@"42025", @"Save Current Recorded Macro…"), @selector(saveRecordedMacro:), @"");
+	AddItem(macro, Label(@"42032", @"Run a Macro Multiple Times…"), @selector(repeatRecordedMacro:), @"");
+	[macro addItem:NSMenuItem.separatorItem];
+	AddItem(macro, Label(@"native-importMacros", @"Import Macros…"), @selector(importMacros:), @"", self);
+	AddItem(macro, Label(@"native-deleteMacro", @"Delete Saved Macro…"), @selector(deleteSavedMacro:), @"", self);
+	AddItem(macro, Label(@"native-modifyMacroShortcut", @"Modify Macro Shortcut…"), @selector(showShortcutMapper:), @"", self).tag = 1;
+	_macroMenuBaseItems = macro.numberOfItems;
+	macro.delegate = self;
+	[self menuNeedsUpdate:macro];
 
 	NSMenu *plugins = AddMenu(main, Label(@"Plugins", @"Plugins"));
 	[_plugins populateMenu:plugins];
@@ -624,6 +645,7 @@ static void AddCharacterSets(NSMenu *menu)
 	NSMenu *help = AddMenu(main, @"?");
 	AddItem(help, Label(@"app-about", @"About macpad++"), @selector(showAbout:), @"", self);
 	AddItem(help, Label(@"app-license", @"License…"), @selector(showLicense:), @"", self);
+	EditorApplyShortcuts(main);
 	// AppKit adds system editing services to the menu bar. Keep the in-window menu scoped to editor commands.
 	[main itemWithTitle:edit.title].representedObject = [edit copy];
 	NSApp.mainMenu = main;
@@ -634,6 +656,7 @@ static void AddCharacterSets(NSMenu *menu)
 
 - (void)showPreferences:(id)sender { EditorShowPreferences(); }
 - (void)showStyleConfigurator:(id)sender { if (EditorShowStyleConfigurator()) [self buildMenu]; }
+- (void)showShortcutMapper:(id)sender { if (EditorShowShortcutMapper(NSApp.mainMenu)) [self buildMenu]; }
 - (void)editUserLanguage:(id)sender
 {
 	if (!EditorShowUserLanguageEditor())
@@ -689,6 +712,32 @@ static void AddCharacterSets(NSMenu *menu)
 			NSDocumentController.sharedDocumentController);
 		return;
 	}
+	if (menu != _macroMenu)
+		return;
+	while (menu.numberOfItems > _macroMenuBaseItems)
+		[menu removeItemAtIndex:menu.numberOfItems - 1];
+	NSArray<EditorMacro *> *macros = EditorMacroLibrary.shared.macros;
+	if (!macros.count)
+		return;
+	[menu addItem:NSMenuItem.separatorItem];
+	NSMutableDictionary<NSString *, NSMenu *> *folders = [NSMutableDictionary dictionary];
+	for (EditorMacro *macro in macros)
+	{
+		NSMenu *destination = menu;
+		if (macro.folder.length)
+		{
+			destination = folders[macro.folder];
+			if (!destination)
+				folders[macro.folder] = destination = AddMenu(menu, macro.folder);
+		}
+		AddItem(destination, macro.name, @selector(playSavedMacro:), @"").representedObject = macro;
+	}
+	EditorApplyShortcuts(menu);
+}
+
+- (void)macroLibraryChanged:(NSNotification *)notification
+{
+	[self menuNeedsUpdate:_macroMenu];
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item
@@ -704,7 +753,7 @@ static void AddCharacterSets(NSMenu *menu)
 			document && (item.tag != 42106 || ![document.editor message:SCI_GETREADONLY]));
 	if (item.action == @selector(copyDocumentPath:))
 		return item.tag >= 42087 ? controller.tabDocuments.count > 0 : document.fileURL != nil;
-	return YES;
+	return item.action != @selector(deleteSavedMacro:) || EditorMacroLibrary.shared.macros.count > 0;
 }
 
 - (void)openRecentFile:(NSMenuItem *)item
@@ -923,6 +972,53 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 		return;
 	NSString *value = item.tag == 42030 ? url.lastPathComponent : item.tag == 42031 ? url.URLByDeletingLastPathComponent.path : url.path;
 	CopyText(value);
+}
+
+- (void)importMacros:(id)sender
+{
+	NSOpenPanel *panel = NSOpenPanel.openPanel;
+	panel.allowedContentTypes = @[UTTypeXML];
+	if ([panel runModal] != NSModalResponseOK)
+		return;
+	NSError *error = nil;
+	NSUInteger skipped = 0;
+	NSInteger imported = [EditorMacroLibrary.shared importShortcuts:panel.URL skipped:&skipped error:&error];
+	if (imported < 0)
+	{
+		[NSApp presentError:error];
+		return;
+	}
+	NSAlert *report = [[NSAlert alloc] init];
+	report.messageText = [NSString localizedStringWithFormat:@"%ld macros imported", imported];
+	if (skipped)
+		report.informativeText = [NSString localizedStringWithFormat:@"%lu duplicate or unsupported macros skipped.", skipped];
+	[report runModal];
+}
+
+- (void)deleteSavedMacro:(id)sender
+{
+	NSArray<EditorMacro *> *macros = EditorMacroLibrary.shared.macros;
+	if (!macros.count)
+		return;
+	NSPopUpButton *chooser = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 290, 26) pullsDown:NO];
+	for (EditorMacro *macro in macros)
+	{
+		NSString *title = macro.folder.length ? [NSString stringWithFormat:@"%@ / %@", macro.folder, macro.name] : macro.name;
+		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:title action:nil keyEquivalent:@""];
+		item.representedObject = macro;
+		[chooser.menu addItem:item];
+	}
+	[chooser selectItemAtIndex:0];
+	NSAlert *alert = [[NSAlert alloc] init];
+	alert.messageText = @"Delete a saved macro";
+	[alert addButtonWithTitle:@"Cancel"];
+	[alert addButtonWithTitle:@"Delete"].hasDestructiveAction = YES;
+	alert.accessoryView = chooser;
+	if ([alert runModal] != NSAlertSecondButtonReturn)
+		return;
+	NSError *error = nil;
+	if (![EditorMacroLibrary.shared removeMacro:chooser.selectedItem.representedObject error:&error])
+		[NSApp presentError:error];
 }
 
 - (void)closeAll:(id)sender

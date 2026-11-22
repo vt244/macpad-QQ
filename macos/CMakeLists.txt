@@ -28,7 +28,7 @@ target_include_directories(editor PUBLIC "${sci}/include" "${sci}/cocoa" "${lex}
 target_include_directories(editor PRIVATE "${sci}/src" "${lex}/lexlib" "${root}/boostregex")
 
 add_executable(macpad macos-main.mm EditorDocument.mm EditorChrome.mm EditorResources.mm EditorPlugins.mm EditorSmoke.mm
-	EditorText.mm EditorFileSearch.mm EditorSearchResultsView.mm EditorWorkspace.mm
+	EditorText.mm EditorFileSearch.mm EditorSearchResultsView.mm EditorWorkspace.mm EditorMacros.mm
 	EditorDocumentList.mm EditorPanelChrome.mm EditorContextMenus.mm EditorDock.mm EditorFolderPanel.mm EditorProjectPanel.mm
 	EditorFunctionList.mm EditorDocumentMap.mm EditorInsertPanels.mm EditorIncrementalSearch.mm EditorEditActions.mm
 	EditorCompletion.mm EditorSettings.mm EditorLaunchOptions.mm)

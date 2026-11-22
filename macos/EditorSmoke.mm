@@ -13,6 +13,7 @@
 #import "EditorIncrementalSearch.h"
 #import "EditorInsertPanels.h"
 #import "EditorLaunchOptions.h"
+#import "EditorMacros.h"
 #import "EditorPlugins.h"
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
@@ -338,6 +339,7 @@ static bool CheckSearchPanel(EditorSearchReport *report)
 }
 
 @interface EditorDocument (MacroSmoke)
+- (BOOL)saveRecordedMacroNamed:(NSString *)name replacing:(BOOL)replacing error:(NSError **)error;
 - (void)checkDiskChanges:(BOOL)checkNormal allowPrompt:(BOOL)allowPrompt;
 @end
 
@@ -402,6 +404,17 @@ static bool CheckSettingsAndLaunch(EditorDocument *document)
 		replacing:@"Smoke Custom Language" error:nullptr] &&
 		[[resources userLanguageXML:@"Smoke Custom Language"] containsString:@"smoke2"],
 		"create, edit and export a compatible user language"))
+		return false;
+	NSMenu *menu = [NSMenu new];
+	NSMenuItem *item = [menu addItemWithTitle:@"Run Fixture" action:@selector(executeSavedRunCommand:) keyEquivalent:@""];
+	item.representedObject = @"Fixture";
+	NSDictionary *previous = [resources setting:@"shortcuts" fallback:@{}];
+	[resources setSetting:@{EditorShortcutIdentifier(item): @{@"key": @"k", @"modifiers": @(NSEventModifierFlagCommand | NSEventModifierFlagShift)}}
+		forName:@"shortcuts"];
+	EditorApplyShortcuts(menu);
+	[resources setSetting:previous forName:@"shortcuts"];
+	if (!Check([item.keyEquivalent isEqualToString:@"k"] && (item.keyEquivalentModifierMask & NSEventModifierFlagShift),
+		"apply a stored shortcut to a named Run command"))
 		return false;
 	EditorLaunchOptions *launch = [[EditorLaunchOptions alloc] initWithArguments:
 		@[@"-n7", @"-c", @"3", @"-lPython", @"-nosession", @"-ro", @"-openFoldersAsWorkspace", @"--", @"-sample.txt"]];
@@ -556,6 +569,35 @@ static bool CheckCustomMenus(EditorDocument *document, NSEvent *click)
 	[NSFileManager.defaultManager removeItemAtURL:editorFile error:nullptr];
 	return Check(close.representedObject == document && [tabMenu itemWithTag:44048] && copy,
 		"apply custom context menu groups, stable command IDs and translated fallback labels");
+}
+
+static bool CheckSearchMacro(EditorDocument *document, NSURL *test)
+{
+	NSString *xml = @"<NotepadPlus><Macros><Macro name=\"Find and replace\">"
+		"<Action type=\"3\" message=\"1700\" wParam=\"0\" lParam=\"0\" sParam=\"\"/>"
+		"<Action type=\"3\" message=\"1601\" wParam=\"0\" lParam=\"0\" sParam=\"needle\"/>"
+		"<Action type=\"3\" message=\"1602\" wParam=\"0\" lParam=\"0\" sParam=\"replacement\"/>"
+		"<Action type=\"3\" message=\"1625\" wParam=\"0\" lParam=\"0\" sParam=\"\"/>"
+		"<Action type=\"3\" message=\"1702\" wParam=\"0\" lParam=\"768\" sParam=\"\"/>"
+		"<Action type=\"3\" message=\"1701\" wParam=\"0\" lParam=\"1609\" sParam=\"\"/>"
+		"</Macro></Macros></NotepadPlus>";
+	NSURL *directory = [test URLByAppendingPathComponent:@"search-macro" isDirectory:YES];
+	NSURL *path = [test URLByAppendingPathComponent:@"search-macro.xml"];
+	EditorMacroLibrary *library = [[EditorMacroLibrary alloc] initWithDirectory:directory];
+	if (!Check([xml writeToURL:path atomically:YES encoding:NSUTF8StringEncoding error:nullptr] &&
+		[library importShortcuts:path skipped:nullptr error:nullptr] == 1, "import an upstream search macro"))
+		return false;
+	EditorMacroLibrary *reopened = [[EditorMacroLibrary alloc] initWithDirectory:directory];
+	NSMenuItem *command = [NSMenuItem new];
+	command.representedObject = reopened.macros.firstObject;
+	ScintillaView *editor = document.editor;
+	[editor setStringProperty:SCI_SETTEXT parameter:0 value:@"needle needle"];
+	[document playSavedMacro:command];
+	if (!Check([editor.string isEqualToString:@"replacement replacement"], "replay saved search and replace actions"))
+		return false;
+	[editor message:SCI_UNDO];
+	[editor message:SCI_UNDO];
+	return true;
 }
 
 static bool CheckCharacterSet(NSURL *test, EditorDocumentController *controller)
@@ -811,6 +853,8 @@ int RunSmokeTest(void)
 		return 1;
 	if (!CheckSearchAndConfigurationParity(controller, test))
 		return 1;
+	if (!CheckSearchMacro(second, test))
+		return 1;
 	[document.editor setStringProperty:SCI_REPLACESEL parameter:0 value:@"# Two views\r\n"];
 	if (!Check([document.editor.string hasPrefix:@"# Two views"] && second.editor.string.length == 0 && document.isDocumentEdited,
 		"edit the other view without altering the active host document"))
@@ -979,6 +1023,65 @@ int RunSmokeTest(void)
 		!Check(!document.isDocumentEdited, "clear the edited state after saving"))
 		return 1;
 	[editor message:SCI_SETSEL wParam:0 lParam:5];
+	[document startRecordingMacro:nil];
+	[editor setStringProperty:SCI_REPLACESEL parameter:0 value:@"def"];
+	[document stopRecordingMacro:nil];
+	if (!Check([document saveRecordedMacroNamed:@"Smoke recording" replacing:NO error:&error], "save a named macro in the profile"))
+		return 1;
+	[editor message:SCI_UNDO];
+	[editor message:SCI_SETSEL wParam:0 lParam:5];
+	[document playRecordedMacro:nil];
+	if (!Check([editor.string hasPrefix:@"def пример"], "replay a recorded text edit"))
+		return 1;
+	[editor message:SCI_UNDO];
+	if (!Check(!document.isDocumentEdited && [editor.string hasPrefix:@"class пример"], "undo macro playback in one step"))
+		return 1;
+	EditorMacroLibrary *reloaded = [[EditorMacroLibrary alloc] initWithDirectory:test];
+	EditorMacroLibrary *concurrent = [[EditorMacroLibrary alloc] initWithDirectory:test];
+	NSURL *shortcuts = [test URLByAppendingPathComponent:@"shortcuts.xml"];
+	NSString *libraryXML = @"<NotepadPlus><Macros>"
+		"<Macro name='Insert from XML' FolderName='Smoke folder'><Action type='1' message='2170' wParam='0' lParam='0' sParam='café'/></Macro>"
+		"<Macro name='Trim from XML' FolderName='Smoke folder'><Action type='2' message='0' wParam='42024' lParam='0'/></Macro>"
+		"<Macro name='Unsupported'><Action type='0' message='2182' wParam='0' lParam='4294967295' sParam=''/></Macro>"
+		"</Macros></NotepadPlus>";
+	NSUInteger skipped = 0;
+	if (!Check(reloaded.macros.count == 1 && [reloaded.macros.firstObject.name isEqualToString:@"Smoke recording"] &&
+		[libraryXML writeToURL:shortcuts atomically:YES encoding:NSUTF8StringEncoding error:&error] &&
+		[EditorMacroLibrary.shared importShortcuts:shortcuts skipped:&skipped error:&error] == 2 && skipped == 1 &&
+		[EditorMacroLibrary.shared.macros.lastObject.folder isEqualToString:@"Smoke folder"],
+		"reload named macros and import only compatible, validated shortcut actions"))
+		return 1;
+	NSError *conflict = nil;
+	if (!Check(![concurrent removeMacro:concurrent.macros.firstObject error:&conflict] && conflict &&
+		[[[EditorMacroLibrary alloc] initWithDirectory:test] macros].count == 3,
+		"prevent a second instance from overwriting an updated macro library"))
+		return 1;
+	EditorDocument *macroDocument = [controller makeUntitledDocumentOfType:controller.defaultType error:&error];
+	[controller addDocument:macroDocument];
+	[macroDocument makeWindowControllers];
+	[macroDocument showWindows];
+	NSMenu *macroMenu = [NSApp.mainMenu itemWithTitle:@"Macro"].submenu;
+	[macroMenu update];
+	NSMenu *importedMenu = [macroMenu itemWithTitle:@"Smoke folder"].submenu;
+	NSMenuItem *savedMacroItem = [importedMenu itemWithTitle:@"Insert from XML"];
+	if (!Check(savedMacroItem != nil, "expose imported macro folders in the live menu") ||
+		!Check([NSApp sendAction:savedMacroItem.action to:savedMacroItem.target from:savedMacroItem] &&
+		[macroDocument.editor.string isEqualToString:@"café"] && [editor.string hasPrefix:@"class пример"],
+		"run a shared imported macro from its menu in a different document"))
+		return 1;
+	[macroDocument.editor setStringProperty:SCI_SETTEXT parameter:0 value:@" \tfirst  \r\n second \t"];
+	[macroDocument.editor message:SCI_SETSEL wParam:3 lParam:6];
+	NSMenuItem *trim = [[NSMenuItem alloc] init];
+	trim.tag = 42043;
+	[macroDocument runWhitespaceCommand:trim];
+	if (!Check([macroDocument.editor.string isEqualToString:@"first\r\n second \t"], "trim only the partially selected line"))
+		return 1;
+	[macroDocument.editor message:SCI_SETSEL wParam:0 lParam:0];
+	NSMenuItem *importedTrim = [importedMenu itemWithTitle:@"Trim from XML"];
+	if (!Check(importedTrim && [NSApp sendAction:importedTrim.action to:importedTrim.target from:importedTrim] &&
+		[macroDocument.editor.string isEqualToString:@"first\r\n second"], "run an imported whitespace menu command"))
+		return 1;
+	[macroDocument close];
 
 	[editor message:SCI_SETSEL wParam:1 lParam:4];
 	[document toggleBookmark:nil];
@@ -1070,6 +1173,6 @@ int RunSmokeTest(void)
 	if (!Check([workspace startAtDirectory:recoveryDirectory] && ![otherInstance startAtDirectory:recoveryDirectory],
 		"prevent another instance from overwriting the same recovery workspace"))
 		return 1;
-	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands, session recovery, terminal options.");
+	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands, session recovery, terminal options, macros.");
 	return 0;
 }

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #import "EditorSettings.h"
 #import "EditorDocument.h"
+#import "EditorMacros.h"
 #import "EditorResources.h"
 
 static void Place(NSView *view, NSView *item, CGFloat x, CGFloat y, CGFloat width, CGFloat height = 24)
@@ -284,6 +285,185 @@ static NSString *Hex(NSColor *color)
 @end
 
 BOOL EditorShowStyleConfigurator(void) { return [[StyleForm new] edit]; }
+
+NSString *EditorShortcutIdentifier(NSMenuItem *item)
+{
+	NSString *action = item.action ? NSStringFromSelector(item.action) : @"";
+	if ([action isEqualToString:@"selectLanguage:"] && [item.representedObject isKindOfClass:NSString.class])
+		return [action stringByAppendingString:item.representedObject];
+	if ([item.representedObject isKindOfClass:EditorMacro.class])
+	{
+		EditorMacro *macro = item.representedObject;
+		return [NSString stringWithFormat:@"%@/%@/%@", action, macro.folder, macro.name];
+	}
+	if ([action isEqualToString:@"executeSavedRunCommand:"] && [item.representedObject isKindOfClass:NSString.class])
+		return [action stringByAppendingString:item.representedObject];
+	return [NSString stringWithFormat:@"%@/%ld", action, item.tag];
+}
+
+static void CollectCommands(NSMenu *menu, NSString *path, NSMutableDictionary<NSString *, NSMenuItem *> *commands)
+{
+	for (NSMenuItem *item in menu.itemArray)
+	{
+		NSString *name = path.length ? [NSString stringWithFormat:@"%@ › %@", path, item.title] : item.title;
+		if (item.submenu)
+			CollectCommands(item.submenu, name, commands);
+		else if (item.action && item.title.length && item.action != @selector(showLicense:) && item.action != @selector(performZoom:))
+			commands[name] = item;
+	}
+}
+
+void EditorApplyShortcuts(NSMenu *menu)
+{
+	NSDictionary *shortcuts = [EditorResources.shared setting:@"shortcuts" fallback:@{}];
+	if (!shortcuts.count)
+		return;
+	for (NSMenuItem *item in menu.itemArray)
+	{
+		if (item.submenu)
+			EditorApplyShortcuts(item.submenu);
+		else if (item.action)
+		{
+			NSDictionary *binding = shortcuts[EditorShortcutIdentifier(item)];
+			if (![binding isKindOfClass:NSDictionary.class] ||
+				![binding[@"key"] isKindOfClass:NSString.class] || ![binding[@"modifiers"] isKindOfClass:NSNumber.class])
+				continue;
+			item.keyEquivalent = binding[@"key"];
+			item.keyEquivalentModifierMask = [binding[@"modifiers"] unsignedIntegerValue];
+		}
+	}
+}
+
+static NSString *DisplayKey(NSString *value)
+{
+	if (value.length == 1)
+	{
+		unichar key = [value characterAtIndex:0];
+		if (key >= NSF1FunctionKey && key <= NSF20FunctionKey)
+			return [NSString stringWithFormat:@"F%d", key - NSF1FunctionKey + 1];
+	}
+	return value;
+}
+
+static NSString *ReadKey(NSString *value)
+{
+	if (!value.length)
+		return @"";
+	if (value.length == 1)
+		return value.lowercaseString;
+	const NSInteger function = [[value substringFromIndex:1] integerValue];
+	if ([value.uppercaseString hasPrefix:@"F"] && function >= 1 && function <= 20)
+		return [NSString stringWithFormat:@"%C", (unichar)(NSF1FunctionKey + function - 1)];
+	return nil;
+}
+
+@interface ShortcutForm : NSObject
+- (BOOL)edit:(NSMenu *)menu;
+@end
+
+@implementation ShortcutForm
+{
+	NSDictionary<NSString *, NSMenuItem *> *_commands;
+	NSPopUpButton *_choice;
+	NSTextField *_key;
+	NSArray<NSButton *> *_modifiers;
+}
+
+static const NSEventModifierFlags ModifierFlags[] = {
+	NSEventModifierFlagCommand, NSEventModifierFlagShift, NSEventModifierFlagOption, NSEventModifierFlagControl,
+};
+
+- (void)choose:(id)sender
+{
+	NSMenuItem *item = _commands[_choice.titleOfSelectedItem];
+	_key.stringValue = DisplayKey(item.keyEquivalent);
+	for (NSUInteger i = 0; i < _modifiers.count; ++i)
+		_modifiers[i].state = (item.keyEquivalentModifierMask & ModifierFlags[i]) != 0;
+}
+
+- (BOOL)edit:(NSMenu *)menu
+{
+	NSMutableDictionary *commands = [NSMutableDictionary dictionary];
+	CollectCommands(menu, @"", commands);
+	_commands = commands;
+	if (!_commands.count)
+		return NO;
+	NSAlert *dialog = [NSAlert new];
+	dialog.messageText = [EditorResources.shared label:@"ShortcutMapper:title" fallback:@"Shortcut Mapper"];
+	dialog.informativeText = SettingsLabel(@"Enter a key or F1–F20. Leave the key empty to remove the shortcut.");
+	[dialog addButtonWithTitle:SettingsLabel(@"Apply")];
+	[dialog addButtonWithTitle:SettingsLabel(@"Cancel")];
+	[dialog addButtonWithTitle:SettingsLabel(@"Restore Default")];
+	NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 443, 115)];
+	_choice = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+	[_choice addItemsWithTitles:[_commands.allKeys sortedArrayUsingSelector:@selector(localizedStandardCompare:)]];
+	_choice.target = self;
+	_choice.action = @selector(choose:);
+	Place(form, _choice, 0, 88, 440);
+	Label(form, @"Shortcut key", 54);
+	_key = [NSTextField textFieldWithString:@""];
+	Place(form, _key, 150, 54, 100);
+	NSMutableArray *modifiers = [NSMutableArray array];
+	for (NSString *name in @[@"Command", @"Shift", @"Option", @"Control"])
+	{
+		NSButton *modifier = [NSButton checkboxWithTitle:SettingsLabel(name) target:nil action:nullptr];
+		Place(form, modifier, modifiers.count * 110, 14, 105);
+		[modifiers addObject:modifier];
+	}
+	_modifiers = modifiers;
+	dialog.accessoryView = form;
+	dialog.window.initialFirstResponder = _key;
+	[self choose:nil];
+	while (true)
+	{
+		NSModalResponse response = [dialog runModal];
+		if (response == NSAlertSecondButtonReturn)
+			return NO;
+		EditorResources *resources = EditorResources.shared;
+		NSMutableDictionary *shortcuts = [[resources setting:@"shortcuts" fallback:@{}] mutableCopy];
+		NSMenuItem *item = _commands[_choice.titleOfSelectedItem];
+		NSString *identifier = EditorShortcutIdentifier(item);
+		if (response == NSAlertThirdButtonReturn)
+		{
+			[shortcuts removeObjectForKey:identifier];
+			[resources setSetting:shortcuts forName:@"shortcuts"];
+			return YES;
+		}
+		NSString *key = ReadKey(_key.stringValue);
+		if (!key)
+		{
+			dialog.informativeText = @"Enter a single character or a function key from F1 to F20.";
+			continue;
+		}
+		NSEventModifierFlags modifiers = 0;
+		for (NSUInteger i = 0; i < _modifiers.count; ++i)
+			if (_modifiers[i].state == NSControlStateValueOn)
+				modifiers |= ModifierFlags[i];
+		NSString *conflict = nil;
+		if (key.length)
+			for (NSString *name in _commands)
+			{
+				NSMenuItem *other = _commands[name];
+				if (![EditorShortcutIdentifier(other) isEqual:identifier] &&
+					[other.keyEquivalent.lowercaseString isEqualToString:key] && other.keyEquivalentModifierMask == modifiers)
+				{
+					conflict = name;
+					break;
+				}
+			}
+		if (conflict)
+		{
+			dialog.informativeText = [NSString stringWithFormat:@"That shortcut is assigned to %@.", conflict];
+			continue;
+		}
+		shortcuts[identifier] = @{@"key": key, @"modifiers": @(modifiers)};
+		[resources setSetting:shortcuts forName:@"shortcuts"];
+		return YES;
+	}
+}
+@end
+
+BOOL EditorShowShortcutMapper(NSMenu *menu) { return [[ShortcutForm new] edit:menu]; }
 
 static NSString *ChooseLanguage(NSString *title, BOOL creating)
 {

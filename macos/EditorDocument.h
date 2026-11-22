@@ -3,6 +3,7 @@
 
 @class ScintillaView;
 @class EditorChrome;
+@class EditorMacro;
 
 @interface EditorDocument : NSDocument
 @property(nonatomic, readonly) ScintillaView *editor;
@@ -24,6 +25,12 @@
 - (IBAction)toggleBookmark:(id)sender;
 - (IBAction)navigateBookmark:(id)sender;
 - (IBAction)clearBookmarks:(id)sender;
+- (IBAction)startRecordingMacro:(id)sender;
+- (IBAction)stopRecordingMacro:(id)sender;
+- (IBAction)playRecordedMacro:(id)sender;
+- (IBAction)repeatRecordedMacro:(id)sender;
+- (IBAction)saveRecordedMacro:(id)sender;
+- (IBAction)playSavedMacro:(NSMenuItem *)sender;
 - (IBAction)findText:(id)sender;
 - (IBAction)findNext:(id)sender;
 - (IBAction)findPrevious:(id)sender;

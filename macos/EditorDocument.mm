@@ -12,6 +12,7 @@
 #import "EditorFunctionList.h"
 #import "EditorIncrementalSearch.h"
 #import "EditorInsertPanels.h"
+#import "EditorMacros.h"
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
 #import "EditorText.h"
@@ -39,6 +40,16 @@ static constexpr int TokenMarkCount = 5;
 static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor);
 static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end);
 static NSUInteger NextUntitledNumber = 1;
+
+struct RecordedSearch
+{
+	NSString *query = @"";
+	NSString *replacement = @"";
+	NSString *folder = @"";
+	NSString *filters = @"*.*";
+	NSInteger mode = 0;
+	NSInteger options = 512;
+};
 
 @interface EditorTabPane : NSView
 @property(nonatomic, weak) EditorTabStrip *tabs;
@@ -1504,6 +1515,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	ScintillaView *_editor;
 	ScintillaView *_clone;
 	EditorCloneObserver *_cloneObserver;
+	__weak ScintillaView *_macroSource;
 	NSData *_loadedUTF8;
 	NSStringEncoding _encoding;
 	NSStringEncoding _readerEncoding;
@@ -1589,11 +1601,14 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	__weak EditorDocument *_displayedOtherDocument;
 	BOOL _loading;
 	BOOL _encodingChanged;
+	BOOL _recording;
+	BOOL _playingMacro;
 	BOOL _monitoring;
 	BOOL _readOnlyBeforeMonitoring;
 	BOOL _askingAboutDisk;
 	NSDictionary *_diskState;
 	NSDictionary *_pendingDiskState;
+	std::vector<MacroStep> _macro;
 }
 
 - (void)dealloc
@@ -2148,6 +2163,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 {
 	if (!_clone)
 		return;
+	if (_macroSource == _clone)
+		[self stopRecordingMacro:nil];
 	_clone.delegate = nil;
 	[_clone removeFromSuperview];
 	_clone = nil;
@@ -2164,6 +2181,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		case SCN_FOCUSIN:
 		case SCN_ZOOM:
 		case SCN_UPDATEUI:
+		case SCN_MACRORECORD:
 		case SCN_MARGINCLICK:
 		case SCN_CHARADDED:
 			[self notification:notification];
@@ -2324,6 +2342,11 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		{@"fileBrowser", @"44085", @"Folder as Workspace", @"folder", @selector(toggleFolderWorkspace:), NSDocumentController.sharedDocumentController},
 		{@"monitoring", @"44097", @"Monitoring (tail -f)", @"waveform.path", @selector(monitorFile:), self},
 		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+		{@"startrecord", @"42018", @"Start Recording", @"record.circle", @selector(startRecordingMacro:), self},
+		{@"stoprecord", @"42019", @"Stop Recording", @"stop.circle", @selector(stopRecordingMacro:), self},
+		{@"playrecord", @"42021", @"Playback", @"play.circle", @selector(playRecordedMacro:), self},
+		{@"saverecord", @"42025", @"Save Current Recorded Macro…", @"square.and.arrow.down", @selector(saveRecordedMacro:), self},
+		{@"playrecord_m", @"42032", @"Run a Macro Multiple Times…", @"repeat.circle", @selector(repeatRecordedMacro:), self},
 	};
 	NSMutableArray<NSToolbarItem *> *items = [NSMutableArray array];
 	for (const auto &command : commands)
@@ -2361,6 +2384,14 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		return [NSDocumentController.sharedDocumentController hasEditedDocuments];
 	if (command.action == @selector(monitorFile:))
 		return self.fileURL && !self.isDocumentEdited;
+	if (command.action == @selector(startRecordingMacro:))
+		return !_recording;
+	if (command.action == @selector(stopRecordingMacro:))
+		return _recording;
+	if (command.action == @selector(playRecordedMacro:) || command.action == @selector(saveRecordedMacro:))
+		return !_recording && !_macro.empty();
+	if (command.action == @selector(repeatRecordedMacro:))
+		return !_recording && (!_macro.empty() || EditorMacroLibrary.shared.macros.count);
 	if (command.action == @selector(toggleVerticalScrollSync:) || command.action == @selector(toggleHorizontalScrollSync:))
 		return [(EditorDocumentController *)NSDocumentController.sharedDocumentController hasOtherView];
 	return YES;
@@ -2777,6 +2808,16 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			NSControlStateValueOn : NSControlStateValueOff;
 		return YES;
 	}
+	if (item.action == @selector(startRecordingMacro:))
+		return !_recording;
+	if (item.action == @selector(stopRecordingMacro:))
+		return _recording;
+	if (item.action == @selector(playRecordedMacro:) || item.action == @selector(saveRecordedMacro:))
+		return !_recording && !_macro.empty();
+	if (item.action == @selector(repeatRecordedMacro:))
+		return !_recording && (!_macro.empty() || EditorMacroLibrary.shared.macros.count);
+	if (item.action == @selector(playSavedMacro:))
+		return !_recording;
 	if (item.action == @selector(toggleDocumentReadOnly:))
 	{
 		item.state = [self.editor message:SCI_GETREADONLY] ? NSControlStateValueOn : NSControlStateValueOff;
@@ -2795,6 +2836,270 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		return self.fileURL != nil && !self.isDocumentEdited;
 	}
 	return [super validateMenuItem:item];
+}
+
+- (IBAction)startRecordingMacro:(id)sender
+{
+	if (_recording)
+		return;
+	_macro.clear();
+	_recording = YES;
+	_macroSource = self.editor;
+	[_macroSource message:SCI_STARTRECORD];
+	[_chrome refreshToolbar];
+}
+
+- (IBAction)stopRecordingMacro:(id)sender
+{
+	[_macroSource message:SCI_STOPRECORD];
+	_macroSource = nil;
+	_recording = NO;
+	[_chrome refreshToolbar];
+}
+
+- (void)recordStep:(const SCNotification *)notification
+{
+	MacroStep step = {static_cast<unsigned int>(notification->message), notification->wParam, notification->lParam, std::nullopt};
+	const char *text = reinterpret_cast<const char *>(step.lParam);
+	switch (step.message)
+	{
+	case SCI_REPLACESEL:
+		if (text && (std::strcmp(text, "\n") == 0 || std::strcmp(text, "\r") == 0))
+		{
+			if (_editor && [_editor message:SCI_GETEOLMODE] == SC_EOL_CRLF && *text == '\n' &&
+				!_macro.empty() && _macro.back().message == SCI_NEWLINE && _macro.back().lParam == '\r')
+				_macro.pop_back();
+			step = {SCI_NEWLINE, 0, *text, std::nullopt};
+			break;
+		}
+		[[fallthrough]];
+	case SCI_INSERTTEXT:
+	case SCI_SEARCHNEXT:
+	case SCI_SEARCHPREV:
+		if (text)
+			step.text = std::string(text);
+		break;
+	case SCI_ADDTEXT:
+	case SCI_APPENDTEXT:
+		if (text)
+			step.text = std::string(text, step.wParam);
+		break;
+	}
+	_macro.push_back(std::move(step));
+}
+
+- (void)playMacro:(const std::vector<MacroStep> &)steps count:(NSUInteger)count untilEOF:(BOOL)untilEOF
+{
+	if (_recording || _playingMacro || steps.empty())
+		return;
+	_playingMacro = YES;
+	ScintillaView *editor = self.editor;
+	[editor message:SCI_BEGINUNDOACTION];
+	for (NSUInteger i = 0; untilEOF || i < count; ++i)
+	{
+		RecordedSearch search;
+		const auto before = [editor message:SCI_GETCURRENTPOS];
+		const auto lengthBefore = [editor message:SCI_GETLENGTH];
+		if (untilEOF && before >= lengthBefore)
+			break;
+		for (const auto &step : steps)
+		{
+			if (IsMacroSearchStep(step.message))
+			{
+				[self playSearchStep:step state:search];
+				continue;
+			}
+			if (!step.message && IsMacroMenuCommand(step.wParam))
+			{
+				if (step.wParam == 41006)
+					[self saveDocument:nil];
+				else
+					[self applyWhitespaceCommand:step.wParam];
+				continue;
+			}
+			const auto parameter = step.text ? reinterpret_cast<sptr_t>(step.text->c_str()) :
+				step.message == SCI_NEWLINE ? 0 : step.lParam;
+			if (step.message == SCI_SEARCHNEXT || step.message == SCI_SEARCHPREV)
+				SearchEditorFromAnchor(editor, step.message, step.wParam, parameter);
+			else
+				[editor message:step.message wParam:step.wParam lParam:parameter];
+		}
+		if (untilEOF && [editor message:SCI_GETLENGTH] - [editor message:SCI_GETCURRENTPOS] >= lengthBefore - before)
+			break;
+	}
+	[editor message:SCI_ENDUNDOACTION];
+	[editor message:SCI_SCROLLCARET];
+	_playingMacro = NO;
+}
+
+- (void)playSearchStep:(const MacroStep &)step state:(RecordedSearch &)search
+{
+	NSString *value = step.text ? [[NSString alloc] initWithBytes:step.text->data()
+		length:step.text->size() encoding:NSUTF8StringEncoding] : nil;
+	switch (step.message)
+	{
+		case 1700: search = RecordedSearch{}; return;
+		case 1601: search.query = value ?: @""; return;
+		case 1602: search.replacement = value ?: @""; return;
+		case 1654: search.filters = value ?: @"*.*"; return;
+		case 1655: search.folder = value ?: @""; return;
+		case 1625: search.mode = step.lParam; return;
+		case 1702: search.options = step.lParam; return;
+	}
+	if (!_searchPanel)
+		[self makeSearchPanel];
+	const NSInteger command = step.lParam;
+	_searchMode.selectedSegment = command == 1665 || command == 1666 ? 4 : command == 1656 || command == 1660 ? 2 :
+		command == 1615 || command == 1633 ? 3 : command == 1608 || command == 1609 || command == 1635 ? 1 : 0;
+	_searchInput.stringValue = search.query;
+	_replaceInput.stringValue = search.replacement;
+	if (search.folder.length)
+		_searchFolder.stringValue = search.folder;
+	_searchFilters.stringValue = search.filters;
+	_matchCase.state = (search.options & 1) != 0;
+	_wholeWord.state = (search.options & 2) != 0;
+	_purgeMarks.state = (search.options & 4) != 0;
+	_bookmarkMatches.state = (search.options & 16) != 0;
+	_recursive.state = (search.options & 32) != 0;
+	_includeHidden.state = (search.options & 64) != 0;
+	_wrapSearch.state = (search.options & 256) != 0;
+	_regularExpression.state = search.mode == 2;
+	_extendedSearch.state = search.mode == 1;
+	_matchNewline.state = (search.options & 1024) != 0;
+	[self updateSearchMode:nil];
+	_inSelection.state = !_inSelection.hidden && (search.options & 128) != 0;
+	[self captureSearchSelection:nil];
+	for (NSUInteger index = 0; index < _projectSearchControls.count; ++index)
+		_projectSearchControls[index].state = (search.options & (128 << index)) != 0;
+	NSButton *action = [NSButton new];
+	switch (command)
+	{
+		case 1: action.tag = search.options & 512 ? 0 : 1; break;
+		case 43010: action.tag = 1; break;
+		case 1608: action.tag = 2; break;
+		case 1609: action.tag = 3; break;
+		case 1656: case 1666: action.tag = 5; break;
+		case 1660: case 1665: action.tag = 6; break;
+		case 1615: action.tag = 7; break;
+		case 1633: action.tag = 8; break;
+		case 1614: action.tag = 10; break;
+		case 1641: action.tag = 11; break;
+		case 1636: action.tag = 12; break;
+		case 1635: action.tag = 13; break;
+		default: return;
+	}
+	[self performSearch:action];
+}
+
+- (IBAction)saveDocument:(id)sender
+{
+	if (_recording)
+		_macro.push_back({0, 41006, 0, std::nullopt});
+	[super saveDocument:sender];
+}
+
+- (IBAction)playRecordedMacro:(id)sender
+{
+	[self playMacro:_macro count:1 untilEOF:NO];
+}
+
+- (IBAction)playSavedMacro:(NSMenuItem *)sender
+{
+	EditorMacro *macro = sender.representedObject;
+	if ([macro isKindOfClass:EditorMacro.class])
+		[self playMacro:[macro steps] count:1 untilEOF:NO];
+}
+
+- (BOOL)saveRecordedMacroNamed:(NSString *)name replacing:(BOOL)replacing error:(NSError **)error
+{
+	return [EditorMacroLibrary.shared saveSteps:_macro name:name replacing:replacing error:error];
+}
+
+- (IBAction)saveRecordedMacro:(id)sender
+{
+	if (_recording || _macro.empty())
+		return;
+	NSAlert *alert = [[NSAlert alloc] init];
+	alert.messageText = [EditorResources.shared label:@"42025" fallback:@"Save Current Recorded Macro"];
+	[alert addButtonWithTitle:@"Save"];
+	[alert addButtonWithTitle:@"Cancel"];
+	NSTextField *input = [NSTextField textFieldWithString:@""];
+	input.frame = NSMakeRect(0, 0, 260, 24);
+	input.placeholderString = @"Macro name";
+	alert.accessoryView = input;
+	alert.window.initialFirstResponder = input;
+	if ([alert runModal] != NSAlertFirstButtonReturn)
+		return;
+	NSString *name = [input.stringValue stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+	NSError *error = nil;
+	if ([self saveRecordedMacroNamed:name replacing:NO error:&error])
+		return;
+	if (error.code == NSFileWriteFileExistsError)
+	{
+		NSAlert *replace = [[NSAlert alloc] init];
+		replace.messageText = [NSString stringWithFormat:@"Replace the macro “%@”?", name];
+		[replace addButtonWithTitle:@"Cancel"];
+		[replace addButtonWithTitle:@"Replace"];
+		if ([replace runModal] != NSAlertSecondButtonReturn)
+			return;
+		error = nil;
+		if ([self saveRecordedMacroNamed:name replacing:YES error:&error])
+			return;
+	}
+	if (error)
+		[self presentError:error];
+}
+
+- (IBAction)repeatRecordedMacro:(id)sender
+{
+	if (_recording)
+		return;
+	NSArray<EditorMacro *> *macros = EditorMacroLibrary.shared.macros;
+	if (_macro.empty() && !macros.count)
+		return;
+	NSAlert *alert = [[NSAlert alloc] init];
+	alert.messageText = [EditorResources.shared label:@"42032" fallback:@"Run a Macro Multiple Times"];
+	[alert addButtonWithTitle:@"Run"];
+	[alert addButtonWithTitle:@"Cancel"];
+	[alert addButtonWithTitle:@"Run Until End of File"];
+	NSPopUpButton *choices = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+	if (!_macro.empty())
+		[choices addItemWithTitle:@"Current recorded macro"];
+	for (EditorMacro *macro in macros)
+	{
+		NSString *title = macro.folder.length ? [NSString stringWithFormat:@"%@ / %@", macro.folder, macro.name] : macro.name;
+		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:title action:nil keyEquivalent:@""];
+		item.representedObject = macro;
+		[choices.menu addItem:item];
+	}
+	[choices selectItemAtIndex:0];
+	NSTextField *count = [NSTextField textFieldWithString:@"1"];
+	NSStackView *form = [NSStackView stackViewWithViews:@[choices, [NSTextField labelWithString:@"Number of times"], count]];
+	form.orientation = NSUserInterfaceLayoutOrientationVertical;
+	form.alignment = NSLayoutAttributeLeading;
+	form.frame = NSMakeRect(0, 0, 275, 90);
+	[choices.widthAnchor constraintLessThanOrEqualToConstant:275].active = YES;
+	[count.widthAnchor constraintEqualToConstant:100].active = YES;
+	alert.accessoryView = form;
+	alert.window.initialFirstResponder = count;
+	const auto response = [alert runModal];
+	if (response != NSAlertFirstButtonReturn && response != NSAlertThirdButtonReturn)
+		return;
+	EditorMacro *selected = choices.selectedItem.representedObject;
+	const auto &steps = selected ? [selected steps] : _macro;
+	if (response == NSAlertThirdButtonReturn)
+	{
+		[self playMacro:steps count:0 untilEOF:YES];
+		return;
+	}
+	NSScanner *scanner = [NSScanner scannerWithString:count.stringValue];
+	NSInteger times = 0;
+	if (![scanner scanInteger:&times] || !scanner.isAtEnd || times < 1)
+	{
+		NSBeep();
+		return;
+	}
+	[self playMacro:steps count:times untilEOF:NO];
 }
 
 - (IBAction)convertEncoding:(NSMenuItem *)sender
@@ -3162,6 +3467,10 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		case SCN_MARGINCLICK:
 			if (notification->margin == 1)
 				[self toggleBookmarkAtLine:[self.editor message:SCI_LINEFROMPOSITION wParam:notification->position]];
+			break;
+		case SCN_MACRORECORD:
+			if (_recording)
+				[self recordStep:notification];
 			break;
 	}
 }
@@ -3638,6 +3947,8 @@ static sptr_t DeleteWhitespace(ScintillaView *editor, NSString *pattern, sptr_t 
 		ConvertIndentation(self.editor, command);
 		return;
 	}
+	if (_recording && IsMacroMenuCommand(command))
+		_macro.push_back({0, static_cast<uptr_t>(command), 0, std::nullopt});
 	[self applyWhitespaceCommand:command];
 }
 
@@ -4224,7 +4535,14 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 				[document->_searchPanel orderOut:nil];
 		}
 	};
-	dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+	if (_playingMacro)
+	{
+		NSError *error = nil;
+		EditorSearchReport *report = worker(progress, &error);
+		finish(report, error);
+	}
+	else
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
 			NSError *error = nil;
 			EditorSearchReport *report = worker(progress, &error);
 			dispatch_async(dispatch_get_main_queue(), ^{ finish(report, error); });
@@ -4295,6 +4613,38 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	}
 }
 
+- (void)recordSearchAction:(NSInteger)tag
+{
+	if (!_recording || tag < 0 || tag > 13 || tag == 4 || tag == 9)
+		return;
+	const NSInteger actions[] = {1, 1, 1608, 1609, 0, 1656, 1660, 1615, 1633, 0, 1614, 1641, 1636, 1635};
+	const BOOL project = _searchMode.selectedSegment == 4;
+	sptr_t action = project && tag == 5 ? 1666 : project && tag == 6 ? 1665 : actions[tag];
+	auto appendText = [&](unsigned int message, NSString *value) {
+		_macro.push_back({message, 0, 0, std::string(value.UTF8String ?: "", [value lengthOfBytesUsingEncoding:NSUTF8StringEncoding])});
+	};
+	sptr_t options = (_matchCase.state ? 1 : 0) | (_wholeWord.state ? 2 : 0) | (_purgeMarks.state ? 4 : 0) |
+		(_bookmarkMatches.state ? 16 : 0) | (_recursive.state ? 32 : 0) | (_includeHidden.state ? 64 : 0) |
+		(!_inSelection.hidden && _inSelection.state ? 128 : 0) | (_wrapSearch.state ? 256 : 0) |
+		(tag == 1 ? 0 : 512) | (_matchNewline.state ? 1024 : 0);
+	if (project)
+		for (NSUInteger index = 0; index < _projectSearchControls.count; ++index)
+			if (_projectSearchControls[index].state)
+				options |= 128 << index;
+	_macro.push_back({1700, 0, 0, std::nullopt});
+	appendText(1601, _searchInput.stringValue);
+	appendText(1602, _replaceInput.stringValue);
+	if (tag == 5 || tag == 6)
+	{
+		appendText(1654, _searchFilters.stringValue);
+		if (!project)
+			appendText(1655, _searchFolder.stringValue);
+	}
+	_macro.push_back({1625, 0, _regularExpression.state ? 2 : _extendedSearch.state ? 1 : 0, std::nullopt});
+	_macro.push_back({1702, 0, options, std::nullopt});
+	_macro.push_back({1701, 0, action, std::nullopt});
+}
+
 - (void)performSearch:(NSButton *)sender
 {
 	if (sender.tag == 4)
@@ -4312,6 +4662,7 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	{
 		if (sender.tag == 8)
 		{
+			[self recordSearchAction:8];
 			[self clearSearchMarks];
 		}
 		else
@@ -4347,6 +4698,12 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	_searchFlags = flags;
 	_searchStatus.stringValue = @"";
 	[self.editor message:SCI_SETSTATUS wParam:SC_STATUS_OK];
+	[self recordSearchAction:sender.tag];
+	struct PauseRecording {
+		ScintillaView *source;
+		~PauseRecording() { [source message:SCI_STARTRECORD]; }
+	} pause{_recording ? _macroSource : nil};
+	[pause.source message:SCI_STOPRECORD];
 	switch (sender.tag)
 	{
 		case 0: [self findNext:nil]; break;
