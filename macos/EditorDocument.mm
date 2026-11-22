@@ -15,6 +15,7 @@
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
 #import "EditorText.h"
+#import "EditorWorkspace.h"
 #import "ScintillaView.h"
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
@@ -22,6 +23,7 @@
 #include "BoostRegexSearch.h"
 #include "pugiconfig.hpp"
 #undef PUGIXML_CHARCONV_FLOAT
+#include "pugixml.hpp"
 #include <algorithm>
 #include <climits>
 #include <cstring>
@@ -122,6 +124,8 @@ static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
 - (NSStringEncoding)currentTextEncoding;
 - (void)checkDiskChanges:(BOOL)checkNormal allowPrompt:(BOOL)allowPrompt;
 - (NSData *)editorUTF8;
+- (NSDictionary<NSString *, id> *)workspaceEntry;
+- (void)restoreWorkspaceEntry:(NSDictionary<NSString *, id> *)entry;
 - (void)displayOtherDocument:(EditorDocument *)document;
 - (void)applySplitRotation:(NSInteger)rotation;
 - (void)applyPresentationMode:(NSInteger)mode;
@@ -178,6 +182,7 @@ static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
 - (void)showSearchReport:(EditorSearchReport *)report;
 - (void)refreshSearchPanel;
 - (void)openSearchMatch:(EditorSearchMatch *)match;
+- (void)workspaceChanged;
 - (void)refreshDocumentList;
 - (EditorDocument *)windowOwnerForDocument:(EditorDocument *)document;
 - (void)showInOtherView:(EditorDocument *)document;
@@ -187,7 +192,14 @@ static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
 - (void)prepareToCloseDocument:(EditorDocument *)document;
 - (void)syncScrollFromDocument:(EditorDocument *)document changes:(int)changes;
 - (void)syncZoomFromDocument:(EditorDocument *)document;
+- (void)restoreViewsWithPrimary:(EditorDocument *)primary other:(EditorDocument *)other focusOther:(BOOL)focusOther;
 @end
+
+static constexpr struct { const char *name; unsigned int read; unsigned int write; } SessionFields[] = {
+	{"firstVisibleLine", SCI_GETFIRSTVISIBLELINE, SCI_SETFIRSTVISIBLELINE},
+	{"xOffset", SCI_GETXOFFSET, SCI_SETXOFFSET},
+	{"scrollWidth", SCI_GETSCROLLWIDTH, SCI_SETSCROLLWIDTH},
+};
 
 static id WorkspaceValue(NSDictionary *entry, NSString *key, Class type)
 {
@@ -203,6 +215,45 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	return cf != kCFStringEncodingInvalidId && CFStringIsEncodingAvailable(cf);
 }
 
+static void WriteSessionView(pugi::xml_node file, NSString *path, ScintillaView *editor)
+{
+	file.append_attribute("filename") = path.UTF8String;
+	for (const auto &field : SessionFields)
+		file.append_attribute(field.name) = static_cast<long long>([editor message:field.read]);
+	file.append_attribute("startPos") = static_cast<long long>([editor message:SCI_GETANCHOR]);
+	file.append_attribute("endPos") = static_cast<long long>([editor message:SCI_GETCURRENTPOS]);
+	for (auto line = [editor message:SCI_MARKERNEXT wParam:0 lParam:1 << Bookmark]; line >= 0;
+		line = [editor message:SCI_MARKERNEXT wParam:line + 1 lParam:1 << Bookmark])
+		file.append_child("Mark").append_attribute("line") = static_cast<long long>(line);
+	for (auto line = [editor message:SCI_CONTRACTEDFOLDNEXT wParam:0]; line >= 0;
+		line = [editor message:SCI_CONTRACTEDFOLDNEXT wParam:line + 1])
+		file.append_child("Fold").append_attribute("line") = static_cast<long long>(line);
+}
+
+static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
+{
+	auto length = [editor message:SCI_GETLENGTH];
+	auto start = std::clamp(file.attribute("startPos").as_llong(), 0LL, static_cast<long long>(length));
+	auto end = std::clamp(file.attribute("endPos").as_llong(), 0LL, static_cast<long long>(length));
+	[editor message:SCI_SETSEL wParam:start lParam:end];
+	auto lineCount = [editor message:SCI_GETLINECOUNT];
+	for (auto mark : file.children("Mark"))
+	{
+		auto line = mark.attribute("line").as_llong(-1);
+		if (line >= 0 && line < lineCount)
+			[editor message:SCI_MARKERADD wParam:line lParam:Bookmark];
+	}
+	for (auto fold : file.children("Fold"))
+	{
+		auto line = fold.attribute("line").as_llong(-1);
+		if (line >= 0 && line < lineCount)
+			[editor message:SCI_FOLDLINE wParam:line lParam:SC_FOLDACTION_CONTRACT];
+	}
+	for (const auto &field : SessionFields)
+		if (auto setting = file.attribute(field.name))
+			[editor message:field.write wParam:std::clamp(setting.as_llong(), 0LL, static_cast<long long>(INT_MAX))];
+}
+
 @implementation EditorDocumentController
 {
 	__weak EditorDocument *_activeDocument;
@@ -214,6 +265,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	NSInteger _switchIndex;
 	NSHashTable<EditorDocument *> *_secondaryTabs;
 	__weak EditorDocument *_otherDocument;
+	EditorWorkspace *_workspace;
 	EditorDockPlacement *_documentListPlacement;
 	EditorDockPlacement *_searchResultsPlacement;
 	EditorDockPlacement *_folderWorkspacePlacement;
@@ -233,6 +285,8 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	NSInteger _clipboardChangeCount;
 	NSTimer *_fileStatusTimer;
 	__weak EditorSearchMatch *_currentSearchMatch;
+	BOOL _workspaceSavedForQuit;
+	NSMutableArray<NSURL *> *_closedTabURLs;
 }
 
 - (void)applyImportedDockLayout
@@ -296,6 +350,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	[self refreshFunctionList];
 	[self refreshDocumentMap];
 	[self refreshInsertPanels];
+	[self workspaceChanged];
 }
 
 - (EditorDockPlacement *)documentListPlacement
@@ -339,6 +394,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 		[self newDocument:nil];
 	_folderWorkspaceVisible = !_folderWorkspaceVisible;
 	[self refreshFolderWorkspace];
+	[self workspaceChanged];
 }
 
 - (void)addWorkspaceFolders:(NSArray<NSURL *> *)folders
@@ -357,6 +413,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 {
 	_workspaceFolders = [folders copy];
 	[self refreshFolderWorkspace];
+	[self workspaceChanged];
 }
 
 - (void)refreshFolderWorkspace
@@ -397,6 +454,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	else
 		[_visibleProjects removeIndex:index];
 	[_activeDocument displayProjectPanels:_visibleProjects];
+	[self workspaceChanged];
 }
 
 - (EditorDockPlacement *)functionListPlacement
@@ -417,6 +475,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 		[self newDocument:nil];
 	_functionListVisible = !_functionListVisible;
 	[self refreshFunctionList];
+	[self workspaceChanged];
 }
 
 - (EditorDockPlacement *)documentMapPlacement
@@ -437,6 +496,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 		[self newDocument:nil];
 	_documentMapVisible = !_documentMapVisible;
 	[self refreshDocumentMap];
+	[self workspaceChanged];
 }
 
 - (NSArray<EditorDockPlacement *> *)insertPlacements
@@ -508,6 +568,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 		}
 	}
 	[self refreshInsertPanels];
+	[self workspaceChanged];
 }
 
 - (void)refreshInsertPanels
@@ -590,6 +651,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	}
 	[self activateTab:document otherView:other];
 	[self refreshDocumentTabs];
+	[self workspaceChanged];
 }
 
 - (void)moveTab:(EditorDocument *)document toEnd:(BOOL)toEnd
@@ -599,6 +661,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	[_tabOrder removeObjectIdenticalTo:document];
 	[_tabOrder insertObject:document atIndex:toEnd ? _tabOrder.count : 0];
 	[self refreshDocumentTabs];
+	[self workspaceChanged];
 }
 
 - (void)noteFocusedTab:(EditorDocument *)document
@@ -700,6 +763,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 			[_tabOrder exchangeObjectAtIndex:[_tabOrder indexOfObjectIdenticalTo:document]
 				withObjectAtIndex:[_tabOrder indexOfObjectIdenticalTo:tabs[target]]];
 			[self refreshDocumentTabs];
+			[self workspaceChanged];
 		}
 		return;
 	}
@@ -748,6 +812,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 			[weakSelf checkOpenFilesOnDisk];
 		}];
 	}
+	[self workspaceChanged];
 }
 
 - (void)checkOpenFilesOnDisk
@@ -786,6 +851,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	[document focusEditor];
 	[self noteFocusedTab:document];
 	[self refreshDocumentTabs];
+	[self workspaceChanged];
 	return YES;
 }
 
@@ -882,6 +948,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	[_secondaryTabs removeAllObjects];
 	[_activeDocument focusEditor];
 	[self refreshDocumentTabs];
+	[self workspaceChanged];
 }
 
 - (void)prepareToCloseDocument:(EditorDocument *)document
@@ -897,10 +964,47 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 		[document displayOtherDocument:nil];
 }
 
+- (void)restoreViewsWithPrimary:(EditorDocument *)primary other:(EditorDocument *)other focusOther:(BOOL)focusOther
+{
+	if (!primary)
+	{
+		primary = other;
+		other = nil;
+	}
+	if (!primary)
+		return;
+	[_activeDocument displayOtherDocument:nil];
+	_otherDocument = other != primary ? other : nil;
+	if (!_secondaryTabs)
+		_secondaryTabs = NSHashTable.weakObjectsHashTable;
+	[_secondaryTabs removeObject:primary];
+	if (_otherDocument)
+		[_secondaryTabs addObject:_otherDocument];
+	[primary showWindows];
+	[primary displayOtherDocument:_otherDocument];
+	if (other == primary)
+		[primary cloneToOtherView:nil];
+	if (focusOther && _otherDocument)
+		[_otherDocument focusEditor];
+	else if (other == primary && !focusOther)
+		[primary focusPrimaryEditor];
+	[self refreshDocumentTabs];
+}
+
 - (void)removeDocument:(NSDocument *)document
 {
 	NSArray<EditorDocument *> *documents = self.tabDocuments;
 	NSUInteger index = [documents indexOfObjectIdenticalTo:(EditorDocument *)document];
+	NSURL *closedURL = document.fileURL;
+	if (index != NSNotFound && closedURL.isFileURL && !_workspaceSavedForQuit)
+	{
+		if (!_closedTabURLs)
+			_closedTabURLs = [NSMutableArray array];
+		[_closedTabURLs removeObject:closedURL];
+		[_closedTabURLs addObject:closedURL];
+		if (_closedTabURLs.count > 30)
+			[_closedTabURLs removeObjectAtIndex:0];
+	}
 	BOOL wasActive = document == _activeDocument;
 	NSRect frame = document.windowControllers.firstObject.window.frame;
 	[super removeDocument:document];
@@ -923,6 +1027,40 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 		}
 	}
 	[self refreshDocumentTabs];
+	[self workspaceChanged];
+}
+
+- (NSURL *)closedTabURL
+{
+	for (NSURL *url in _closedTabURLs.reverseObjectEnumerator)
+		if (![self documentForURL:url] && [NSFileManager.defaultManager fileExistsAtPath:url.path])
+			return url;
+	for (NSURL *url in self.recentDocumentURLs)
+		if (![self documentForURL:url] && [NSFileManager.defaultManager fileExistsAtPath:url.path])
+			return url;
+	return nil;
+}
+
+- (BOOL)canReopenClosedTab { return self.closedTabURL != nil; }
+
+- (IBAction)reopenClosedTab:(id)sender
+{
+	NSURL *url = self.closedTabURL;
+	if (!url)
+		return;
+	[self openDocumentWithContentsOfURL:url display:YES completionHandler:^(NSDocument *document, BOOL alreadyOpen, NSError *error) {
+		if (document)
+			[self->_closedTabURLs removeObject:url];
+		else if (error)
+			[NSApp presentError:error];
+	}];
+}
+
+- (BOOL)validateUserInterfaceItem:(id<NSValidatedUserInterfaceItem>)item
+{
+	if (item.action == @selector(reopenClosedTab:))
+		return self.canReopenClosedTab;
+	return [super validateUserInterfaceItem:item];
 }
 
 - (void)refreshDocumentTabs
@@ -941,6 +1079,185 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 		_activeDocument.clonedEditorView && _activeDocument.editor == _activeDocument.clonedEditorView;
 	[_activeDocument displayDocumentList:primary otherView:other focused:focused focusOther:focusOther
 		groupByView:!self.documentListUngrouped visible:self.documentListVisible];
+}
+
+- (void)startWorkspaceRecoveryAtDirectory:(NSURL *)directory
+{
+	_workspace = [[EditorWorkspace alloc] initWithController:self];
+	if (![_workspace startAtDirectory:directory])
+		_workspace = nil;
+}
+
+- (void)workspaceChanged
+{
+	if (!_workspaceSavedForQuit)
+		[_workspace scheduleCheckpoint];
+}
+
+- (void)finishWorkspaceRecovery
+{
+	if (!_workspaceSavedForQuit)
+		[_workspace checkpoint];
+}
+
+- (void)reviewUnsavedDocumentsWithAlertTitle:(NSString *)title cancellable:(BOOL)cancellable
+	delegate:(id)delegate didReviewAllSelector:(SEL)selector contextInfo:(void *)context
+{
+	// AppKit calls this before quitting. Keep its save prompts if recovery cannot write the workspace.
+	if (delegate && selector && [delegate respondsToSelector:selector] && [_workspace checkpoint])
+	{
+		_workspaceSavedForQuit = YES;
+		using ReviewCallback = void (*)(id, SEL, NSDocumentController *, BOOL, void *);
+		auto finished = reinterpret_cast<ReviewCallback>([delegate methodForSelector:selector]);
+		finished(delegate, selector, self, YES, context);
+		return;
+	}
+	[super reviewUnsavedDocumentsWithAlertTitle:title cancellable:cancellable delegate:delegate
+		didReviewAllSelector:selector contextInfo:context];
+}
+
+- (NSDictionary<NSString *, id> *)captureWorkspace
+{
+	NSMutableArray<NSDictionary *> *entries = [NSMutableArray array];
+	NSMutableArray<NSDictionary *> *projects = [NSMutableArray array];
+	for (NSUInteger index = 0; index < self.projectWorkspaces.count; ++index)
+		[projects addObject:@{@"workspace": self.projectWorkspaces[index].snapshot,
+			@"placement": self.projectPlacements[index].snapshot, @"visible": @([_visibleProjects containsIndex:index])}];
+	NSUInteger active = 0;
+	NSInteger other = -1;
+	for (EditorDocument *document in self.tabDocuments)
+	{
+		if (document == _activeDocument)
+			active = entries.count;
+		if (document == _otherDocument)
+			other = entries.count;
+		NSMutableDictionary *entry = [[document workspaceEntry] mutableCopy];
+		entry[@"secondary"] = @([_secondaryTabs containsObject:document]);
+		[entries addObject:entry];
+	}
+	return @{@"version": @1, @"documents": entries, @"active": @(active), @"other": @(other),
+		@"focusOther": @(_otherDocument && self.focusedDocument == _otherDocument),
+		@"syncVertical": @(self.syncVerticalScroll), @"syncHorizontal": @(self.syncHorizontalScroll), @"syncZoom": @(self.syncZoom),
+		@"splitRotation": @(self.splitRotation),
+		@"purgeSearchReports": @(self.purgeSearchReports),
+		@"documentList": @(self.documentListVisible),
+		@"documentListUngrouped": @(self.documentListUngrouped),
+		@"documentListPlacement": self.documentListPlacement.snapshot,
+		@"searchResultsPlacement": self.searchResultsPlacement.snapshot,
+		@"folderWorkspaceVisible": @(_folderWorkspaceVisible),
+		@"folderWorkspacePlacement": self.folderWorkspacePlacement.snapshot,
+		@"functionListPlacement": self.functionListPlacement.snapshot, @"functionListVisible": @(_functionListVisible),
+		@"documentMapPlacement": self.documentMapPlacement.snapshot, @"documentMapVisible": @(_documentMapVisible),
+		@"insertPlacements": [self.insertPlacements valueForKey:@"snapshot"],
+		@"clipboardVisible": @([_visibleInsertPanels containsIndex:0]), @"charactersVisible": @([_visibleInsertPanels containsIndex:1]),
+		@"workspaceFolders": [_workspaceFolders valueForKey:@"path"] ?: @[], @"projects": projects};
+}
+
+- (void)restoreWorkspace:(NSDictionary<NSString *, id> *)snapshot
+{
+	NSArray *entries = WorkspaceValue(snapshot, @"documents", NSArray.class);
+	self.syncVerticalScroll = [WorkspaceValue(snapshot, @"syncVertical", NSNumber.class) boolValue];
+	self.syncHorizontalScroll = [WorkspaceValue(snapshot, @"syncHorizontal", NSNumber.class) boolValue];
+	self.syncZoom = [WorkspaceValue(snapshot, @"syncZoom", NSNumber.class) boolValue];
+	self.splitRotation = [WorkspaceValue(snapshot, @"splitRotation", NSNumber.class) unsignedIntegerValue] % 4;
+	self.purgeSearchReports = [WorkspaceValue(snapshot, @"purgeSearchReports", NSNumber.class) boolValue];
+	self.documentListVisible = [WorkspaceValue(snapshot, @"documentList", NSNumber.class) boolValue];
+	self.documentListUngrouped = [WorkspaceValue(snapshot, @"documentListUngrouped", NSNumber.class) boolValue];
+	[self.documentListPlacement restore:WorkspaceValue(snapshot, @"documentListPlacement", NSDictionary.class)];
+	[self.searchResultsPlacement restore:WorkspaceValue(snapshot, @"searchResultsPlacement", NSDictionary.class)];
+	[self.folderWorkspacePlacement restore:WorkspaceValue(snapshot, @"folderWorkspacePlacement", NSDictionary.class)];
+	[self.functionListPlacement restore:WorkspaceValue(snapshot, @"functionListPlacement", NSDictionary.class)];
+	_functionListVisible = [WorkspaceValue(snapshot, @"functionListVisible", NSNumber.class) boolValue];
+	[self.documentMapPlacement restore:WorkspaceValue(snapshot, @"documentMapPlacement", NSDictionary.class)];
+	_documentMapVisible = [WorkspaceValue(snapshot, @"documentMapVisible", NSNumber.class) boolValue];
+	NSArray *insertPlacements = WorkspaceValue(snapshot, @"insertPlacements", NSArray.class);
+	for (NSUInteger index = 0; index < MIN(self.insertPlacements.count, insertPlacements.count); ++index)
+		[self.insertPlacements[index] restore:insertPlacements[index]];
+	_visibleInsertPanels = [NSMutableIndexSet indexSet];
+	if ([WorkspaceValue(snapshot, @"clipboardVisible", NSNumber.class) boolValue])
+	{
+		[_visibleInsertPanels addIndex:0];
+		[self startClipboardHistory];
+	}
+	if ([WorkspaceValue(snapshot, @"charactersVisible", NSNumber.class) boolValue])
+		[_visibleInsertPanels addIndex:1];
+	_folderWorkspaceVisible = [WorkspaceValue(snapshot, @"folderWorkspaceVisible", NSNumber.class) boolValue];
+	NSMutableArray<NSURL *> *folders = [NSMutableArray array];
+	for (id path in WorkspaceValue(snapshot, @"workspaceFolders", NSArray.class))
+		if ([path isKindOfClass:NSString.class] && [path isAbsolutePath])
+			[folders addObject:[NSURL fileURLWithPath:path isDirectory:YES]];
+	_workspaceFolders = [folders copy];
+	_visibleProjects = [NSMutableIndexSet indexSet];
+	NSArray *projects = WorkspaceValue(snapshot, @"projects", NSArray.class);
+	for (NSUInteger index = 0; index < MIN(self.projectWorkspaces.count, projects.count); ++index)
+	{
+		NSDictionary *project = projects[index];
+		if (![project isKindOfClass:NSDictionary.class])
+			continue;
+		[self.projectWorkspaces[index] restore:WorkspaceValue(project, @"workspace", NSDictionary.class)];
+		[self.projectPlacements[index] restore:WorkspaceValue(project, @"placement", NSDictionary.class)];
+		if ([WorkspaceValue(project, @"visible", NSNumber.class) boolValue])
+			[_visibleProjects addIndex:index];
+	}
+	NSUInteger activeIndex = [WorkspaceValue(snapshot, @"active", NSNumber.class) unsignedIntegerValue];
+	NSNumber *otherIndex = WorkspaceValue(snapshot, @"other", NSNumber.class);
+	EditorDocument *first = nil;
+	EditorDocument *active = nil;
+	EditorDocument *other = nil;
+	_secondaryTabs = NSHashTable.weakObjectsHashTable;
+	for (NSUInteger i = 0; i < entries.count; ++i)
+	{
+		id entry = entries[i];
+		if (![entry isKindOfClass:NSDictionary.class])
+			continue;
+		NSString *path = WorkspaceValue(entry, @"path", NSString.class);
+		NSData *unsaved = WorkspaceValue(entry, @"unsavedUTF8", NSData.class);
+		NSURL *url = path.isAbsolutePath ? [NSURL fileURLWithPath:path] : nil;
+		EditorDocument *document = nil;
+		if (url && ![self documentForURL:url])
+		{
+			NSString *type = [self typeForContentsOfURL:url error:nullptr];
+			auto explicitEncoding = [WorkspaceValue(entry, @"readerEncoding", NSNumber.class) unsignedIntegerValue];
+			if (type && IsAvailableEncoding(explicitEncoding))
+			{
+				document = [self makeUntitledDocumentOfType:type error:nullptr];
+				[document setReaderEncoding:explicitEncoding];
+				if ([document readFromURL:url ofType:type error:nullptr])
+				{
+					document.fileURL = url;
+					NSDate *modification = nil;
+					[url getResourceValue:&modification forKey:NSURLContentModificationDateKey error:nullptr];
+					document.fileModificationDate = modification;
+				}
+				else
+					document = nil;
+			}
+			else if (type)
+				document = [self makeDocumentWithContentsOfURL:url ofType:type error:nullptr];
+			if (unsaved && document)
+			{
+				NSDate *modified = WorkspaceValue(entry, @"fileModified", NSDate.class);
+				if (modified && ![modified isEqual:document.fileModificationDate])
+					document = nil;
+			}
+		}
+		if (!document && (!path.length || unsaved))
+			document = [self makeUntitledDocumentOfType:self.defaultType error:nullptr];
+		if (!document)
+			continue;
+		[self addDocument:document];
+		if ([WorkspaceValue(entry, @"secondary", NSNumber.class) boolValue])
+			[_secondaryTabs addObject:document];
+		[document restoreWorkspaceEntry:entry];
+		if (!first)
+			first = document;
+		if (i == activeIndex)
+			active = document;
+		if (otherIndex && i == otherIndex.unsignedIntegerValue)
+			other = document;
+	}
+	[self restoreViewsWithPrimary:active ?: first other:other ?: [self tabsInOtherView:YES].firstObject
+		focusOther:[WorkspaceValue(snapshot, @"focusOther", NSNumber.class) boolValue]];
 }
 
 - (void)setSearchResultsVisible:(BOOL)visible
@@ -1025,6 +1342,137 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 		NSBeep();
 }
 
+- (BOOL)saveSessionToURL:(NSURL *)url error:(NSError **)error
+{
+	pugi::xml_document xml;
+	auto session = xml.append_child("NotepadPlus").append_child("Session");
+	ScintillaView *currentClone = _activeDocument.clonedEditorView;
+	BOOL focusOther = _otherDocument.fileURL && self.focusedDocument == _otherDocument;
+	if (currentClone && _activeDocument.fileURL && _activeDocument.editor == currentClone)
+		focusOther = YES;
+	session.append_attribute("activeView") = focusOther ? 1 : 0;
+	auto list = session.append_child("mainView");
+	auto secondaryList = session.append_child("subView");
+	auto active = list.append_attribute("activeIndex");
+	active = 0;
+	auto secondaryActive = secondaryList.append_attribute("activeIndex");
+	secondaryActive = 0;
+	int index = 0;
+	int secondaryIndex = 0;
+	for (EditorDocument *document in self.tabDocuments)
+	{
+		NSString *path = document.fileURL.path;
+		ScintillaView *editor = document.primaryEditorView;
+		if (!path || !editor)
+			continue;
+		auto owner = [_secondaryTabs containsObject:document] ? secondaryList : list;
+		if (owner == list)
+		{
+			if (document == _activeDocument)
+				active = index;
+			++index;
+		}
+		else
+		{
+			if (document == _otherDocument)
+				secondaryActive = secondaryIndex;
+			++secondaryIndex;
+		}
+		WriteSessionView(owner.append_child("File"), path, editor);
+		if (document == _activeDocument && currentClone)
+			WriteSessionView(secondaryList.append_child("File"), path, currentClone);
+	}
+
+	std::ostringstream stream;
+	xml.save(stream, "  ", pugi::format_default, pugi::encoding_utf8);
+	auto bytes = stream.str();
+	return [[NSData dataWithBytes:bytes.data() length:bytes.size()] writeToURL:url options:NSDataWritingAtomic error:error];
+}
+
+- (BOOL)loadSessionFromURL:(NSURL *)url error:(NSError **)error
+{
+	NSData *data = [NSData dataWithContentsOfURL:url options:0 error:error];
+	if (!data)
+		return NO;
+	pugi::xml_document xml;
+	auto parsed = xml.load_buffer(data.bytes, data.length);
+	auto session = xml.child("NotepadPlus").child("Session");
+	if (!parsed || !session)
+	{
+		if (error)
+			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError
+				userInfo:@{NSURLErrorKey: url, NSLocalizedDescriptionKey: @"This XML file does not contain an editor session."}];
+		return NO;
+	}
+
+	EditorDocument *active[2] = {nil, nil};
+	EditorDocument *first[2] = {nil, nil};
+	NSHashTable<EditorDocument *> *secondary = NSHashTable.weakObjectsHashTable;
+	NSHashTable<EditorDocument *> *primaryFiles = NSHashTable.weakObjectsHashTable;
+	pugi::xml_node cloneFile;
+	NSMutableArray<NSString *> *missing = [NSMutableArray array];
+	for (NSUInteger view = 0; view < 2; ++view)
+	{
+		auto list = session.child(view ? "subView" : "mainView");
+		auto index = list.attribute("activeIndex").as_int();
+		int current = -1;
+		for (auto file : list.children("File"))
+		{
+			++current;
+			NSString *path = [NSString stringWithUTF8String:file.attribute("filename").value()];
+			if (!path.length)
+				continue;
+			if (!path.isAbsolutePath)
+			{
+				[missing addObject:path];
+				continue;
+			}
+			NSURL *fileURL = [NSURL fileURLWithPath:path];
+			EditorDocument *document = (EditorDocument *)[self documentForURL:fileURL];
+			if (!document)
+			{
+				NSString *type = [self typeForContentsOfURL:fileURL error:nullptr];
+				document = type ? [self makeDocumentWithContentsOfURL:fileURL ofType:type error:nullptr] : nil;
+				if (!document)
+				{
+					[missing addObject:path];
+					continue;
+				}
+				[self addDocument:document];
+				[document makeWindowControllers];
+			}
+			if (!first[view])
+				first[view] = document;
+			if (current == index)
+				active[view] = document;
+			if (view == 0)
+				[primaryFiles addObject:document];
+			else if (![primaryFiles containsObject:document])
+				[secondary addObject:document];
+			if (document.isDocumentEdited)
+				continue;
+			if (view == 1 && document == (active[0] ?: first[0]))
+				cloneFile = file;
+			else
+				ReadSessionView(file, document.primaryEditorView);
+		}
+	}
+	EditorDocument *primary = active[0] ?: first[0];
+	EditorDocument *other = active[1] ?: first[1];
+	_secondaryTabs = secondary;
+	[self restoreViewsWithPrimary:primary other:other focusOther:session.attribute("activeView").as_int() == 1];
+	if (cloneFile && primary == other)
+		ReadSessionView(cloneFile, primary.clonedEditorView);
+	if (missing.count)
+	{
+		if (error)
+			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadNoSuchFileError userInfo:@{
+				NSLocalizedDescriptionKey: @"Some files in this session could not be opened.",
+				NSLocalizedRecoverySuggestionErrorKey: [missing componentsJoinedByString:@"\n"]}];
+		return NO;
+	}
+	return YES;
+}
 - (NSString *)defaultType
 {
 	return @"public.plain-text";
@@ -1333,6 +1781,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		EditorDocumentController *documents = weakController;
 		documents.documentListVisible = NO;
 		[documents refreshDocumentTabs];
+		[documents workspaceChanged];
 	};
 	_resultsView = [[EditorSearchResultsView alloc] initWithOpenMatch:^(EditorSearchMatch *match) {
 		[weakController openSearchMatch:match];
@@ -1346,6 +1795,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		EditorDocumentController *documents = weakController;
 		documents.purgeSearchReports = purge;
 		[documents refreshSearchPanel];
+		[documents workspaceChanged];
 	};
 	_resultsView.refine = ^(NSArray<EditorSearchReport *> *reports) { [weakController.focusedDocument refineSearchReports:reports]; };
 	_documentList = [[EditorDocumentList alloc] initWithSelect:^(EditorDocument *document, BOOL otherView) {
@@ -1360,6 +1810,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	} dismiss:dismissDocuments groupingChanged:^(BOOL grouped) {
 		weakController.documentListUngrouped = !grouped;
 		[weakController refreshDocumentList];
+		[weakController workspaceChanged];
 	}];
 	_editorSplit = [[EditorSplitView alloc] initWithFrame:content.bounds];
 	_editorSplit.vertical = YES;
@@ -1369,6 +1820,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		EditorDocumentController *documents = weakController;
 		documents.splitRotation = (documents.splitRotation + direction + 4) % 4;
 		[weakDocument applySplitRotation:documents.splitRotation];
+		[documents workspaceChanged];
 	};
 	_primaryPane = [[EditorTabPane alloc] initWithFrame:content.bounds];
 	_primaryEditorHost = AddEditorHost(_primaryPane, _chrome.primaryTabs);
@@ -1377,6 +1829,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	EditorDockArea *dock = [[EditorDockArea alloc] initWithEditor:_editorSplit];
 	_dockArea = dock;
 	dock.translatesAutoresizingMaskIntoConstraints = NO;
+	dock.placementChanged = ^{ [weakController workspaceChanged]; };
 	EditorResources *resources = EditorResources.shared;
 	_resultsPane = [dock addPanel:_resultsView title:[resources label:@"find-result-caption" fallback:@"Search results"]
 		placement:controller.searchResultsPlacement dismiss:dismissResults];
@@ -1401,7 +1854,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			fallback:[NSString stringWithFormat:@"Project Panel %lu", index + 1]];
 		void (^dismiss)(void) = ^{ [weakController setProjectPanel:index visible:NO]; };
 		EditorProjectPanel *panel = [[EditorProjectPanel alloc] initWithTitle:title workspace:controller.projectWorkspaces[index]
-			open:openFromPanel changed:^{} dismiss:dismiss];
+			open:openFromPanel changed:^{ [weakController workspaceChanged]; } dismiss:dismiss];
 		[panels addObject:panel];
 		[panes addObject:[dock addPanel:panel title:title placement:controller.projectPlacements[index] dismiss:dismiss]];
 	}
@@ -1659,6 +2112,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		[self addClonedView];
 	}
 	[self focusClonedEditor];
+	[controller workspaceChanged];
 }
 
 - (void)addClonedView
@@ -1727,6 +2181,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	controller.syncZoom = !controller.syncZoom;
 	[controller syncZoomFromDocument:controller.focusedDocument];
+	[controller workspaceChanged];
 }
 
 - (IBAction)toggleVerticalScrollSync:(id)sender
@@ -1734,6 +2189,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	controller.syncVerticalScroll = !controller.syncVerticalScroll;
 	[controller syncScrollFromDocument:controller.focusedDocument changes:SC_UPDATE_V_SCROLL];
+	[controller workspaceChanged];
 }
 
 - (IBAction)toggleHorizontalScrollSync:(id)sender
@@ -1741,6 +2197,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	controller.syncHorizontalScroll = !controller.syncHorizontalScroll;
 	[controller syncScrollFromDocument:controller.focusedDocument changes:SC_UPDATE_H_SCROLL];
+	[controller workspaceChanged];
 }
 
 - (void)displaySearchReports:(NSArray<EditorSearchReport *> *)reports purge:(BOOL)purge match:(EditorSearchMatch *)match visible:(BOOL)visible
@@ -1765,6 +2222,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	controller.documentListVisible = !controller.documentListVisible;
 	[controller refreshDocumentTabs];
+	[controller workspaceChanged];
 }
 
 - (void)displayFolderWorkspace:(NSArray<NSURL *> *)folders visible:(BOOL)visible
@@ -1969,6 +2427,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	_tabPinned = !_tabPinned;
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	[controller refreshDocumentTabs];
+	[controller workspaceChanged];
 }
 
 - (void)changeTabColor:(NSInteger)index
@@ -1976,6 +2435,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	_tabColorIndex = std::clamp<NSInteger>(index, 0, 5);
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	[controller refreshDocumentTabs];
+	[controller workspaceChanged];
 }
 
 - (void)document:(NSDocument *)document shouldCloseOtherTab:(BOOL)shouldClose contextInfo:(void *)context
@@ -2464,6 +2924,122 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	return [NSData dataWithBytes:bytes length:length];
 }
 
+- (NSDictionary<NSString *, id> *)workspaceEntry
+{
+	NSMutableDictionary<NSString *, id> *entry = [NSMutableDictionary dictionary];
+	entry[@"name"] = self.displayName;
+	entry[@"path"] = self.fileURL.path;
+	entry[@"fileModified"] = self.fileModificationDate;
+	entry[@"language"] = _languageOverride;
+	entry[@"tabPinned"] = @(_tabPinned);
+	entry[@"tabColor"] = @(_tabColorIndex);
+	if (_readerEncoding)
+		entry[@"readerEncoding"] = @(_readerEncoding);
+	if (self.isDocumentEdited && [[EditorResources.shared setting:@"checkpointDrafts" fallback:@YES] boolValue])
+	{
+		entry[@"unsavedUTF8"] = [self editorUTF8];
+		entry[@"encoding"] = @(_encoding);
+		entry[@"bom"] = _bom;
+	}
+	entry[@"eol"] = @([_editor message:SCI_GETEOLMODE]);
+	entry[@"startPos"] = @([_editor message:SCI_GETANCHOR]);
+	entry[@"endPos"] = @([_editor message:SCI_GETCURRENTPOS]);
+	for (const auto &field : SessionFields)
+		entry[@(field.name)] = @([_editor message:field.read]);
+	NSMutableArray<NSNumber *> *marks = [NSMutableArray array];
+	NSMutableArray<NSNumber *> *folds = [NSMutableArray array];
+	if (_editor)
+	{
+		for (auto line = [_editor message:SCI_MARKERNEXT wParam:0 lParam:1 << Bookmark]; line >= 0;
+			line = [_editor message:SCI_MARKERNEXT wParam:line + 1 lParam:1 << Bookmark])
+			[marks addObject:@(line)];
+		for (auto line = [_editor message:SCI_CONTRACTEDFOLDNEXT wParam:0]; line >= 0;
+			line = [_editor message:SCI_CONTRACTEDFOLDNEXT wParam:line + 1])
+			[folds addObject:@(line)];
+	}
+	entry[@"marks"] = marks;
+	entry[@"folds"] = folds;
+	if (_clone)
+	{
+		NSMutableDictionary<NSString *, id> *clone = [NSMutableDictionary dictionary];
+		clone[@"startPos"] = @([_clone message:SCI_GETANCHOR]);
+		clone[@"endPos"] = @([_clone message:SCI_GETCURRENTPOS]);
+		clone[@"focused"] = @(self.editor == _clone);
+		for (const auto &field : SessionFields)
+			clone[@(field.name)] = @([_clone message:field.read]);
+		entry[@"clone"] = clone;
+	}
+	return entry;
+}
+
+- (void)restoreWorkspaceEntry:(NSDictionary<NSString *, id> *)entry
+{
+	if (!self.fileURL)
+	{
+		NSString *name = WorkspaceValue(entry, @"name", NSString.class);
+		if (name.length)
+		{
+			_untitledName = WorkspaceValue(entry, @"path", NSString.class) ? [@"Recovered " stringByAppendingString:name] : name;
+			NSScanner *scanner = [NSScanner scannerWithString:name];
+			NSInteger number = 0;
+			if ([scanner scanString:@"new " intoString:nullptr] && [scanner scanInteger:&number] &&
+				scanner.isAtEnd && number > 0 && number < NSIntegerMax)
+				NextUntitledNumber = MAX(NextUntitledNumber, static_cast<NSUInteger>(number + 1));
+		}
+	}
+	_languageOverride = WorkspaceValue(entry, @"language", NSString.class);
+	_tabPinned = [WorkspaceValue(entry, @"tabPinned", NSNumber.class) boolValue];
+	_tabColorIndex = std::clamp<NSInteger>([WorkspaceValue(entry, @"tabColor", NSNumber.class) integerValue], 0, 5);
+	auto readerEncoding = [WorkspaceValue(entry, @"readerEncoding", NSNumber.class) unsignedIntegerValue];
+	if (IsAvailableEncoding(readerEncoding))
+		_readerEncoding = readerEncoding;
+	NSData *unsaved = WorkspaceValue(entry, @"unsavedUTF8", NSData.class);
+	if (unsaved)
+	{
+		_loadedUTF8 = unsaved;
+		auto encoding = [WorkspaceValue(entry, @"encoding", NSNumber.class) unsignedIntegerValue];
+		if (IsAvailableEncoding(encoding))
+			_encoding = encoding;
+		_bom = WorkspaceValue(entry, @"bom", NSData.class);
+	}
+	[self makeWindowControllers];
+	NSNumber *eol = WorkspaceValue(entry, @"eol", NSNumber.class);
+	if (eol && eol.integerValue >= SC_EOL_CRLF && eol.integerValue <= SC_EOL_LF)
+		[_editor message:SCI_SETEOLMODE wParam:eol.integerValue];
+	auto length = [_editor message:SCI_GETLENGTH];
+	auto start = std::clamp([WorkspaceValue(entry, @"startPos", NSNumber.class) longLongValue], 0LL, static_cast<long long>(length));
+	auto end = std::clamp([WorkspaceValue(entry, @"endPos", NSNumber.class) longLongValue], 0LL, static_cast<long long>(length));
+	[_editor message:SCI_SETSEL wParam:start lParam:end];
+	auto lineCount = [_editor message:SCI_GETLINECOUNT];
+	for (id mark in WorkspaceValue(entry, @"marks", NSArray.class))
+		if ([mark isKindOfClass:NSNumber.class] && [mark integerValue] >= 0 && [mark integerValue] < lineCount)
+			[_editor message:SCI_MARKERADD wParam:[mark integerValue] lParam:Bookmark];
+	for (id fold in WorkspaceValue(entry, @"folds", NSArray.class))
+		if ([fold isKindOfClass:NSNumber.class] && [fold integerValue] >= 0 && [fold integerValue] < lineCount)
+			[_editor message:SCI_FOLDLINE wParam:[fold integerValue] lParam:SC_FOLDACTION_CONTRACT];
+	for (const auto &field : SessionFields)
+		if (NSNumber *setting = WorkspaceValue(entry, @(field.name), NSNumber.class))
+			[_editor message:field.write wParam:std::clamp(setting.longLongValue, 0LL, static_cast<long long>(INT_MAX))];
+	if (NSDictionary *clone = WorkspaceValue(entry, @"clone", NSDictionary.class))
+	{
+		[self addClonedView];
+		auto cloneStart = std::clamp([WorkspaceValue(clone, @"startPos", NSNumber.class) longLongValue], 0LL, static_cast<long long>(length));
+		auto cloneEnd = std::clamp([WorkspaceValue(clone, @"endPos", NSNumber.class) longLongValue], 0LL, static_cast<long long>(length));
+		[_clone message:SCI_SETSEL wParam:cloneStart lParam:cloneEnd];
+		for (const auto &field : SessionFields)
+			if (NSNumber *setting = WorkspaceValue(clone, @(field.name), NSNumber.class))
+				[_clone message:field.write wParam:std::clamp(setting.longLongValue, 0LL, static_cast<long long>(INT_MAX))];
+		if ([WorkspaceValue(clone, @"focused", NSNumber.class) boolValue])
+			[self focusClonedEditor];
+	}
+	if (unsaved)
+	{
+		_encodingChanged = YES;
+		[self updateChangeCount:NSChangeDone];
+	}
+	[self updateStatus];
+}
+
 - (NSData *)dataOfType:(NSString *)typeName error:(NSError **)error
 {
 	NSData *data = EncodeEditorText([self editorUTF8], _encoding, _bom);
@@ -2484,9 +3060,34 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		{
 			self->_encodingChanged = NO;
 			[self.editor message:SCI_SETSAVEPOINT];
+			[(EditorDocumentController *)NSDocumentController.sharedDocumentController workspaceChanged];
 		}
 		completionHandler(error);
 	}];
+}
+
+- (BOOL)writeSafelyToURL:(NSURL *)url ofType:(NSString *)typeName forSaveOperation:(NSSaveOperationType)operation
+	error:(NSError **)error
+{
+	EditorResources *resources = EditorResources.shared;
+	const NSInteger backup = [[resources setting:@"backupMode" fallback:@0] integerValue];
+	if (backup && (operation == NSSaveOperation || operation == NSSaveAsOperation) &&
+		url.isFileURL && [NSFileManager.defaultManager fileExistsAtPath:url.path])
+	{
+		NSData *original = [NSData dataWithContentsOfURL:url options:NSDataReadingMappedIfSafe error:error];
+		if (!original)
+			return NO;
+		NSString *directoryPath = [[resources setting:@"backupDirectory" fallback:@""] stringByExpandingTildeInPath];
+		NSURL *directory = directoryPath.isAbsolutePath ? [NSURL fileURLWithPath:directoryPath isDirectory:YES] :
+			url.URLByDeletingLastPathComponent;
+		NSString *suffix = backup == 1 ? @"bak" : [NSString stringWithFormat:@"%.0f-%@.bak",
+			NSDate.date.timeIntervalSince1970, [NSUUID.UUID.UUIDString substringToIndex:8]];
+		NSURL *destination = [directory URLByAppendingPathComponent:[url.lastPathComponent stringByAppendingPathExtension:suffix]];
+		if (![NSFileManager.defaultManager createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:error] ||
+			![original writeToURL:destination options:NSDataWritingAtomic error:error])
+			return NO;
+	}
+	return [super writeSafelyToURL:url ofType:typeName forSaveOperation:operation error:error];
 }
 
 - (void)notification:(SCNotification *)notification
@@ -2512,6 +3113,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 				else if (notification->modificationType & SC_MOD_DELETETEXT)
 					*_selectionStart = std::max<sptr_t>(notification->position, *_selectionStart - notification->length);
 			}
+			if (notification->modificationType & (SC_MOD_INSERTTEXT | SC_MOD_DELETETEXT | SC_MOD_CHANGEMARKER | SC_MOD_CHANGEFOLD))
+				[(EditorDocumentController *)NSDocumentController.sharedDocumentController workspaceChanged];
 			if (notification->modificationType & (SC_MOD_INSERTTEXT | SC_MOD_DELETETEXT))
 			{
 				EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
@@ -2549,6 +3152,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		case SCN_UPDATEUI:
 			[self updateStatus];
 			[_chrome refreshToolbar];
+			if (notification->updated & (SC_UPDATE_SELECTION | SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
+				[(EditorDocumentController *)NSDocumentController.sharedDocumentController workspaceChanged];
 			if (notification->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
 				[(EditorDocumentController *)NSDocumentController.sharedDocumentController syncScrollFromDocument:self changes:notification->updated];
 			if (notification->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_CONTENT))

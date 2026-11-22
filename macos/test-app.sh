@@ -22,3 +22,5 @@ xcrun clang -dynamiclib -arch arm64 -arch x86_64 -mmacosx-version-min=13.0 -I ma
 codesign --verify --strict "$app"
 xcrun lipo "$app/Contents/MacOS/macpad++" -verify_arch arm64 x86_64
 "$app/Contents/MacOS/macpad++" --smoke-test
+MACPAD_DATA_DIR="$work/lifecycle" "$app/Contents/MacOS/macpad++" --smoke-workspace-write
+MACPAD_DATA_DIR="$work/lifecycle" "$app/Contents/MacOS/macpad++" --smoke-workspace-restore

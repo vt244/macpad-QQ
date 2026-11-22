@@ -14,6 +14,7 @@
 #import "ScintillaView.h"
 
 int RunSmokeTest(void);
+void RunWorkspaceLifecycleTest(BOOL restore);
 
 @interface MacpadApplication : NSApplication
 @end
@@ -32,6 +33,13 @@ int RunSmokeTest(void);
 	if (event.type == NSEventTypeFlagsChanged && !(event.modifierFlags & NSEventModifierFlagControl))
 		[documents finishRecentTabSwitch:YES];
 	[super sendEvent:event];
+}
+
+- (BOOL)restoreWindowWithIdentifier:(NSUserInterfaceItemIdentifier)identifier state:(NSCoder *)state
+	completionHandler:(void (^)(NSWindow *, NSError *))completionHandler
+{
+	// The editor workspace restores document groups, splits, and unsaved content together.
+	return NO;
 }
 
 - (BOOL)sendAction:(SEL)action to:(id)target from:(id)sender
@@ -144,19 +152,39 @@ static void AddCharacterSets(NSMenu *menu)
 @implementation MacpadApp
 {
 	EditorPlugins *_plugins;
+	NSMenu *_recentMenu;
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification
 {
 	_plugins = [[EditorPlugins alloc] initWithDirectory:[EditorResources.shared.profile URLByAppendingPathComponent:@"plugins"]];
 	[self buildMenu];
-
+	if ([[EditorResources.shared setting:@"rememberSession" fallback:@YES] boolValue] &&
+		![NSProcessInfo.processInfo.arguments containsObject:@"--smoke-test"])
+	{
+		EditorDocumentController *documents = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+		[documents startWorkspaceRecoveryAtDirectory:[EditorResources.shared.profile URLByAppendingPathComponent:@"recovery" isDirectory:YES]];
+	}
 }
 
 - (BOOL)applicationShouldOpenUntitledFile:(NSApplication *)app
 {
 	return ![NSProcessInfo.processInfo.arguments containsObject:@"--smoke-test"] &&
 		NSDocumentController.sharedDocumentController.documents.count == 0;
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+	NSArray<NSString *> *arguments = NSProcessInfo.processInfo.arguments;
+	BOOL write = [arguments containsObject:@"--smoke-workspace-write"];
+	BOOL restore = [arguments containsObject:@"--smoke-workspace-restore"];
+	if (write || restore)
+		dispatch_async(dispatch_get_main_queue(), ^{ RunWorkspaceLifecycleTest(restore); });
+}
+
+- (void)applicationWillTerminate:(NSNotification *)notification
+{
+	[(EditorDocumentController *)NSDocumentController.sharedDocumentController finishWorkspaceRecovery];
 }
 
 - (void)applicationDidResignActive:(NSNotification *)notification
@@ -179,6 +207,11 @@ static void AddCharacterSets(NSMenu *menu)
 	NSMenu *file = AddMenu(main, Label(@"file", @"File"));
 	AddItem(file, Label(@"41001", @"New"), @selector(newDocument:), @"n", documents);
 	AddItem(file, Label(@"41002", @"Open…"), @selector(openFiles:), @"o", self);
+	_recentMenu = AddMenu(file, Label(@"file-recentFiles", @"Recent Files"));
+	_recentMenu.delegate = self;
+	[self menuNeedsUpdate:_recentMenu];
+	NSMenuItem *reopen = AddItem(file, Label(@"41021", @"Restore Last Closed File"), @selector(reopenClosedTab:), @"t", documents);
+	reopen.keyEquivalentModifierMask = NSEventModifierFlagCommand | NSEventModifierFlagShift;
 	AddItem(file, Label(@"41022", @"Open Folder as Workspace…"), @selector(chooseWorkspaceFolders:), @"", documents);
 	NSMenu *containingFolder = AddMenu(file, Label(@"file-openFolder", @"Open Containing Folder"));
 	AddItem(containingFolder, Label(@"native-showSelectionInFinder", @"Show in Finder"), @selector(runTabFileCommand:), @"", self).tag = 41019;
@@ -203,6 +236,8 @@ static void AddCharacterSets(NSMenu *menu)
 	[file addItem:NSMenuItem.separatorItem];
 	AddItem(file, Label(@"41010", @"Print…"), @selector(printDocument:), @"p");
 	[file addItem:NSMenuItem.separatorItem];
+	AddItem(file, Label(@"41012", @"Load Session…"), @selector(loadSession:), @"", self);
+	AddItem(file, Label(@"41013", @"Save Session…"), @selector(saveSession:), @"", self);
 
 	NSMenu *edit = AddMenu(main, Label(@"edit", @"Edit"));
 	AddItem(edit, Label(@"42003", @"Undo"), @selector(undo:), @"z");
@@ -565,6 +600,26 @@ static void AddCharacterSets(NSMenu *menu)
 	[self openDocuments:@[url]];
 }
 
+- (void)menuNeedsUpdate:(NSMenu *)menu
+{
+	if (menu == _recentMenu)
+	{
+		[menu removeAllItems];
+		NSArray<NSURL *> *urls = NSDocumentController.sharedDocumentController.recentDocumentURLs;
+		for (NSURL *url in urls)
+		{
+			NSMenuItem *entry = AddItem(menu, url.lastPathComponent, @selector(openRecentFile:), @"", self);
+			entry.representedObject = url;
+			entry.toolTip = url.path;
+		}
+		if (urls.count)
+			[menu addItem:NSMenuItem.separatorItem];
+		AddItem(menu, Label(@"42041", @"Clear Recent Files"), @selector(clearRecentDocuments:), @"",
+			NSDocumentController.sharedDocumentController);
+		return;
+	}
+}
+
 - (BOOL)validateMenuItem:(NSMenuItem *)item
 {
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
@@ -779,6 +834,31 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 	[self buildMenu];
 }
 
+- (void)saveSession:(id)sender
+{
+	NSSavePanel *panel = NSSavePanel.savePanel;
+	panel.nameFieldStringValue = @"session.xml";
+	panel.allowedContentTypes = @[UTTypeXML];
+	if ([panel runModal] != NSModalResponseOK)
+		return;
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	NSError *error = nil;
+	if (![controller saveSessionToURL:panel.URL error:&error])
+		[NSApp presentError:error];
+}
+
+- (void)loadSession:(id)sender
+{
+	NSOpenPanel *panel = NSOpenPanel.openPanel;
+	panel.allowedContentTypes = @[UTTypeXML];
+	if ([panel runModal] != NSModalResponseOK)
+		return;
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	NSError *error = nil;
+	if (![controller loadSessionFromURL:panel.URL error:&error])
+		[NSApp presentError:error];
+}
+
 - (void)fillCatalog:(NSMenu *)menu theme:(BOOL)theme
 {
 	EditorResources *resources = EditorResources.shared;
@@ -905,6 +985,9 @@ int main(int argc, const char *argv[])
 			[app finishLaunching];
 			return RunSmokeTest();
 		}
+		if (argc == 2 && std::strncmp(argv[1], "--smoke-workspace-", 18) == 0 &&
+			!NSProcessInfo.processInfo.environment[@"MACPAD_DATA_DIR"].isAbsolutePath)
+			return 1;
 		[app run];
 		(void)documents;
 		(void)delegate;

@@ -17,6 +17,7 @@
 #import "EditorResources.h"
 #import "EditorSettings.h"
 #import "EditorText.h"
+#import "EditorWorkspace.h"
 #import "ScintillaView.h"
 
 #include "SciLexer.h"
@@ -99,7 +100,8 @@ static bool CheckFolderWorkspace(EditorDocumentController *controller, EditorDoc
 	if (!Check(outline.numberOfRows == 2, "show one workspace root and its nested directory"))
 		return false;
 	[outline expandItem:[outline itemAtRow:1]];
-	if (!Check(outline.numberOfRows == 3, "expand the workspace tree"))
+	if (!Check(outline.numberOfRows == 3 &&
+		[[controller captureWorkspace][@"workspaceFolders"] isEqual:@[folder.path]], "expand the workspace tree and save its root"))
 		return false;
 	[controller toggleFolderWorkspace:nil];
 	return true;
@@ -129,7 +131,7 @@ static bool CheckProjectWorkspace(EditorDocumentController *controller, EditorDo
 	NSOutlineView *outline = (NSOutlineView *)ViewMatching(document.editor.window.contentView, ^BOOL(NSView *view) {
 		return [view isKindOfClass:NSOutlineView.class] && [[view accessibilityLabel] isEqualToString:title];
 	});
-	if (!Check(outline && !outline.isHiddenOrHasHiddenAncestor,
+	if (!Check(outline && !outline.isHiddenOrHasHiddenAncestor && [controller captureWorkspace][@"projects"] != nil,
 		"independently show and capture the second project panel"))
 		return false;
 	[controller toggleProjectPanel:command];
@@ -520,8 +522,16 @@ static bool CheckSearchAndConfigurationParity(EditorDocumentController *controll
 		[[NSString stringWithContentsOfURL:[resources.profile URLByAppendingPathComponent:@"imported-config.xml"]
 			encoding:NSUTF8StringEncoding error:nullptr] isEqual:xml], "apply imported preferences and retain the original XML"))
 		return false;
+	NSURL *file = [test URLByAppendingPathComponent:@"backup-fixture.txt"];
+	editor.string = @"new contents";
+	[resources setSetting:@"" forName:@"backupDirectory"];
+	NSError *error = nil;
+	bool saved = [@"before" writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:nullptr] &&
+		[document writeSafelyToURL:file ofType:controller.defaultType forSaveOperation:NSSaveOperation error:&error];
+	NSString *copy = [NSString stringWithContentsOfURL:[file URLByAppendingPathExtension:@"bak"]
+		encoding:NSUTF8StringEncoding error:nullptr];
 	[resources setSettings:@{@"tabWidth": @(width), @"backupMode": @(backup), @"backupDirectory": directory}];
-	return true;
+	return Check(saved && [copy isEqualToString:@"before"], "write a backup of the old bytes before saving");
 }
 
 static bool CheckCustomMenus(EditorDocument *document, NSEvent *click)
@@ -587,8 +597,46 @@ static bool CheckCharacterSet(NSURL *test, EditorDocumentController *controller)
 		!Check(!document.isDocumentEdited, "leave file state clean after reinterpreting the bytes") ||
 		!Check([[document dataOfType:controller.defaultType error:&error] isEqualToData:bytes], "round-trip the existing legacy bytes"))
 		return false;
+	NSDictionary *snapshot = [controller captureWorkspace];
 	[document close];
-	return true;
+	[controller restoreWorkspace:snapshot];
+	document = (EditorDocument *)[controller documentForURL:file];
+	BOOL restored = document && [document.editor.string isEqualToString:text] &&
+		[[document dataOfType:controller.defaultType error:&error] isEqualToData:bytes];
+	[document close];
+	return Check(restored, "restore the explicitly selected character set on reopen");
+}
+
+void RunWorkspaceLifecycleTest(BOOL restore)
+{
+	dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 8 * NSEC_PER_SEC),
+		dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+			Check(false, "quit through AppKit after saving the workspace without an unsaved-document prompt");
+			std::exit(1);
+		});
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	NSString *draft = @"Recover this unsaved draft after quitting.";
+	if (restore)
+	{
+		EditorDocument *document = (EditorDocument *)controller.documents.firstObject;
+		if (!Check(controller.documents.count == 1 && document.isDocumentEdited && [document.editor.string isEqualToString:draft] &&
+			[document.editor message:SCI_GETSELECTIONEND] == 7, "restore the unsaved draft and clone selection on a fresh AppKit launch"))
+			std::exit(1);
+		puts("Passed: recovery through AppKit quit and relaunch.");
+	}
+	else
+	{
+		if (!controller.documents.count)
+			[controller newDocument:nil];
+		EditorDocument *document = (EditorDocument *)controller.documents.firstObject;
+		[document.editor setStringProperty:SCI_REPLACESEL parameter:0 value:draft];
+		if (!Check(controller.documents.count == 1 && document.isDocumentEdited && [document.editor.string isEqualToString:draft],
+			"make an unsaved draft in a full AppKit launch"))
+			std::exit(1);
+		[document cloneToOtherView:nil];
+		[document.editor message:SCI_SETSEL wParam:0 lParam:7];
+	}
+	[NSApp terminate:nil];
 }
 
 int RunSmokeTest(void)
@@ -793,6 +841,16 @@ int RunSmokeTest(void)
 	[clone message:SCI_SETSEL wParam:0 lParam:3];
 	if (!Check([primary message:SCI_GETSELECTIONEND] == 0, "keep independent cursor and selection state in the clone"))
 		return 1;
+	NSURL *clonedSession = [test URLByAppendingPathComponent:@"cloned-session.xml"];
+	if (!Check([controller saveSessionToURL:clonedSession error:&error], "export a same-buffer split as an XML session"))
+		return 1;
+	[document closeOtherView:nil];
+	if (!Check([controller loadSessionFromURL:clonedSession error:&error], "open the saved clone layout"))
+		return 1;
+	clone = document.editor;
+	if (!Check(clone != primary && [clone message:SCI_GETSELECTIONEND] == 3 &&
+		[primary message:SCI_GETSELECTIONEND] == 0, "restore the clone and its separate selection from the XML session"))
+		return 1;
 	[clone setStringProperty:SCI_REPLACESEL parameter:0 value:@"class"];
 	if (!Check([primary.string hasPrefix:@"class пример"] && document.isDocumentEdited, "show edits from the clone in both views"))
 		return 1;
@@ -917,12 +975,96 @@ int RunSmokeTest(void)
 		return 1;
 	[editor message:SCI_SETSEL wParam:0 lParam:5];
 
+	[editor message:SCI_SETSEL wParam:1 lParam:4];
+	[document toggleBookmark:nil];
+	EditorDocument *sessionPeer = [controller makeDocumentWithContentsOfURL:rootText ofType:controller.defaultType error:&error];
+	if (!Check(sessionPeer != nil, "open a second saved file for the XML session"))
+		return 1;
+	[controller addDocument:sessionPeer];
+	[sessionPeer makeWindowControllers];
+	[sessionPeer moveToOtherView:nil];
+	NSURL *session = [test URLByAppendingPathComponent:@"session.xml"];
+	if (!Check([controller saveSessionToURL:session error:&error], "write a compatible editor session"))
+		return 1;
+	[sessionPeer close];
+	[document close];
+	if (!Check([controller loadSessionFromURL:session error:&error], "reopen files from the saved session"))
+		return 1;
+	document = (EditorDocument *)[controller documentForURL:output];
+	editor = document.editor;
+	sessionPeer = (EditorDocument *)[controller documentForURL:rootText];
+	if (!Check(document && [editor message:SCI_GETANCHOR] == 1 && [editor message:SCI_GETCURRENTPOS] == 4 &&
+		[editor message:SCI_MARKERGET wParam:0] != 0 && editor.window == sessionPeer.editor.window &&
+		controller.focusedDocument == sessionPeer, "restore two panes, focus, selection and bookmark from the XML session"))
+		return 1;
+	[sessionPeer close];
+
 	NSMenuItem *utf8 = [[NSMenuItem alloc] init];
 	utf8.tag = NSUTF8StringEncoding;
 	[document convertEncoding:utf8];
 	if (!Check(document.isDocumentEdited && [[document dataOfType:controller.defaultType error:&error]
 		isEqualToData:[editor.string dataUsingEncoding:NSUTF8StringEncoding]], "convert to UTF-8 and mark the new encoding as unsaved"))
 		return 1;
-	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands.");
+	EditorDocument *draft = [controller makeUntitledDocumentOfType:controller.defaultType error:&error];
+	[controller addDocument:draft];
+	[draft makeWindowControllers];
+	[draft showWindows];
+	[draft.editor setStringProperty:SCI_REPLACESEL parameter:0 value:@"Unsaved draft — черновик"];
+	[draft.editor message:SCI_SETSEL wParam:0 lParam:7];
+	[document moveToOtherView:nil];
+	if (!Check(controller.documents.count == 2, "prepare two tabs for the workspace test"))
+	{
+		for (EditorDocument *item in controller.documents)
+			fprintf(stderr, "  open %s, saved=%d, edited=%d\n", item.displayName.UTF8String, item.fileURL != nil, item.isDocumentEdited);
+		return 1;
+	}
+	NSURL *checkpoint = [test URLByAppendingPathComponent:@"workspace.plist"];
+	EditorWorkspace *workspace = [[EditorWorkspace alloc] initWithController:controller];
+	if (!Check([workspace writeToURL:checkpoint error:&error], "checkpoint a modified file and an untitled draft"))
+		return 1;
+	[draft close];
+	[document close];
+	if (!Check([workspace restoreFromURL:checkpoint error:&error], "restore the workspace checkpoint"))
+		return 1;
+	document = (EditorDocument *)[controller documentForURL:output];
+	draft = (EditorDocument *)controller.documents.lastObject;
+	if (!Check(controller.documents.count == 2 && document.isDocumentEdited && draft.isDocumentEdited, "recover both unsaved tabs"))
+	{
+		fprintf(stderr, "Found saved file=%d, edited file=%d, edited draft=%d, tabs=%lu\n",
+			document != nil, document.isDocumentEdited, draft.isDocumentEdited, controller.documents.count);
+		for (EditorDocument *item in controller.documents)
+			fprintf(stderr, "  reopened %s, saved=%d, edited=%d\n", item.displayName.UTF8String, item.fileURL != nil, item.isDocumentEdited);
+		return 1;
+	}
+	if (!Check([draft.editor.string isEqualToString:@"Unsaved draft — черновик"] && [draft.editor message:SCI_GETSELECTIONEND] == 7,
+			"recover the draft and its selection") ||
+		!Check(draft.windowControllers.firstObject.window.visible && draft.editor.window == document.editor.window && controller.focusedDocument == document,
+			"recover the split layout and focused pane") ||
+		!Check([[document dataOfType:controller.defaultType error:&error] isEqualToData:[document.editor.string dataUsingEncoding:NSUTF8StringEncoding]] &&
+		[[NSData dataWithContentsOfURL:output] isEqualToData:expected], "recover the changed encoding without modifying the disk copy"))
+		return 1;
+	[draft close];
+	[document close];
+
+	if (!Check([@"Changed outside the editor" writeToURL:output atomically:YES encoding:NSUTF8StringEncoding error:&error] &&
+		[files setAttributes:@{NSFileModificationDate: [NSDate dateWithTimeIntervalSinceNow:10]} ofItemAtPath:output.path error:&error],
+		"change the disk copy between workspace launches"))
+		return 1;
+	if (!Check([workspace restoreFromURL:checkpoint error:&error], "restore after the original changed on disk"))
+		return 1;
+	EditorDocument *recovered = (EditorDocument *)controller.documents.firstObject;
+	if (!Check(!recovered.fileURL && recovered.isDocumentEdited && [recovered.displayName hasPrefix:@"Recovered "] &&
+		[recovered.editor.string hasPrefix:@"class пример"] &&
+		[[NSString stringWithContentsOfURL:output encoding:NSUTF8StringEncoding error:&error] isEqualToString:@"Changed outside the editor"],
+		"recover the older unsaved text as an untitled copy if the original changed on disk"))
+		return 1;
+	for (EditorDocument *openDocument in [controller.documents copy])
+		[openDocument close];
+	NSURL *recoveryDirectory = [test URLByAppendingPathComponent:@"workspace-lock" isDirectory:YES];
+	EditorWorkspace *otherInstance = [[EditorWorkspace alloc] initWithController:controller];
+	if (!Check([workspace startAtDirectory:recoveryDirectory] && ![otherInstance startAtDirectory:recoveryDirectory],
+		"prevent another instance from overwriting the same recovery workspace"))
+		return 1;
+	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands, session recovery.");
 	return 0;
 }

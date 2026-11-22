@@ -109,6 +109,13 @@ void EditorShowPreferences(void)
 		@[@"fillFindWord", @"Use the word under the caret if there is no selection", @NO],
 		@[@"findFilesOnDisk", @"Search files on disk even if a buffer has unsaved edits", @NO]], 220);
 
+	NSView *backup = tab(@"pref-backup", @"Backup and sessions");
+	checks(backup, @[@[@"rememberSession", @"Restore the last session on startup", @YES],
+		@[@"checkpointDrafts", @"Periodically save unsaved edits for recovery", @YES]], 220);
+	choice(backup, @"backupMode", @"Keep a backup of saved files", @[@"None", @"One .bak copy", @"Keep dated copies"], 0, 123);
+	field(backup, @"backupDirectory", @"Backup folder (optional)", @"", 87);
+	field(backup, @"checkpointMilliseconds", @"Recovery interval (ms)", @"1000", 51);
+
 	window.accessoryView = tabs;
 	if ([window runModal] != NSAlertFirstButtonReturn)
 		return;

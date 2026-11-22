@@ -77,6 +77,8 @@
 @interface EditorDocumentController : NSDocumentController
 @property(nonatomic, readonly) EditorDocument *focusedDocument;
 @property(nonatomic, readonly) NSArray<EditorDocument *> *tabDocuments;
+@property(nonatomic, readonly) BOOL canReopenClosedTab;
+- (IBAction)reopenClosedTab:(id)sender;
 - (NSArray<EditorDocument *> *)tabsInOtherView:(BOOL)other;
 - (EditorDocument *)selectedTabInOtherView:(BOOL)other;
 - (void)activateTab:(EditorDocument *)document otherView:(BOOL)other;
@@ -95,4 +97,10 @@
 - (void)addWorkspaceFolders:(NSArray<NSURL *> *)folders;
 - (void)prepareToShowDocument:(EditorDocument *)document;
 - (void)refreshDocumentTabs;
+- (BOOL)saveSessionToURL:(NSURL *)url error:(NSError **)error;
+- (BOOL)loadSessionFromURL:(NSURL *)url error:(NSError **)error;
+- (void)startWorkspaceRecoveryAtDirectory:(NSURL *)directory;
+- (void)finishWorkspaceRecovery;
+- (NSDictionary<NSString *, id> *)captureWorkspace;
+- (void)restoreWorkspace:(NSDictionary<NSString *, id> *)snapshot;
 @end
