@@ -25,6 +25,21 @@ session recovery through quit and relaunch.
 The [macOS workflow](.github/workflows/macos.yml) builds, tests and archives
 the app with its corresponding source.
 
+### Prepare a GitHub release
+
+1. Resolve the app icon and theme redistribution terms recorded in
+   [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+2. Run the macOS workflow for the exact commit to release. Download its
+   `macpad-macOS-with-source` artifact and extract it.
+3. Verify both archives with `shasum -a 256 -c SHA256SUMS`. The archive
+   `macpad++-macOS.zip` contains the app and its license notices.
+   `macpad++-source.zip` contains the source from the same commit.
+4. Attach both archives and `SHA256SUMS` to a draft release whose tag
+   points to that commit. Keep the source available alongside the app.
+   If the release app is signed with Developer ID and notarized separately,
+   recreate its archive and regenerate the checksum before publishing.
+   [GitHub release documentation](https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository)
+
 ### Native plugins
 
 Implement the entry point and callbacks in [MacpadPlugin.h](macos/MacpadPlugin.h).
