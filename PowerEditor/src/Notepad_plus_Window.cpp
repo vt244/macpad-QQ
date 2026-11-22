@@ -218,7 +218,16 @@ void Notepad_plus_Window::init(HINSTANCE hInst, HWND parent, const wchar_t *cmdL
 	std::wstring nppDir = nppParams.getNppPath();
 
 	LocalizationSwitcher & localizationSwitcher = nppParams.getLocalizationSwitcher();
-	std::wstring localizationDir = nppDir;
+	std::wstring localizationDir = nppParams.getUserPath();
+	if (!localizationDir.empty() && localizationDir != nppDir)
+	{
+		pathAppend(localizationDir, L"localization\\");
+		_notepad_plus_plus_core.getMatchedFileNames(localizationDir.c_str(), 0, patterns, fileNames, false, false);
+		for (const auto& fileName : fileNames)
+			localizationSwitcher.addLanguageFromXml(fileName);
+		fileNames.clear();
+	}
+	localizationDir = nppDir;
 	pathAppend(localizationDir, L"localization\\");
 
 	_notepad_plus_plus_core.getMatchedFileNames(localizationDir.c_str(), 0, patterns, fileNames, false, false);
