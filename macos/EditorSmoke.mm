@@ -12,6 +12,7 @@
 #import "EditorFunctionList.h"
 #import "EditorIncrementalSearch.h"
 #import "EditorInsertPanels.h"
+#import "EditorLaunchOptions.h"
 #import "EditorPlugins.h"
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
@@ -380,7 +381,7 @@ static bool CheckFileModes(EditorDocumentController *controller, NSURL *test)
 	return true;
 }
 
-static bool CheckSettings(EditorDocument *document)
+static bool CheckSettingsAndLaunch(EditorDocument *document)
 {
 	EditorResources *resources = EditorResources.shared;
 	id width = [resources setting:@"tabWidth" fallback:@4];
@@ -402,7 +403,11 @@ static bool CheckSettings(EditorDocument *document)
 		[[resources userLanguageXML:@"Smoke Custom Language"] containsString:@"smoke2"],
 		"create, edit and export a compatible user language"))
 		return false;
-	return true;
+	EditorLaunchOptions *launch = [[EditorLaunchOptions alloc] initWithArguments:
+		@[@"-n7", @"-c", @"3", @"-lPython", @"-nosession", @"-ro", @"-openFoldersAsWorkspace", @"--", @"-sample.txt"]];
+	return Check(launch.line == 7 && launch.column == 3 && [launch.language isEqualToString:@"python"] && launch.noSession &&
+		launch.readOnly && launch.openFoldersAsWorkspace && [launch.paths.firstObject.lastPathComponent isEqualToString:@"-sample.txt"],
+		"parse the original command-line position, language, editing mode and a path starting with a dash");
 }
 
 static bool CheckSearchAndConfigurationParity(EditorDocumentController *controller, NSURL *test)
@@ -758,7 +763,7 @@ int RunSmokeTest(void)
 	[second changeTabPin];
 	if (!Check([[document.editor menuForEvent:contextClick] itemWithTag:SCI_LINEDUPLICATE] != nil, "populate the editor's right-click menu"))
 		return 1;
-	if (!CheckCustomMenus(document, contextClick) || !CheckSettings(document))
+	if (!CheckCustomMenus(document, contextClick) || !CheckSettingsAndLaunch(document))
 		return 1;
 	[second showWindows];
 	if (!Check(!document.windowControllers.firstObject.window.visible && second.windowControllers.firstObject.window.visible,
@@ -1065,6 +1070,6 @@ int RunSmokeTest(void)
 	if (!Check([workspace startAtDirectory:recoveryDirectory] && ![otherInstance startAtDirectory:recoveryDirectory],
 		"prevent another instance from overwriting the same recovery workspace"))
 		return 1;
-	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands, session recovery.");
+	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands, session recovery, terminal options.");
 	return 0;
 }

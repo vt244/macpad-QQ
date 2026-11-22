@@ -7,6 +7,7 @@
 #import "EditorDocument.h"
 #import "EditorChrome.h"
 #import "EditorContextMenus.h"
+#import "EditorLaunchOptions.h"
 #import "EditorPlugins.h"
 #import "EditorResources.h"
 #import "EditorSettings.h"
@@ -62,6 +63,7 @@ void RunWorkspaceLifecycleTest(BOOL restore);
 @end
 
 @interface MacpadApp : NSObject <NSApplicationDelegate, NSMenuDelegate>
+@property(nonatomic, strong) EditorLaunchOptions *launchOptions;
 - (void)buildMenu;
 @end
 
@@ -157,9 +159,23 @@ static void AddCharacterSets(NSMenu *menu)
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification
 {
-	_plugins = [[EditorPlugins alloc] initWithDirectory:[EditorResources.shared.profile URLByAppendingPathComponent:@"plugins"]];
+	if (!self.launchOptions.noPlugins)
+		_plugins = [[EditorPlugins alloc] initWithDirectory:[EditorResources.shared.profile URLByAppendingPathComponent:@"plugins"]];
+	if (self.launchOptions.translation.length)
+	{
+		EditorResources *resources = EditorResources.shared;
+		NSDictionary *languages = @{@"ru": @"russian", @"en": @"english", @"fr": @"french", @"de": @"german",
+			@"it": @"italian", @"es": @"spanish", @"ja": @"japanese", @"ko": @"korean", @"zh": @"chineseSimplified"};
+		NSString *requested = languages[self.launchOptions.translation] ?: self.launchOptions.translation;
+		for (NSString *name in resources.translations)
+			if ([name.stringByDeletingPathExtension caseInsensitiveCompare:requested] == NSOrderedSame)
+			{
+				[resources chooseTranslation:resources.translations[name]];
+				break;
+			}
+	}
 	[self buildMenu];
-	if ([[EditorResources.shared setting:@"rememberSession" fallback:@YES] boolValue] &&
+	if (!self.launchOptions.noSession && [[EditorResources.shared setting:@"rememberSession" fallback:@YES] boolValue] &&
 		![NSProcessInfo.processInfo.arguments containsObject:@"--smoke-test"])
 	{
 		EditorDocumentController *documents = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
@@ -170,6 +186,7 @@ static void AddCharacterSets(NSMenu *menu)
 - (BOOL)applicationShouldOpenUntitledFile:(NSApplication *)app
 {
 	return ![NSProcessInfo.processInfo.arguments containsObject:@"--smoke-test"] &&
+		!self.launchOptions.paths.count &&
 		NSDocumentController.sharedDocumentController.documents.count == 0;
 }
 
@@ -180,6 +197,58 @@ static void AddCharacterSets(NSMenu *menu)
 	BOOL restore = [arguments containsObject:@"--smoke-workspace-restore"];
 	if (write || restore)
 		dispatch_async(dispatch_get_main_queue(), ^{ RunWorkspaceLifecycleTest(restore); });
+	else if (self.launchOptions.paths.count)
+		dispatch_async(dispatch_get_main_queue(), ^{ [self openLaunchPaths]; });
+}
+
+- (void)openLaunchPaths
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	EditorLaunchOptions *options = self.launchOptions;
+	for (NSURL *url in options.paths)
+	{
+		NSNumber *directory = nil;
+		[url getResourceValue:&directory forKey:NSURLIsDirectoryKey error:nullptr];
+		if (directory.boolValue && options.openFoldersAsWorkspace)
+			[controller addWorkspaceFolders:@[url]];
+		else if (options.openSession)
+		{
+			NSError *error = nil;
+			if (![controller loadSessionFromURL:url error:&error] && error)
+				[NSApp presentError:error];
+		}
+		else
+			[controller openDocumentWithContentsOfURL:url display:YES completionHandler:^(NSDocument *opened, BOOL wasOpen, NSError *error) {
+				if (error)
+				{
+					[NSApp presentError:error];
+					return;
+				}
+				EditorDocument *document = (EditorDocument *)opened;
+				if (options.language.length)
+				{
+					NSMenuItem *language = [NSMenuItem new];
+					language.representedObject = options.language;
+					[document selectLanguage:language];
+				}
+				if (options.readOnly)
+					[document.editor message:SCI_SETREADONLY wParam:1];
+				if (options.monitor)
+					[document monitorFile:nil];
+				if (options.hideTabs)
+					[document.chrome setTabsHidden:YES];
+				ScintillaView *editor = document.editor;
+				if (options.position >= 0)
+					[editor message:SCI_GOTOPOS wParam:MIN(options.position, [editor message:SCI_GETLENGTH])];
+				else if (options.line || options.column)
+				{
+					auto line = MIN(MAX(0, options.line - 1), [editor message:SCI_GETLINECOUNT] - 1);
+					auto position = [editor message:SCI_FINDCOLUMN wParam:line lParam:MAX(0, options.column - 1)];
+					[editor message:SCI_GOTOPOS wParam:position];
+				}
+				[editor message:SCI_SCROLLCARET];
+			}];
+	}
 }
 
 - (void)applicationWillTerminate:(NSNotification *)notification
@@ -464,6 +533,8 @@ static void AddCharacterSets(NSMenu *menu)
 	NSMenu *moveDocument = AddMenu(view, Label(@"view-moveCloneDocument", @"Move/Clone Current Document"));
 	AddItem(moveDocument, Label(@"10001", @"Move to Other View"), @selector(moveToOtherView:), @"");
 	AddItem(moveDocument, Label(@"10002", @"Clone to Other View"), @selector(cloneToOtherView:), @"");
+	AddItem(moveDocument, Label(@"10003", @"Move to New Instance"), @selector(openDocumentInNewInstance:), @"", self).tag = 10003;
+	AddItem(moveDocument, Label(@"10004", @"Open in New Instance"), @selector(openDocumentInNewInstance:), @"", self).tag = 10004;
 	NSMenu *tabs = AddMenu(view, Label(@"view-tab", @"Tab"));
 	for (NSInteger number = 1; number <= 9; ++number)
 		AddItem(tabs, Label([@(44085 + number) stringValue], [NSString stringWithFormat:@"Tab %ld", number]),
@@ -624,6 +695,8 @@ static void AddCharacterSets(NSMenu *menu)
 {
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	EditorDocument *document = controller.focusedDocument;
+	if (item.action == @selector(openDocumentInNewInstance:))
+		return document && (item.tag == 10003 || document.fileURL);
 	if (item.action == @selector(runTabFileCommand:))
 		return document && EditorCanRunTabCommand(document, item.tag);
 	if (item.action == @selector(actOnSelection:))
@@ -786,6 +859,53 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 	}
 }
 
+- (void)launchAdditionalInstance:(NSArray<NSString *> *)arguments completion:(void (^)(void))completion
+{
+	NSWorkspaceOpenConfiguration *configuration = [NSWorkspaceOpenConfiguration configuration];
+	configuration.createsNewApplicationInstance = YES;
+	configuration.arguments = [@[@"-nosession",
+		[@"-settingsDir=" stringByAppendingString:EditorResources.shared.profile.path]] arrayByAddingObjectsFromArray:arguments];
+	[NSWorkspace.sharedWorkspace openApplicationAtURL:NSBundle.mainBundle.bundleURL configuration:configuration
+		completionHandler:^(NSRunningApplication *instance, NSError *error) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				if (error)
+					[NSApp presentError:error];
+				else if (instance && completion)
+					completion();
+			});
+		}];
+}
+
+- (void)launchNewInstanceForDocument:(EditorDocument *)document move:(BOOL)move
+{
+	NSURL *url = document.fileURL;
+	if (!url)
+		return;
+	NSString *position = [NSString stringWithFormat:@"-p%ld", static_cast<long>([document.editor message:SCI_GETCURRENTPOS])];
+	[self launchAdditionalInstance:@[position, @"--", url.path] completion:^{
+		if (move && !document.isDocumentEdited && [document.fileURL isEqual:url])
+			[document closeEditorTab:nil];
+	}];
+}
+
+- (void)document:(EditorDocument *)document didSaveForNewInstance:(BOOL)saved contextInfo:(void *)context
+{
+	if (saved)
+		[self launchNewInstanceForDocument:document move:YES];
+}
+
+- (void)openDocumentInNewInstance:(NSMenuItem *)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	EditorDocument *document = [sender.representedObject isKindOfClass:EditorDocument.class] ? sender.representedObject :
+		controller.focusedDocument;
+	const BOOL move = sender.tag == 10003;
+	if (move && (!document.fileURL || document.isDocumentEdited))
+		[document saveDocumentWithDelegate:self didSaveSelector:@selector(document:didSaveForNewInstance:contextInfo:) contextInfo:nullptr];
+	else
+		[self launchNewInstanceForDocument:document move:move];
+}
+
 - (void)copyDocumentPath:(NSMenuItem *)item
 {
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
@@ -853,6 +973,11 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 	panel.allowedContentTypes = @[UTTypeXML];
 	if ([panel runModal] != NSModalResponseOK)
 		return;
+	if ([[EditorResources.shared setting:@"instanceMode" fallback:@0] integerValue] == 1)
+	{
+		[self launchAdditionalInstance:@[@"-openSession", @"--", panel.URL.path] completion:nil];
+		return;
+	}
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	NSError *error = nil;
 	if (![controller loadSessionFromURL:panel.URL error:&error])
@@ -933,6 +1058,11 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 	{
 		if (!url.isFileURL)
 			continue;
+		if ([[EditorResources.shared setting:@"instanceMode" fallback:@0] integerValue] == 2)
+		{
+			[self launchAdditionalInstance:@[@"--", url.path] completion:nil];
+			continue;
+		}
 		[documents openDocumentWithContentsOfURL:url display:YES completionHandler:^(NSDocument *document, BOOL alreadyOpen, NSError *error) {
 			if (error)
 				[NSApp presentError:error];
@@ -975,9 +1105,22 @@ int main(int argc, const char *argv[])
 {
 	@autoreleasepool
 	{
+		NSArray<NSString *> *arguments = NSProcessInfo.processInfo.arguments;
+		EditorLaunchOptions *options = [[EditorLaunchOptions alloc] initWithArguments:
+			[arguments subarrayWithRange:NSMakeRange(1, arguments.count - 1)]];
+		if (options.help)
+		{
+			puts("macpad++ [-nLINE] [-cCOLUMN] [-pBYTE] [-lLANGUAGE] [-udl=NAME] [-LCODE]\n"
+				"         [-nosession] [-noPlugin] [-notabbar] [-ro] [-monitor]\n"
+				"         [-settingsDir=PATH] [-openSession] [-openFoldersAsWorkspace] [--] [file ...]");
+			return 0;
+		}
+		if (options.settingsPath.isAbsolutePath)
+			setenv("MACPAD_DATA_DIR", options.settingsPath.fileSystemRepresentation, 1);
 		NSApplication *app = MacpadApplication.sharedApplication;
 		__attribute__((objc_precise_lifetime)) EditorDocumentController *documents = [[EditorDocumentController alloc] init];
 		__attribute__((objc_precise_lifetime)) MacpadApp *delegate = [[MacpadApp alloc] init];
+		delegate.launchOptions = options;
 		app.delegate = delegate;
 		[app setActivationPolicy:NSApplicationActivationPolicyRegular];
 		if (argc == 2 && strcmp(argv[1], "--smoke-test") == 0)

@@ -372,6 +372,12 @@ NSMenu *EditorTabMenu(EditorDocument *document)
 	[move addItem:NSMenuItem.separatorItem];
 	item(move, 10001, Label(@"10001", @"Move to Other View"), YES);
 	item(move, 10002, Label(@"10002", @"Clone to Other View"), YES);
+	for (NSInteger command : {10003, 10004})
+	{
+		NSMenuItem *instance = Item(move, Label([@(command) stringValue], command == 10003 ? @"Move to New Instance" : @"Open in New Instance"),
+			NSApp.delegate, @selector(openDocumentInNewInstance:), command == 10003 || saved, command);
+		instance.representedObject = document;
+	}
 	NSMenu *colors = Submenu(menu, titleFor(4, @"Apply Color to Tab"));
 	for (NSInteger index = 1; index <= 5; ++index)
 	{

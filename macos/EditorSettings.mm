@@ -112,6 +112,7 @@ void EditorShowPreferences(void)
 	NSView *backup = tab(@"pref-backup", @"Backup and sessions");
 	checks(backup, @[@[@"rememberSession", @"Restore the last session on startup", @YES],
 		@[@"checkpointDrafts", @"Periodically save unsaved edits for recovery", @YES]], 220);
+	choice(backup, @"instanceMode", @"Open files in", @[@"Current instance", @"New instance for sessions", @"New instance for every file"], 0, 159);
 	choice(backup, @"backupMode", @"Keep a backup of saved files", @[@"None", @"One .bak copy", @"Keep dated copies"], 0, 123);
 	field(backup, @"backupDirectory", @"Backup folder (optional)", @"", 87);
 	field(backup, @"checkpointMilliseconds", @"Recovery interval (ms)", @"1000", 51);
