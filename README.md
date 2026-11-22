@@ -5,10 +5,25 @@ Notepad++, originally created by Don Ho and developed by its contributors.
 The macOS port uses AppKit for the interface, Scintilla Cocoa for editing,
 and Lexilla for syntax highlighting. [Upstream project](https://github.com/notepad-plus-plus/notepad-plus-plus)
 
-## Get started
+## Install on macOS
 
-macpad++ runs on Apple silicon and Intel Macs with macOS 13 or later.
-The app runs directly on macOS.
+macpad++ runs natively on Apple silicon and Intel Macs with macOS 13 or later.
+It reads existing XML themes, translations and user-defined languages.
+Plugins use the [macOS plugin API](macos/MacpadPlugin.h). Windows DLLs need
+to be ported and rebuilt to run inside macpad++.
+
+Check [GitHub Releases](https://github.com/vt244/macpad-plus-plus/releases) for
+published builds. When a macOS release is available, download
+`macpad++-macOS.zip` and `SHA256SUMS`, verify the archive, then unpack it
+and move `macpad++.app` to Applications.
+
+```sh
+shasum -a 256 macpad++-macOS.zip
+```
+
+Compare the output with the app archive entry in `SHA256SUMS`.
+
+## Build from source
 
 To build from source, install the Apple Command Line Tools and CMake 3.20 or
 later, then run these commands from the repository root.
@@ -18,19 +33,33 @@ macos/build-app.sh
 open 'dist/macpad++.app'
 ```
 
-GitHub Actions also provides the app and its matching source archive from
-successful builds. Local and CI builds are signed ad hoc. [Build guide](BUILD.md) · [GitHub Actions](https://github.com/vt244/macpad-plus-plus/actions/workflows/macos.yml)
+Local and CI builds use ad hoc signing. The macOS workflow tests the native
+app and bundles it with matching source and SHA-256 checksums.
+[Build and release instructions](BUILD.md) · [macOS workflow](.github/workflows/macos.yml)
 
 ## What you can do
 
-- Edit text and source files in tabs, with syntax highlighting, line numbers and word wrap.
-- Find and replace text with optional regular expressions.
-- Open and save UTF‑8 and BOM-marked UTF‑16 files while preserving their encoding and line endings.
-- Import existing theme and translation XML files.
+- Edit in two tabbed views, move tabs by dragging, and rotate the split from the divider's context menu. Use **View → Move/Clone Current Document** to open a second view.
+- Move, resize or float panels such as **Document List**, **Folder as Workspace**, **Project Panels**, **Function List** and **Document Map**.
+- Find, replace, count and mark matches using literal, extended or regular expression search. Search within a selection, across open documents, in folders or in projects.
+- Refine previous searches from the results panel and navigate between hits with **Search → Next Search Result** and **Previous Search Result**.
+- Use the **Edit** menu for column insertion, multiple selections, commenting, line sorting and autocompletion. **Clipboard History** keeps recent text entries in memory while its panel is open.
+- Open, save and convert UTF‑8, BOM-marked UTF‑16 and Windows‑1252 text.
+- Reopen legacy text with its original encoding from **Encoding → Character Set**.
+- Follow log files with **View → Monitoring (tail -f)**. Configure detection of external changes in **Settings → Preferences**.
+- Record and replay editing, search and replace actions from the **Macro** menu. **Import Macros…** reads compatible actions from `shortcuts.xml`. Assign keys to macros and named **Run** commands in **Settings → Shortcut Mapper**.
+- Generate checksums from **Tools**, run macOS commands and save or open XML sessions.
+- Reopen the working session, including unsaved drafts, after quitting or restarting.
+- Import existing XML themes, translations and user-defined languages.
 
 Open files from **File → Open** or from Finder with **Open With → macpad++**.
-The native port uses the existing XML formats for editor styles and matching
-menu labels. [Compatibility and current limitations](SUPPORTED_SYSTEM.md)
+Use the executable directly to open a file from the terminal at a specific line and column.
+
+```sh
+'dist/macpad++.app/Contents/MacOS/macpad++' -n20 -c4 -lpython example.py
+```
+
+[Compatibility and current limitations](SUPPORTED_SYSTEM.md)
 
 ## Customize macpad++
 
@@ -38,12 +67,15 @@ The profile folder is `~/Library/Application Support/macpad++/profile/`.
 
 | Resource | Where to install it | Where to use it |
 | --- | --- | --- |
-| XML theme | `themes/` | **View → Theme**. **Import XML…** copies the file into the profile. |
+| XML theme | `themes/` | **View → Theme** selects a theme. **Settings → Style Configurator** edits colors and fonts. |
 | XML translation | `localization/` | **Settings → Interface Language**. **Import XML…** copies the file into the profile. The default option also reads `nativeLang.xml` at the profile root. |
-| macOS plugin | `plugins/*.dylib` | Restart macpad++ and open **Plugins**. |
+| User Defined Language XML | `userDefineLangs/` or `userDefineLang.xml` | Create, edit, import and export definitions from **Language**. Apply a definition from the menu or by file extension. |
+| Function and completion rules | `functionList/` and `autoCompletion/` | Override the supplied XML rules for **Function List** and **Auto-Completion**. |
+| Context menus | `contextMenu.xml` and `tabContextMenu.xml` | Edit the editor and tab menus from **Settings**. |
+| macOS plugin | `plugins/*.dylib` | Install from a local file or the catalog in **Plugins → Plugins Admin…**, then restart. Disabled files remain in `plugins/Disabled/`. |
 
-Native plugins can read and replace the current selection. Windows DLL plugins
-require Windows. Plugins with source code can be adapted and rebuilt for macOS.
+The native plugin API supports document access, editor events, AppKit panels
+and multiple menu commands.
 [Native plugin API](macos/MacpadPlugin.h) · [Plugin build example](BUILD.md#native-plugins)
 
 ## License and contributions

@@ -3,13 +3,22 @@
 | Component | Native macOS support |
 | --- | --- |
 | Platform | macOS 13 or later on Apple silicon and Intel. The app includes both architectures. |
-| Documents | UTF‑8 with or without a BOM, and BOM-marked UTF‑16 LE/BE. Saving preserves the encoding, BOM and existing line endings. |
-| Syntax highlighting | Built-in Lexilla languages selected by file extension. User Defined Language (UDL) XML requires the legacy Windows editor. |
-| Theme XML | Default and lexer styles, available fonts, and selection and line number colors from the upstream XML format. Windows-specific GUI theme entries have no macOS equivalent. |
-| Translation XML | Matching menu and command labels from the upstream XML format. AppKit controls and new macOS commands use their own labels. |
-| Plugins | macOS dylibs for the running CPU architecture. See the [native plugin interface](macos/MacpadPlugin.h) for supported commands. Existing Win32 DLLs require the Windows editor. |
+| Documents | Automatic UTF‑8, BOM-marked UTF‑16 LE/BE, and Windows‑1252. Reopen saved files using the character sets provided by macOS, including Windows‑1251 and KOI8‑R. Saving preserves the encoding, BOM and existing line endings. |
+| Editor window | Independent tab strips with vertical and multi-row modes, hover previews and a Control-Tab switcher for recent documents. The rotatable split supports cloned buffers and synchronized zoom. Use File to reopen a recently closed file and View to open or move a saved document to another instance. |
+| Panels | Dock, resize or float the document list, file trees, three project panels, function list, document map, clipboard history and character panel. Panels on the same edge share a reorderable tab strip and can float together. The Function List nests methods under their classes. The folder tree can expand or collapse all roots and locate the current file. Project XML paths can be relative to their workspace. Windows drive and UNC paths remain unresolved on macOS. |
+| Search | Literal, Extended and Boost.Regex modes. Search in a selection, open buffers, folders and projects or refine earlier results. Five token styles support marking, navigation and copying. Volatile searches leave the previous query and history intact. Search by Unicode code point or range. Batch replacement preserves encodings and checks for stale changes. |
+| Editing | Select text or columns in two steps, convert tabs and spaces, change case, insert a date using a custom format and copy the paths of open files. Jump to matching braces, adjust multiple selections, open a selected path, search with a custom search provider or redact text. Paste HTML or RTF source from the macOS clipboard and transfer binary text bytes between macpad++ documents. |
+| Syntax highlighting | Built-in Lexilla languages and UDL XML 2.0 and 2.1. Create, edit and export UDL definitions through an XML editor. Function List and Auto-Completion accept bundled and profile XML rules. |
+| Theme XML | Lexer styles, fonts, editor and tab colors, fold margins, whitespace, change history and the document map. The Style Configurator edits a copy in the profile. Some Windows GUI entries have no native equivalent. |
+| Translation and menu XML | Matching menus, dialog controls and panel labels use translation XML. Russian includes additional macOS labels for Preferences, search results, docking, project panels and the user language editor. Other untranslated labels fall back to English. Editor and tab context menus accept supported native commands by upstream ID or name. |
+| Preferences and backups | Import supported editor, tab, toolbar, search, backup, session, built-in panel layout and large-file settings from `config.xml`. The importer retains the original as `imported-config.xml` in the profile. Simple or versioned backups preserve the previous contents of saved files. Windows-only settings stay in the original XML. |
+| Sessions | Load and save session XML for saved files, including both panes, active view, selection, scroll position, bookmarks, and collapsed folds. |
+| Workspace recovery | The profile remembers open documents, unsaved text, and the two-pane layout. If a file changed on disk while the app was closed, the recovered edits open in a separate untitled tab. |
+| Macros | Record and replay supported editing and search actions, including search sequences from `shortcuts.xml`. Use Shortcut Mapper to assign native shortcuts. |
+| Tools and Run | MD5, SHA‑1, SHA‑256 and SHA‑512. Save named macOS commands with active-document placeholders and assign them shortcuts. |
+| Terminal | Supports line, column and byte position, syntax and UI language, read-only and monitoring modes, profile selection, session opening and folder workspaces. Run the executable with `--help` for options. |
+| Plugins | Plugins Admin supports local and catalog installation and version updates. ABI v2 adds document access, events, panels and multiple commands. ABI v1 selection plugins remain supported. Windows DLLs require the Windows editor. |
 
-The native editor includes core editing, search and replace, and native window
-tabbing. Windows-only features such as macros, session restoration and the
-upstream Plugins Admin have no implementation in this port.
+The macOS port uses native AppKit shortcuts and dialogs. Compatibility varies
+for Windows-specific commands, unsupported XML options and older plugin APIs.
 The legacy Windows source and build instructions are available in [BUILD.md](BUILD.md).
