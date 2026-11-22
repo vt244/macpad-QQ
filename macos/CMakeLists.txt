@@ -10,7 +10,7 @@ set(lex "${root}/lexilla")
 file(GLOB scintilla_sources CONFIGURE_DEPENDS "${sci}/src/*.cxx" "${sci}/cocoa/*.mm")
 file(GLOB lexilla_sources CONFIGURE_DEPENDS "${lex}/lexlib/*.cxx" "${lex}/lexers/Lex*.cxx")
 
-# The Notepad++ UDL lexer uses Win32. Drop its entry from the generated registry
+# The upstream UDL lexer uses Win32. Drop its entry from the generated registry
 # for this target while keeping the vendored sources intact.
 list(FILTER lexilla_sources EXCLUDE REGEX "/LexUser[.]cxx$")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${lex}/src/Lexilla.cxx")

@@ -1,35 +1,57 @@
 # macpad++
 
-macpad++ is a native macOS source-code editor derived from
-[Notepad++](https://github.com/notepad-plus-plus/notepad-plus-plus).
-It uses AppKit, Scintilla Cocoa and Lexilla, and runs on Apple silicon and Intel Macs with macOS 13 or later.
+macpad++ is a native macOS code and text editor. It is an independent fork of
+Notepad++, originally created by Don Ho and developed by its contributors.
+The macOS port uses AppKit for the interface, Scintilla Cocoa for editing,
+and Lexilla for syntax highlighting. [Upstream project](https://github.com/notepad-plus-plus/notepad-plus-plus)
 
-## Run on macOS
+## Get started
 
-Build `macpad++.app` using the [build guide](BUILD.md) or get the app and its
-matching source archive from a successful [macOS build](https://github.com/vt244/macpad-plus-plus/actions/workflows/macos.yml).
-Open the app in Finder. Use **File → Open** or **Open With → macpad++** to edit a file.
+macpad++ runs on Apple silicon and Intel Macs with macOS 13 or later.
+The app runs directly on macOS.
 
-The editor supports syntax highlighting for built-in languages, UTF‑8 and
-UTF‑16, tabs, undo, word wrap, and find and replace with regular expressions.
-See [compatibility](SUPPORTED_SYSTEM.md) for the scope of the native port.
+To build from source, install the Apple Command Line Tools and CMake 3.20 or
+later, then run these commands from the repository root.
 
-## Themes, translations and plugins
+```sh
+macos/build-app.sh
+open 'dist/macpad++.app'
+```
 
-User files live in `~/Library/Application Support/macpad++/profile/`.
+GitHub Actions also provides the app and its matching source archive from
+successful builds. Local and CI builds are signed ad hoc. [Build guide](BUILD.md) · [GitHub Actions](https://github.com/vt244/macpad-plus-plus/actions/workflows/macos.yml)
 
-| Extension | Where to put it | How to use it |
+## What you can do
+
+- Edit text and source files in tabs, with syntax highlighting, line numbers and word wrap.
+- Find and replace text with optional regular expressions.
+- Open and save UTF‑8 and BOM-marked UTF‑16 files while preserving their encoding and line endings.
+- Import existing theme and translation XML files.
+
+Open files from **File → Open** or from Finder with **Open With → macpad++**.
+The native port uses the existing XML formats for editor styles and matching
+menu labels. [Compatibility and current limitations](SUPPORTED_SYSTEM.md)
+
+## Customize macpad++
+
+The profile folder is `~/Library/Application Support/macpad++/profile/`.
+
+| Resource | Where to install it | Where to use it |
 | --- | --- | --- |
-| Theme XML | `themes/` | Choose **View → Theme**. Use **Import XML…** to add a file. |
-| Translation XML | `localization/` | Choose **Settings → Interface Language**. Use **Import XML…** to add a file. The default choice reads `nativeLang.xml` from the profile root when present. |
-| Native plugin | `plugins/*.dylib` | Restart macpad++ and use its **Plugins** menu. The [native plugin API](macos/MacpadPlugin.h) supports commands that read and replace the active selection. |
+| XML theme | `themes/` | **View → Theme**. **Import XML…** copies the file into the profile. |
+| XML translation | `localization/` | **Settings → Interface Language**. **Import XML…** copies the file into the profile. The default option also reads `nativeLang.xml` at the profile root. |
+| macOS plugin | `plugins/*.dylib` | Restart macpad++ and open **Plugins**. |
 
-Windows plugin DLLs require Windows. Plugins with source code can be adapted
-to the native plugin API. [Build and adapt a plugin](BUILD.md#native-plugins)
+Native plugins can read and replace the current selection. Windows DLL plugins
+require Windows. Plugins with source code can be adapted and rebuilt for macOS.
+[Native plugin API](macos/MacpadPlugin.h) · [Plugin build example](BUILD.md#native-plugins)
 
-## Source and licenses
+## License and contributions
 
-macpad++ is a modified version of Notepad++ by Don Ho and the Notepad++ contributors.
-The editor is distributed under the [GNU GPL version 3](LICENSE).
-See [third-party notices](THIRD_PARTY_NOTICES.md) for components with separate
-terms, including bundled themes. [Contribution rules](CONTRIBUTING.md) apply to this fork.
+The editor is distributed under the GNU General Public License version 3.
+The fork preserves upstream copyright notices. Third-party components, themes
+and artwork have their own attribution and distribution considerations.
+[GPLv3](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
+
+Report macOS issues in this fork and include your macOS and macpad++ versions.
+[Issues](https://github.com/vt244/macpad-plus-plus/issues) · [Contributing](CONTRIBUTING.md)

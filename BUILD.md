@@ -72,13 +72,13 @@ Boost is taken from [boost 1.92.0](https://www.boost.org/users/history/version_1
 
 1. Open the Developer Command Prompt for Visual Studio
 2. Go into the [`scintilla\win32\`](https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/scintilla/win32/)
-3. Build the same configuration as notepad++:
+3. Use the same configuration as the Windows editor:
    - Release: `nmake -f scintilla.mak`
    - Debug: `nmake DEBUG=1 -f scintilla.mak`
    - Example:
    `nmake -f scintilla.mak`
 4. Go into the [`lexilla\src\`](https://github.com/notepad-plus-plus/notepad-plus-plus/tree/master/lexilla/src/)
-5. Build the same configuration as notepad++:
+5. Use the same configuration as the Windows editor:
    - Release: `nmake -f lexilla.mak`
    - Debug: `nmake DEBUG=1 -f lexilla.mak`
 
@@ -86,8 +86,7 @@ Boost is taken from [boost 1.92.0](https://www.boost.org/users/history/version_1
 
 More about the previous build process: <https://community.notepad-plus-plus.org/topic/13959/building-notepad-with-visual-studio-2015-2017>
 
-Since `Notepad++` version 6.0 - 7.9.5, the build of dynamic linked `SciLexer.dll` that is distributed
-uses features from Boost's `Boost.Regex` library.
+Upstream releases 6.0 through 7.9.5 used Boost.Regex in the separately distributed `SciLexer.dll`.
 
 ### GCC
 

@@ -1,20 +1,20 @@
 macpad++
 ========
 
-macpad++ is a native macOS source-code editor based on Notepad++ by
-Don Ho and the Notepad++ contributors. It uses AppKit, Scintilla Cocoa
-and Lexilla and reads existing Notepad++ theme and translation XML files.
+macpad++ is a native macOS code and text editor. It is an independent
+fork of Notepad++, originally created by Don Ho and developed by its
+contributors. The editor uses AppKit, Scintilla Cocoa and Lexilla.
 
-Open macpad++.app in Finder. Themes, translations and native plugins
-can be installed in the profile under ~/Library/Application Support/macpad++/.
+Open macpad++.app in Finder. Use File > Open to edit a file. Add themes
+in View > Theme and translations in Settings > Interface Language.
+The profile is under ~/Library/Application Support/macpad++/profile/.
 
-Source, build instructions and support:
+Source, build instructions, and issues:
 https://github.com/vt244/macpad-plus-plus
 
-The editor is distributed under GPL version 3. See LICENSE and
-THIRD_PARTY_NOTICES.md in the macOS application's Resources directory
-for license terms and attribution.
+The editor is distributed under GPL version 3. Choose License in the
+macpad++ menu or see LICENSE and THIRD_PARTY_NOTICES.md in the app
+bundle for license terms and attribution.
 
-Original project and manual:
-https://notepad-plus-plus.org/
-https://npp-user-manual.org/
+Original project:
+https://github.com/notepad-plus-plus/notepad-plus-plus
