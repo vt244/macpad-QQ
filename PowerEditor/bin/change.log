@@ -1,3 +1,17 @@
+macpad++ 0.2.0
+
+ - Added a native macOS editor using AppKit and Scintilla Cocoa.
+ - Added native XML theme and translation import and a macOS plugin API.
+
+macpad++ 0.1.0
+
+ - Added the macOS app and Wine-based editor launch.
+ - Added a separate profile for plugins, themes and localizations.
+ - Rebranded the editor and translations for the macpad++ fork.
+
+Upstream Notepad++ change history
+---------------------------------
+
 Notepad++ v8.9.9.1 regression fixes & new feature:
 
  1. Fix regression in pasting into virtual space in multi paste mode.

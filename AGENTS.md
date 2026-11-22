@@ -10,7 +10,7 @@
 
 - Do not modify `scintilla/` or `lexilla/`.
 - Do not submit refactoring-only or typo-fix-only changes. They will be rejected.
-- Support Windows only, do not add support for other platforms.
+- Preserve the Windows editor and its plugin ABI. Put macOS launcher and packaging changes in `macos/`.
 
 ## Validation
 
