@@ -4,15 +4,16 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 root=$PWD
 
-mkdir -p .tmp/native-tmp dist
-export TMPDIR="$root/.tmp/native-tmp"
+mkdir -p .tmp dist
+work=$(mktemp -d "$root/.tmp/package.XXXXXXXX")
+trap 'rm -rf "$work"' EXIT
+export TMPDIR="$work/tmp"
+mkdir "$TMPDIR"
 jobs=${MACPAD_BUILD_JOBS:-$(sysctl -n hw.logicalcpu 2>/dev/null || echo 4)}
 cmake -S macos -B .tmp/native-build -DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'
 cmake --build .tmp/native-build --parallel "$jobs"
 
-work=$(mktemp -d "$root/.tmp/package.XXXXXXXX")
-trap 'rm -rf "$work"' EXIT
 app="$work/macpad++.app"
 resources="$app/Contents/Resources"
 mkdir -p "$app/Contents/MacOS" "$resources/licenses"
