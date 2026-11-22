@@ -69,9 +69,11 @@ void EditorShowPreferences(void)
 	};
 	NSView *editor = tab(@"pref-editor", @"Editing");
 	checks(editor, @[@[@"insertSpaces", @"Insert spaces for indentation", @NO], @[@"backspaceUnindent", @"Backspace unindents", @NO],
-		@[@"virtualSpace", @"Allow the caret beyond the end of a line", @NO], @[@"multipleSelections", @"Enable multiple selections", @YES]], 220);
+		@[@"virtualSpace", @"Allow the caret beyond the end of a line", @NO], @[@"multipleSelections", @"Enable multiple selections", @YES],
+		@[@"autocomplete", @"Offer completions while typing", @YES], @[@"autoPairs", @"Insert matching delimiters and closing tags", @YES]], 220);
 	field(editor, @"dateTimeFormat", @"Custom date and time format", @"yyyy-MM-dd HH:mm:ss", 82);
 	field(editor, @"tabWidth", @"Tab width", @"4", 52);
+	field(editor, @"autocompleteMinimum", @"Characters before completion", @"2", 22);
 
 	NSView *display = tab(@"pref-display", @"Display");
 	checks(display, @[@[@"wordWrap", @"Wrap long lines", @NO], @[@"lineNumbers", @"Show line numbers", @YES],
@@ -97,6 +99,7 @@ void EditorShowPreferences(void)
 
 	NSView *large = tab(@"pref-largeFiles", @"Large files");
 	checks(large, @[@[@"limitLargeFiles", @"Skip syntax highlighting for large files", @NO],
+		@[@"largeFileCompletion", @"Allow automatic completion", @NO],
 		@[@"largeFileBraceMatch", @"Allow matching brace commands", @NO],
 		@[@"largeFileDisableWrap", @"Disable word wrap for large files", @NO]], 220);
 	field(large, @"largeFileMegabytes", @"Large file threshold (MiB)", @"200", 107);

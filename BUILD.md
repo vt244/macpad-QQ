@@ -19,7 +19,7 @@ Run the smoke test in a macOS graphical session:
 macos/test-app.sh
 ```
 
-It checks dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings.
+It checks dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands.
 The [macOS workflow](.github/workflows/macos.yml) builds, tests and archives
 the app with its corresponding source.
 

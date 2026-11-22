@@ -215,6 +215,20 @@ static void AddCharacterSets(NSMenu *menu)
 	AddItem(edit, Label(@"42007", @"Select All"), @selector(selectAll:), @"a");
 	AddItem(edit, Label(@"42020", @"Begin/End Select"), @selector(beginOrEndSelection:), @"").tag = 42020;
 	AddItem(edit, Label(@"42089", @"Begin/End Select in Column Mode"), @selector(beginOrEndSelection:), @"").tag = 42089;
+	AddItem(edit, Label(@"42034", @"Column Editor…"), @selector(showColumnEditor:), @"");
+	for (NSInteger kind = 0; kind < 2; ++kind)
+	{
+		NSMenu *selection = AddMenu(edit, kind ? Label(@"edit-multiSelectNext", @"Multi-select Next") :
+			Label(@"edit-multiSelectALL", @"Multi-select All"));
+		NSArray *options = @[@"Ignore Case and Word Boundaries", @"Match Case Only", @"Match Whole Words Only", @"Match Case and Whole Words"];
+		for (NSInteger option = 0; option < options.count; ++option)
+		{
+			const NSInteger command = 42090 + kind * 4 + option;
+			AddItem(selection, Label([@(command) stringValue], options[option]), @selector(selectOccurrences:), @"").tag = command;
+		}
+	}
+	AddItem(edit, Label(@"42098", @"Undo Latest Multi-Select"), @selector(adjustMatchingSelections:), @"").tag = 42098;
+	AddItem(edit, Label(@"42099", @"Skip Current and Select Next"), @selector(adjustMatchingSelections:), @"").tag = 42099;
 	[edit addItem:NSMenuItem.separatorItem];
 	NSMenu *lines = AddMenu(edit, Label(@"edit-lineOperations", @"Line Operations"));
 	AddEditorCommand(lines, Label(@"42010", @"Duplicate Current Line"), SCI_LINEDUPLICATE, @"d");
@@ -225,9 +239,30 @@ static void AddCharacterSets(NSMenu *menu)
 	NSArray<NSString *> *lineActions = @[@"Split Lines", @"Join Lines", @"Remove Empty Lines", @"Remove Empty Lines (Containing Blank Characters)"];
 	for (NSUInteger i = 0; i < lineActions.count; ++i)
 		AddItem(lines, Label([@(lineIDs[i]) stringValue], lineActions[i]), @selector(runWhitespaceCommand:), @"").tag = lineIDs[i];
+	[lines addItem:NSMenuItem.separatorItem];
+	const NSInteger reorderIDs[] = {42079, 42077, 42083, 42078, 42059, 42060, 42080, 42081, 42100, 42101,
+		42061, 42062, 42063, 42064, 42065, 42066, 42104, 42105};
+	NSArray *reorderNames = @[@"Remove Duplicate Lines", @"Remove Consecutive Duplicate Lines", @"Reverse Line Order", @"Randomize Line Order",
+		@"Sort Lexicographically Ascending", @"Sort Lexicographically Descending", @"Sort Ascending Ignoring Case", @"Sort Descending Ignoring Case",
+		@"Sort in Locale Order Ascending", @"Sort in Locale Order Descending", @"Sort as Integers Ascending", @"Sort as Integers Descending",
+		@"Sort as Decimals (Comma) Ascending", @"Sort as Decimals (Comma) Descending", @"Sort as Decimals (Dot) Ascending",
+		@"Sort as Decimals (Dot) Descending", @"Sort by Length Ascending", @"Sort by Length Descending"];
+	for (NSUInteger i = 0; i < reorderNames.count; ++i)
+		AddItem(lines, Label([@(reorderIDs[i]) stringValue], reorderNames[i]), @selector(reorderLines:), @"").tag = reorderIDs[i];
 	NSMenu *indent = AddMenu(edit, Label(@"edit-indent", @"Indent"));
 	AddEditorCommand(indent, Label(@"42008", @"Increase Indent"), SCI_LINEINDENT);
 	AddEditorCommand(indent, Label(@"42009", @"Decrease Indent"), SCI_LINEDEDENT);
+	NSMenu *comments = AddMenu(edit, Label(@"edit-comment", @"Comment/Uncomment"));
+	const NSInteger commentIDs[] = {42022, 42035, 42036, 42023, 42047};
+	NSArray *commentNames = @[@"Toggle Single Line Comment", @"Single Line Comment", @"Single Line Uncomment", @"Block Comment", @"Block Uncomment"];
+	for (NSUInteger i = 0; i < commentNames.count; ++i)
+		AddItem(comments, Label([@(commentIDs[i]) stringValue], commentNames[i]), @selector(commentSelection:), i == 0 ? @"/" : @"").tag = commentIDs[i];
+	NSMenu *completion = AddMenu(edit, Label(@"edit-autoCompletion", @"Auto-Completion"));
+	const NSInteger completionIDs[] = {50000, 50001, 50002, 50010, 50011, 50006};
+	NSArray *completionNames = @[@"Function Completion", @"Word Completion", @"Function Parameters Hint",
+		@"Function Parameters Previous Hint", @"Function Parameters Next Hint", @"Path Completion"];
+	for (NSUInteger i = 0; i < completionNames.count; ++i)
+		AddItem(completion, Label([@(completionIDs[i]) stringValue], completionNames[i]), @selector(completeText:), @"").tag = completionIDs[i];
 	NSMenu *blanks = AddMenu(edit, Label(@"edit-blankOperations", @"Blank Operations"));
 	const NSInteger blankIDs[] = {42024, 42042, 42043, 42044, 42045, 42046, 42054, 42053};
 	NSArray<NSString *> *blankActions = @[@"Trim Trailing Space", @"Trim Leading Space", @"Trim Leading and Trailing Space",
@@ -338,6 +373,17 @@ static void AddCharacterSets(NSMenu *menu)
 	AddItem(bookmarks, Label(@"43006", @"Next Bookmark"), @selector(navigateBookmark:), @"").tag = 1;
 	AddItem(bookmarks, Label(@"43007", @"Previous Bookmark"), @selector(navigateBookmark:), @"").tag = -1;
 	AddItem(bookmarks, Label(@"43008", @"Clear All Bookmarks"), @selector(clearBookmarks:), @"");
+	const NSInteger bookmarkIDs[] = {43018, 43019, 43020, 43021, 43051, 43050};
+	NSArray *bookmarkNames = @[@"Cut Bookmarked Lines", @"Copy Bookmarked Lines", @"Paste to Bookmarked Lines", @"Remove Bookmarked Lines",
+		@"Remove Non-Bookmarked Lines", @"Inverse Bookmarks"];
+	for (NSUInteger i = 0; i < bookmarkNames.count; ++i)
+		AddItem(bookmarks, Label([@(bookmarkIDs[i]) stringValue], bookmarkNames[i]),
+			@selector(operateOnBookmarkedLines:), @"").tag = bookmarkIDs[i];
+	NSMenu *changes = AddMenu(search, Label(@"search-changeHistory", @"Change History"));
+	NSArray *changeNames = @[@"Go to Next Change", @"Go to Previous Change", @"Clear Change History"];
+	for (NSUInteger i = 0; i < changeNames.count; ++i)
+		AddItem(changes, Label([@(43067 + i) stringValue], changeNames[i]), @selector(navigateChanges:), @"").tag = 43067 + i;
+
 	NSMenu *view = AddMenu(main, Label(@"view", @"View"));
 	AddItem(view, Label(@"44034", @"Always on Top"), @selector(toggleAlwaysOnTop:), @"");
 	AddItem(view, Label(@"44032", @"Toggle Full Screen"), @selector(toggleEditorFullScreen:), @"");

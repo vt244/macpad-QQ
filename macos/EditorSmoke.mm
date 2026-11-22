@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #import "EditorDocument.h"
 #import "EditorChrome.h"
+#import "EditorCompletion.h"
 #import "EditorContextMenus.h"
 #import "EditorDock.h"
+#import "EditorEditActions.h"
 #import "EditorDocumentList.h"
 #import "EditorDocumentMap.h"
 #import "EditorFileSearch.h"
@@ -279,6 +281,43 @@ static bool CheckSearchScopes(EditorDocument *document, NSURL *test)
 	return true;
 }
 
+static bool CheckEditingCommands()
+{
+	ScintillaView *editor = [[ScintillaView alloc] initWithFrame:NSMakeRect(0, 0, 300, 150)];
+	[editor message:SCI_SETMULTIPLESELECTION wParam:1];
+	[editor setStringProperty:SCI_SETTEXT parameter:0 value:@"b\r\na\nb\r\n"];
+	EditorReorderLines(editor, 42079);
+	if (!Check([editor.string isEqualToString:@"b\r\na\r\n"], "remove duplicate lines while preserving line separators"))
+		return false;
+	EditorReorderLines(editor, 42059);
+	if (!Check([editor.string isEqualToString:@"a\r\nb\r\n"], "sort the remaining lines"))
+		return false;
+	[editor setStringProperty:SCI_SETTEXT parameter:0 value:@"long\nx\n"];
+	[editor message:SCI_GOTOPOS wParam:2];
+	EditorInsertColumnText(editor, @"!");
+	if (!Check([editor.string isEqualToString:@"lo!ng\nx !\n  !"], "insert into a column and pad short lines"))
+		return false;
+	[editor setStringProperty:SCI_SETTEXT parameter:0 value:@"foo foo foo"];
+	[editor message:SCI_SETSEL wParam:0 lParam:3];
+	EditorAddMatchingSelections(editor, 42093);
+	if (!Check([editor message:SCI_GETSELECTIONS] == 3, "select all matching words"))
+		return false;
+	[editor setStringProperty:SCI_SETTEXT parameter:0 value:@"a\n  b\n"];
+	[editor message:SCI_SETSEL wParam:0 lParam:4];
+	EditorCommentSelection(editor, 42022, @"#", nil, nil);
+	if (!Check([editor.string isEqualToString:@"# a\n  # b\n"], "use the language's line comment and preserve indentation"))
+		return false;
+	[editor message:SCI_MARKERADD wParam:0 lParam:20];
+	EditorBookmarkLines(editor, 43051, 20);
+	if (!Check([editor.string isEqualToString:@"# a\n"], "remove lines without bookmarks"))
+		return false;
+	[editor setStringProperty:SCI_SETTEXT parameter:0 value:@"("];
+	[editor message:SCI_GOTOPOS wParam:1];
+	EditorCompletion *completion = [EditorCompletion new];
+	[completion typed:'(' inEditor:editor language:@"python" complete:NO closePairs:YES];
+	return Check([editor.string isEqualToString:@"()"] && [editor message:SCI_GETCURRENTPOS] == 1,
+		"insert the paired delimiter and keep the caret between the pair");
+}
 static bool CheckSearchPanel(EditorSearchReport *report)
 {
 	EditorSearchResultsView *panel = [[EditorSearchResultsView alloc] initWithOpenMatch:^(EditorSearchMatch *match) {}
@@ -405,6 +444,12 @@ static bool CheckSearchAndConfigurationParity(EditorDocumentController *controll
 		return false;
 	[document findNext:nil];
 	if (!Check([editor message:SCI_GETSELECTIONSTART] == 10, "retain the previous search after a volatile search"))
+		return false;
+	action.tag = 42095;
+	[document selectOccurrences:action];
+	action.tag = 42098;
+	[document adjustMatchingSelections:action];
+	if (!Check([editor message:SCI_GETSELECTIONS] == 1, "undo the latest multi-selection"))
 		return false;
 	[editor message:SCI_CLEARALL];
 	const char bytes[] = {'a', '\0', 'b'};
@@ -709,6 +754,8 @@ int RunSmokeTest(void)
 		return 1;
 	if (!CheckSearchScopes(second, test))
 		return 1;
+	if (!CheckEditingCommands())
+		return 1;
 	if (!CheckSearchAndConfigurationParity(controller, test))
 		return 1;
 	[document.editor setStringProperty:SCI_REPLACESEL parameter:0 value:@"# Two views\r\n"];
@@ -876,6 +923,6 @@ int RunSmokeTest(void)
 	if (!Check(document.isDocumentEdited && [[document dataOfType:controller.defaultType error:&error]
 		isEqualToData:[editor.string dataUsingEncoding:NSUTF8StringEncoding]], "convert to UTF-8 and mark the new encoding as unsaved"))
 		return 1;
-	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings.");
+	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands.");
 	return 0;
 }

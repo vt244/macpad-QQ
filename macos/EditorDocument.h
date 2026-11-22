@@ -30,6 +30,7 @@
 - (IBAction)findSelectedText:(NSMenuItem *)sender;
 - (IBAction)findMatchingBrace:(NSMenuItem *)sender;
 - (IBAction)useMarkStyle:(NSMenuItem *)sender;
+- (IBAction)adjustMatchingSelections:(NSMenuItem *)sender;
 - (IBAction)specialClipboard:(NSMenuItem *)sender;
 - (IBAction)findInFiles:(id)sender;
 - (void)findInDirectory:(NSURL *)directory;
@@ -50,6 +51,13 @@
 - (IBAction)runWhitespaceCommand:(id)sender;
 - (IBAction)beginOrEndSelection:(NSMenuItem *)sender;
 - (IBAction)transformSelectionCase:(NSMenuItem *)sender;
+- (IBAction)showColumnEditor:(id)sender;
+- (IBAction)selectOccurrences:(NSMenuItem *)sender;
+- (IBAction)commentSelection:(NSMenuItem *)sender;
+- (IBAction)completeText:(NSMenuItem *)sender;
+- (IBAction)reorderLines:(NSMenuItem *)sender;
+- (IBAction)operateOnBookmarkedLines:(NSMenuItem *)sender;
+- (IBAction)navigateChanges:(NSMenuItem *)sender;
 - (IBAction)monitorFile:(id)sender;
 - (IBAction)saveCopyAs:(id)sender;
 - (IBAction)moveFileToTrash:(id)sender;

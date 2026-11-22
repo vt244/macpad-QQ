@@ -1,12 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #import "EditorDocument.h"
 #import "EditorChrome.h"
+#import "EditorCompletion.h"
 #import "EditorContextMenus.h"
 #import "EditorDocumentList.h"
 #import "EditorDocumentMap.h"
 #import "EditorDock.h"
 #import "EditorFileSearch.h"
 #import "EditorFolderPanel.h"
+#import "EditorEditActions.h"
 #import "EditorFunctionList.h"
 #import "EditorIncrementalSearch.h"
 #import "EditorInsertPanels.h"
@@ -1077,6 +1079,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	NSButton *_wrapSearch;
 	NSButton *_replaceButton;
 	NSButton *_replaceAllButton;
+	NSInteger _multiSelectFlags;
 	std::optional<sptr_t> _selectionStart;
 	NSSegmentedControl *_searchMode;
 	NSTextField *_replaceLabel;
@@ -1128,6 +1131,7 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	id _presentationKeys;
 	__weak EditorDocument *_incrementalDocument;
 	NSString *_languageIdentifier;
+	EditorCompletion *_completion;
 	EditorSplitView *_editorSplit;
 	EditorTabPane *_primaryPane;
 	NSView *_primaryEditorHost;
@@ -1707,6 +1711,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		case SCN_ZOOM:
 		case SCN_UPDATEUI:
 		case SCN_MARGINCLICK:
+		case SCN_CHARADDED:
 			[self notification:notification];
 			break;
 	}
@@ -2514,6 +2519,19 @@ static void ApplyPreferencesToView(ScintillaView *view)
 					[controller refreshFunctionList];
 			}
 			break;
+		case SCN_CHARADDED:
+			if (notification->characterSource == SC_CHARACTERSOURCE_DIRECT_INPUT)
+			{
+				if (!_completion)
+					_completion = [EditorCompletion new];
+				const BOOL code = _languageIdentifier.length && ![_languageIdentifier isEqualToString:@"normal"];
+				EditorResources *resources = EditorResources.shared;
+				[_completion typed:notification->ch inEditor:self.editor language:_languageIdentifier
+					complete:code && [[resources setting:@"autocomplete" fallback:@YES] boolValue] &&
+						(!self.largeFileMode || [[resources setting:@"largeFileCompletion" fallback:@NO] boolValue])
+					closePairs:code && [[resources setting:@"autoPairs" fallback:@YES] boolValue]];
+			}
+			break;
 		case SCN_SAVEPOINTLEFT:
 			[self updateChangeCount:NSChangeDone];
 			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
@@ -2659,6 +2677,32 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[self.editor message:static_cast<unsigned int>([sender tag])];
 }
 
+- (IBAction)showColumnEditor:(id)sender { EditorShowColumnDialog(self.editor); }
+
+- (IBAction)selectOccurrences:(NSMenuItem *)sender
+{
+	const NSInteger options = (sender.tag - 42090) % 4;
+	_multiSelectFlags = (options & 1 ? SCFIND_MATCHCASE : 0) | (options & 2 ? SCFIND_WHOLEWORD : 0);
+	EditorAddMatchingSelections(self.editor, sender.tag);
+}
+
+- (IBAction)adjustMatchingSelections:(NSMenuItem *)sender
+{
+	ScintillaView *editor = self.editor;
+	const auto selections = [editor message:SCI_GETSELECTIONS];
+	if (sender.tag == 42098)
+	{
+		if (selections > 1)
+			[editor message:SCI_DROPSELECTIONN wParam:selections - 1];
+		return;
+	}
+
+	EditorAddMatchingSelections(editor, 42094 + (_multiSelectFlags & SCFIND_MATCHCASE ? 1 : 0) +
+		(_multiSelectFlags & SCFIND_WHOLEWORD ? 2 : 0));
+	if ([editor message:SCI_GETSELECTIONS] > selections)
+		[editor message:SCI_DROPSELECTIONN wParam:selections - 1];
+}
+
 static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end)
 {
 	const auto *bytes = reinterpret_cast<const char *>([editor message:SCI_GETCHARACTERPOINTER]);
@@ -2729,6 +2773,23 @@ static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end)
 	[editor message:SCI_ENDUNDOACTION];
 	[editor message:SCI_SCROLLCARET];
 }
+
+- (IBAction)commentSelection:(NSMenuItem *)sender
+{
+	NSArray<NSString *> *symbols = [EditorResources.shared commentSymbolsForLanguage:_languageIdentifier];
+	EditorCommentSelection(self.editor, sender.tag, symbols[0], symbols[1], symbols[2]);
+}
+
+- (IBAction)completeText:(NSMenuItem *)sender
+{
+	if (!_completion)
+		_completion = [EditorCompletion new];
+	[_completion completeIn:self.editor language:_languageIdentifier directory:self.fileURL.URLByDeletingLastPathComponent command:sender.tag];
+}
+
+- (IBAction)reorderLines:(NSMenuItem *)sender { EditorReorderLines(self.editor, sender.tag); }
+- (IBAction)operateOnBookmarkedLines:(NSMenuItem *)sender { EditorBookmarkLines(self.editor, sender.tag, Bookmark); }
+- (IBAction)navigateChanges:(NSMenuItem *)sender { EditorNavigateChanges(self.editor, sender.tag); }
 
 - (IBAction)toggleDocumentReadOnly:(id)sender
 {
