@@ -18,6 +18,7 @@ resources="$app/Contents/Resources"
 mkdir -p "$app/Contents/MacOS" "$resources/licenses"
 
 cp macos/Info.plist "$app/Contents/"
+cp macos/AppIcon.icns "$resources/"
 for cursor in mac_cursor_busy mac_cursor_flipped; do
 	sips -s format tiff "scintilla/cocoa/res/$cursor.png" --out "$resources/$cursor.tiff" >/dev/null
 done
