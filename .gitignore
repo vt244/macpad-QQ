@@ -170,3 +170,41 @@ PowerEditor/src/MISC/md5/RCa06792
 # Local macOS builds and validation
 /.tmp/
 /dist/
+
+# IDEs and editor settings
+.idea/
+.fleet/
+.zed/
+.nova/
+*.code-workspace
+xcuserdata/
+*.xcuserstate
+.project
+.settings/
+.cproject
+
+# Operating system metadata
+.AppleDouble/
+.LSOverride
+._*
+.Spotlight-V100/
+.Trashes/
+.fseventsd/
+ehthumbs.db
+
+# Local AI agent state and configuration
+/AGENTS.md
+.agents/
+.codex/
+.claude/
+.cursor/
+.windsurf/
+.continue/
+.aider*/
+.gemini/
+.opencode/
+.kiro/
+.roo/
+.augment/
+CLAUDE.local.md
+AGENTS.local.md
