@@ -9,6 +9,7 @@
 #import "EditorContextMenus.h"
 #import "EditorPlugins.h"
 #import "EditorResources.h"
+#import "EditorSettings.h"
 #import "Scintilla.h"
 #import "ScintillaView.h"
 
@@ -169,6 +170,7 @@ static void AddCharacterSets(NSMenu *menu)
 	NSMenu *application = AddMenu(main, @"macpad++");
 	AddItem(application, Label(@"app-about", @"About macpad++"), @selector(showAbout:), @"", self);
 	AddItem(application, Label(@"app-license", @"License…"), @selector(showLicense:), @"", self);
+	AddItem(application, Label(@"48011", @"Preferences…"), @selector(showPreferences:), @",", self);
 	[application addItem:NSMenuItem.separatorItem];
 	AddItem(application, Label(@"app-hide", @"Hide macpad++"), @selector(hide:), @"h", NSApp);
 	AddItem(application, Label(@"app-quit", @"Quit macpad++"), @selector(terminate:), @"q", NSApp);
@@ -440,6 +442,8 @@ static void AddCharacterSets(NSMenu *menu)
 		AddItem(group, name, @selector(selectLanguage:), @"").representedObject = key;
 	}
 	NSMenu *settings = AddMenu(main, Label(@"settings", @"Settings"));
+	AddItem(settings, Label(@"48011", @"Preferences…"), @selector(showPreferences:), @"", self);
+	AddItem(settings, Label(@"native-importConfig", @"Import Notepad++ Configuration…"), @selector(importWindowsConfiguration:), @"", self);
 	AddItem(settings, Label(@"native-editEditorMenu", @"Edit Editor Context Menu…"), @selector(editContextMenu:), @"", self);
 	AddItem(settings, Label(@"native-editTabMenu", @"Edit Tab Context Menu…"), @selector(editContextMenu:), @"", self).tag = 1;
 	NSMenu *translations = AddMenu(settings, Label(@"native-interfaceLanguage", @"Interface Language"));
@@ -464,6 +468,7 @@ static void AddCharacterSets(NSMenu *menu)
 		[document refreshChromeMenus];
 }
 
+- (void)showPreferences:(id)sender { EditorShowPreferences(); }
 - (void)editContextMenu:(NSMenuItem *)sender
 {
 	BOOL tabs = sender.tag == 1;
@@ -518,6 +523,29 @@ static void AddCharacterSets(NSMenu *menu)
 {
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	EditorRunTabCommand(controller.focusedDocument, item.tag);
+}
+
+- (void)importWindowsConfiguration:(id)sender
+{
+	NSOpenPanel *panel = NSOpenPanel.openPanel;
+	panel.allowedContentTypes = @[UTTypeXML];
+	if ([panel runModal] != NSModalResponseOK)
+		return;
+	NSError *error = nil;
+	if (![EditorResources.shared importWindowsConfiguration:panel.URL error:&error])
+	{
+		[NSApp presentError:error];
+		return;
+	}
+	for (EditorDocument *document in NSDocumentController.sharedDocumentController.documents)
+		[document applyPreferences];
+	[(EditorDocumentController *)NSDocumentController.sharedDocumentController applyImportedDockLayout];
+	NSAlert *report = [NSAlert new];
+	report.messageText = Label(@"native-configImported", @"Configuration Imported");
+	report.informativeText = Label(@"native-configImportedInfo",
+		@"Supported preferences were applied. The original XML was copied to the profile as imported-config.xml.");
+	[report addButtonWithTitle:Label(@"app-ok", @"OK")];
+	[report runModal];
 }
 
 static NSArray<NSArray<NSString *> *> *SearchEngines()

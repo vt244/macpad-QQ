@@ -288,6 +288,178 @@ static void SetProperty(ScintillaView *view, const char *key, NSString *value)
 	[self savePreferences];
 }
 
+- (BOOL)importWindowsConfiguration:(NSURL *)url error:(NSError **)error
+{
+	NSData *source = [NSData dataWithContentsOfURL:url options:0 error:error];
+	if (!source)
+		return NO;
+	pugi::xml_document document;
+	auto parsed = document.load_buffer(source.bytes, source.length);
+	auto gui = document.child("NotepadPlus").child("GUIConfigs");
+	if (!parsed || !gui)
+	{
+		if (error)
+			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError userInfo:@{
+				NSURLErrorKey: url, NSLocalizedDescriptionKey: [self label:@"native-invalidConfig" fallback:@"Choose a valid Notepad++ config.xml."]}];
+		return NO;
+	}
+	NSMutableDictionary<NSString *, id> *settings = [NSMutableDictionary dictionary];
+	auto config = [&](const char *name) { return gui.find_child_by_attribute("GUIConfig", "name", name); };
+	const struct { const char *section, *attribute; NSString *setting; } booleanSettings[] = {
+		{"ScintillaPrimaryView", "Wrap", @"wordWrap"}, {"ScintillaPrimaryView", "lineNumberMargin", @"lineNumbers"},
+		{"ScintillaPrimaryView", "bookMarkMargin", @"bookmarkMargin"}, {"ScintillaPrimaryView", "indentGuideLine", @"indentGuide"},
+		{"ScintillaPrimaryView", "whiteSpaceShow", @"whitespace"}, {"ScintillaPrimaryView", "eolShow", @"showEOL"},
+		{"ScintillaPrimaryView", "wrapSymbolShow", @"showWrapSymbol"},
+		{"ScintillaPrimaryView", "scrollBeyondLastLine", @"scrollBeyondLastLine"},
+		{"ScintillaPrimaryView", "virtualSpace", @"virtualSpace"},
+		{"ScintillaPrimaryView", "multiSelection", @"multipleSelections"},
+		{"TabSetting", "replaceBySpace", @"insertSpaces"}, {"TabSetting", "backspaceUnindent", @"backspaceUnindent"},
+		{"TabBar", "hide", @"hideTabBar"}, {"TabBar", "closeButton", @"tabCloseButtons"},
+		{"TabBar", "doubleClick2Close", @"doubleClickClosesTab"},
+		{"TabBar", "vertical", @"verticalTabs"}, {"TabBar", "multiLine", @"multilineTabs"},
+		{"MISC", "docPeekOnTab", @"tabPreview"},
+		{"largeFileRestriction", "isEnabled", @"limitLargeFiles"},
+		{"largeFileRestriction", "allowAutoCompletion", @"largeFileCompletion"},
+		{"largeFileRestriction", "allowBraceMatch", @"largeFileBraceMatch"},
+		{"largeFileRestriction", "deactivateWordWrap", @"largeFileDisableWrap"},
+		{"Searching", "fillFindFieldWithSelected", @"fillFindSelection"},
+		{"Searching", "fillFindFieldSelectCaret", @"fillFindWord"},
+		{"Searching", "FiF_ignoreunsavedChangesInOpenedFiles", @"findFilesOnDisk"},
+	};
+	for (const auto &entry : booleanSettings)
+		if (auto attribute = config(entry.section).attribute(entry.attribute))
+		{
+			std::string_view value = attribute.value();
+			if (value == "yes" || value == "show" || value == "no" || value == "hide")
+				settings[entry.setting] = @(value == "yes" || value == "show");
+		}
+	const struct { const char *section, *attribute; NSString *setting; int minimum, maximum; } integers[] = {
+		{"TabSetting", "size", @"tabWidth", 1, 32}, {"Backup", "action", @"backupMode", 0, 2},
+		{"Backup", "snapshotBackupTiming", @"checkpointMilliseconds", 250, 600000},
+		{"NewDocDefaultSettings", "format", @"newDocumentEOL", 0, 2}, {"NewDocDefaultSettings", "encoding", @"newDocumentEncoding", 0, 7},
+		{"auto-completion", "triggerFromNbChar", @"autocompleteMinimum", 1, 9},
+		{"largeFileRestriction", "fileSizeMB", @"largeFileMegabytes", 1, 4096},
+		{"multiInst", "setting", @"instanceMode", 0, 2}
+	};
+	for (const auto &entry : integers)
+		if (auto attribute = config(entry.section).attribute(entry.attribute))
+			settings[entry.setting] = @(std::clamp(attribute.as_int(entry.minimum), entry.minimum, entry.maximum));
+	if (auto action = config("auto-completion").attribute("autoCAction"))
+		settings[@"autocomplete"] = @(action.as_int() != 0);
+	if (auto snapshotMode = config("Backup").attribute("isSnapshotMode"))
+		settings[@"checkpointDrafts"] = @(std::string_view(snapshotMode.value()) == "yes");
+	if (auto format = config("insertDateTime").attribute("customizedFormat"))
+		settings[@"dateTimeFormat"] = String(format.value());
+	if (auto engine = config("searchEngine"))
+	{
+		if (auto choice = engine.attribute("searchEngineChoice"))
+		{
+			static const NSInteger native[] = {6, 0, 1, 2, 4, 5};
+			settings[@"searchEngine"] = @(native[std::clamp(choice.as_int(1), 0, 5)]);
+		}
+		if (auto format = engine.attribute("searchEngineCustom"))
+			settings[@"searchEngineCustom"] = String(format.value());
+	}
+	settings[@"windowsDockLayout"] = @{};
+	if (auto docking = config("DockingManager"))
+	{
+		const char *sizeNames[] = {"leftWidth", "rightWidth", "topHeight", "bottomHeight"};
+		NSMutableArray<NSNumber *> *sizes = [NSMutableArray array];
+		for (const char *size : sizeNames)
+			[sizes addObject:@(std::clamp(docking.attribute(size).as_int(200), 56, 1600))];
+		NSMutableDictionary *nativePanels = [NSMutableDictionary dictionary];
+		NSMutableDictionary *activeTabs = [NSMutableDictionary dictionary];
+		for (auto tab : docking.children("ActiveTabs"))
+			activeTabs[@(tab.attribute("cont").as_int(-1))] = @(tab.attribute("activeTab").as_int(-1));
+		NSMutableDictionary *containerCounts = [NSMutableDictionary dictionary];
+		for (auto pane : docking.children("PluginDlg"))
+		{
+			NSInteger container = pane.attribute("curr").as_int(-1);
+			BOOL visible = pane.attribute("isVisible").as_bool(false);
+			NSInteger index = [containerCounts[@(container)] integerValue];
+			if (visible)
+				containerCounts[@(container)] = @(index + 1);
+			std::string_view owner = pane.attribute("pluginName").value();
+			if (!owner.ends_with("::InternalFunction"))
+				continue;
+			NSInteger oldEdge = std::clamp(pane.attribute("prev").as_int(0), 0, 3);
+			NSInteger edge = container < 0 ? oldEdge : MIN(container, 4);
+			NSInteger dock = edge == 4 ? oldEdge : edge;
+			NSMutableDictionary *record = [@{@"edge": @(edge), @"lastDock": @(dock), @"visible": @(visible),
+				@"width": dock < 2 ? sizes[dock] : @200, @"height": dock >= 2 ? sizes[dock] : @185,
+				@"order": @(index + 1), @"selectedAt": @(index == [activeTabs[@(container)] integerValue] ? 1 : 0)} mutableCopy];
+			if (container >= 4)
+			{
+				record[@"floatingGroup"] = [NSString stringWithFormat:@"windows-dock-%ld", container];
+				auto frame = docking.find_child_by_attribute("FloatingWindow", "cont", std::to_string(container).c_str());
+				if (frame)
+				{
+					NSRect screen = NSScreen.mainScreen.visibleFrame;
+					CGFloat width = std::clamp(frame.attribute("width").as_int(390), 150, 1600);
+					CGFloat height = std::clamp(frame.attribute("height").as_int(240), 85, 1200);
+					record[@"floatingFrame"] = NSStringFromRect(NSMakeRect(frame.attribute("x").as_int(0),
+						NSMaxY(screen) - frame.attribute("y").as_int(0) - height, width, height));
+				}
+			}
+			nativePanels[[@(pane.attribute("id").as_int(-1)) stringValue]] = record;
+		}
+		settings[@"windowsDockLayout"] = @{@"sizes": sizes, @"panes": nativePanels};
+	}
+	if (auto session = config("RememberLastSession"))
+		settings[@"rememberSession"] = @(std::string_view(session.child_value()) == "yes");
+	if (auto mru = config("MRU"))
+		settings[@"mruTabSwitcher"] = @(std::string_view(mru.child_value()) == "yes");
+	if (auto toolbar = config("ToolBar"))
+	{
+		std::string_view size = toolbar.child_value();
+		if (!size.empty())
+			settings[@"toolbarStyle"] = @(size == "small" ? 0 : size == "large" ? 1 : size == "small2" ? 2 : size == "large2" ? 3 : 4);
+		if (auto visible = toolbar.attribute("visible"))
+			settings[@"hideToolbar"] = @(std::string_view(visible.value()) == "no");
+	}
+	if (auto status = config("StatusBar"))
+		settings[@"hideStatusBar"] = @(std::string_view(status.child_value()) == "hide");
+	if (auto change = config("Auto-detection"))
+	{
+		std::string_view mode = change.child_value();
+		settings[@"fileStatusMode"] = @(mode == "no" ? 0 : mode.ends_with("Old") ? 2 : 1);
+		settings[@"autoReload"] = @(mode.starts_with("auto"));
+		settings[@"reloadToEnd"] = @(mode.find("2End") != std::string_view::npos);
+	}
+	NSString *backupDirectory = String(config("Backup").attribute("dir").value()).stringByExpandingTildeInPath;
+	if (std::string_view(config("Backup").attribute("useCustumDir").value()) == "yes" && backupDirectory.isAbsolutePath)
+		settings[@"backupDirectory"] = backupDirectory;
+	auto history = document.child("NotepadPlus").child("FindHistory");
+	if (history)
+	{
+		const struct { const char *attribute; NSString *setting; } attributes[] = {
+			{"matchCase", @"findMatchCase"}, {"matchWord", @"findWholeWord"}, {"wrap", @"findWrap"}, {"fifRecuisive", @"findRecursive"}
+		};
+		for (const auto &entry : attributes)
+			if (auto value = history.attribute(entry.attribute))
+				settings[entry.setting] = @(value.as_bool());
+		for (const char *type : {"Find", "Replace"})
+		{
+			NSMutableArray<NSString *> *values = [NSMutableArray array];
+			for (auto entry : history.children(type))
+			{
+				NSString *value = String(entry.attribute("name").value());
+				if (value.length && ![values containsObject:value])
+					[values addObject:value];
+				if (values.count == 24)
+					break;
+			}
+			if (values.count)
+				settings[std::string_view(type) == "Find" ? @"findHistory" : @"replaceHistory"] = values;
+		}
+	}
+	if (![NSFileManager.defaultManager createDirectoryAtURL:_profile withIntermediateDirectories:YES attributes:nil error:error] ||
+		![source writeToURL:[_profile URLByAppendingPathComponent:@"imported-config.xml"] options:NSDataWritingAtomic error:error])
+		return NO;
+	[self setSettings:settings];
+	return YES;
+}
+
 - (NSString *)label:(NSString *)identifier fallback:(NSString *)fallback
 {
 	NSString *label = _labels[identifier];

@@ -10,6 +10,7 @@
 #import "EditorPlugins.h"
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
+#import "EditorSettings.h"
 #import "EditorText.h"
 #import "ScintillaView.h"
 
@@ -288,7 +289,20 @@ static bool CheckFileModes(EditorDocumentController *controller, NSURL *test)
 	return true;
 }
 
-static bool CheckSearchParity(EditorDocumentController *controller)
+static bool CheckSettings(EditorDocument *document)
+{
+	EditorResources *resources = EditorResources.shared;
+	id width = [resources setting:@"tabWidth" fallback:@4];
+	[resources setSetting:@6 forName:@"tabWidth"];
+	[document applyPreferences];
+	if (!Check([document.editor message:SCI_GETTABWIDTH] == 6, "apply the persisted preferences to an open editor"))
+		return false;
+	[resources setSetting:width forName:@"tabWidth"];
+	[document applyPreferences];
+	return true;
+}
+
+static bool CheckSearchAndConfigurationParity(EditorDocumentController *controller, NSURL *test)
 {
 	EditorDocument *document = (EditorDocument *)[controller makeUntitledDocumentOfType:controller.defaultType error:nullptr];
 	[document makeWindowControllers];
@@ -376,6 +390,30 @@ static bool CheckSearchParity(EditorDocumentController *controller)
 	if (!Check([editor.string isEqualToString:@"\tone  two\n\tnext"], "compress only indentation when specified"))
 		return false;
 
+	EditorResources *resources = EditorResources.shared;
+	NSUInteger width = [[resources setting:@"tabWidth" fallback:@4] unsignedIntegerValue];
+	NSInteger backup = [[resources setting:@"backupMode" fallback:@0] integerValue];
+	NSString *directory = [resources setting:@"backupDirectory" fallback:@""];
+	NSURL *config = [test URLByAppendingPathComponent:@"smoke-config.xml"];
+	NSString *xml = @"<NotepadPlus><GUIConfigs><GUIConfig name='TabSetting' size='9'/>"
+		"<GUIConfig name='Backup' action='1'/>"
+		"<GUIConfig name='searchEngine' searchEngineChoice='0' searchEngineCustom='https://example.com/?q=$(CURRENT_WORD)'/>"
+		"<GUIConfig name='largeFileRestriction' fileSizeMB='512' isEnabled='no'/>"
+		"<GUIConfig name='DockingManager' rightWidth='315'>"
+		"<PluginDlg pluginName='Notepad++::InternalFunction' id='44084' curr='1' prev='0' isVisible='yes'/>"
+		"</GUIConfig></GUIConfigs></NotepadPlus>";
+	if (!Check([xml writeToURL:config atomically:YES encoding:NSUTF8StringEncoding error:nullptr] &&
+		[resources importWindowsConfiguration:config error:nullptr], "import a Windows configuration XML"))
+		return false;
+	[document applyPreferences];
+	NSDictionary *dockLayout = [resources setting:@"windowsDockLayout" fallback:@{}];
+	if (!Check([editor message:SCI_GETTABWIDTH] == 9 && [dockLayout[@"panes"][@"44084"][@"width"] isEqual:@315] &&
+		[[resources setting:@"largeFileMegabytes" fallback:@0] isEqual:@512] &&
+		[[resources setting:@"searchEngineCustom" fallback:@""] containsString:@"$(CURRENT_WORD)"] &&
+		[[NSString stringWithContentsOfURL:[resources.profile URLByAppendingPathComponent:@"imported-config.xml"]
+			encoding:NSUTF8StringEncoding error:nullptr] isEqual:xml], "apply imported preferences and retain the original XML"))
+		return false;
+	[resources setSettings:@{@"tabWidth": @(width), @"backupMode": @(backup), @"backupDirectory": directory}];
 	return true;
 }
 
@@ -565,7 +603,7 @@ int RunSmokeTest(void)
 	[second changeTabPin];
 	if (!Check([[document.editor menuForEvent:contextClick] itemWithTag:SCI_LINEDUPLICATE] != nil, "populate the editor's right-click menu"))
 		return 1;
-	if (!CheckCustomMenus(document, contextClick))
+	if (!CheckCustomMenus(document, contextClick) || !CheckSettings(document))
 		return 1;
 	[second showWindows];
 	if (!Check(!document.windowControllers.firstObject.window.visible && second.windowControllers.firstObject.window.visible,
@@ -607,7 +645,7 @@ int RunSmokeTest(void)
 		return 1;
 	if (!CheckSearchScopes(second, test))
 		return 1;
-	if (!CheckSearchParity(controller))
+	if (!CheckSearchAndConfigurationParity(controller, test))
 		return 1;
 	[document.editor setStringProperty:SCI_REPLACESEL parameter:0 value:@"# Two views\r\n"];
 	if (!Check([document.editor.string hasPrefix:@"# Two views"] && second.editor.string.length == 0 && document.isDocumentEdited,
@@ -757,6 +795,6 @@ int RunSmokeTest(void)
 	if (!Check(document.isDocumentEdited && [[document dataOfType:controller.defaultType error:&error]
 		isEqualToData:[editor.string dataUsingEncoding:NSUTF8StringEncoding]], "convert to UTF-8 and mark the new encoding as unsaved"))
 		return 1;
-	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins.");
+	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings.");
 	return 0;
 }

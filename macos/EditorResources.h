@@ -21,6 +21,7 @@
 - (id)setting:(NSString *)name fallback:(id)fallback;
 - (void)setSetting:(id)value forName:(NSString *)name;
 - (void)setSettings:(NSDictionary<NSString *, id> *)settings;
+- (BOOL)importWindowsConfiguration:(NSURL *)url error:(NSError **)error;
 - (NSURL *)importXML:(NSURL *)url theme:(BOOL)theme error:(NSError **)error;
 - (NSString *)configure:(ScintillaView *)view extension:(NSString *)extension language:(NSString *)name
 	syntaxHighlighting:(BOOL)highlight identifier:(NSString **)identifier;

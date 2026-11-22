@@ -172,6 +172,12 @@ static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
 - (void)syncZoomFromDocument:(EditorDocument *)document;
 @end
 
+static id WorkspaceValue(NSDictionary *entry, NSString *key, Class type)
+{
+	id value = entry[key];
+	return [value isKindOfClass:type] ? value : nil;
+}
+
 static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 {
 	if (!encoding)
@@ -201,6 +207,57 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	NSMutableIndexSet *_visibleProjects;
 	NSTimer *_fileStatusTimer;
 	__weak EditorSearchMatch *_currentSearchMatch;
+}
+
+- (void)applyImportedDockLayout
+{
+	NSDictionary *layout = [EditorResources.shared setting:@"windowsDockLayout" fallback:@{}];
+	NSArray<NSNumber *> *sizes = WorkspaceValue(layout, @"sizes", NSArray.class);
+	if (sizes.count != 4)
+		return;
+	NSDictionary *panels = WorkspaceValue(layout, @"panes", NSDictionary.class);
+	if (!_visibleProjects)
+		_visibleProjects = [NSMutableIndexSet indexSet];
+	NSDictionary<NSString *, EditorDockPlacement *> *placements = @{
+		@"44070": self.documentListPlacement, @"43045": self.searchResultsPlacement,
+		@"44085": self.folderWorkspacePlacement,
+		@"44081": self.projectPlacements[0], @"44082": self.projectPlacements[1], @"44083": self.projectPlacements[2]};
+	for (NSString *identifier in placements)
+	{
+		EditorDockPlacement *placement = placements[identifier];
+		NSDictionary *record = WorkspaceValue(panels, identifier, NSDictionary.class);
+		if (!record)
+		{
+			NSInteger edge = [placement.snapshot[@"edge"] integerValue];
+			if (edge >= 0 && edge < sizes.count)
+				[placement restore:edge < 2 ? @{@"width": sizes[edge]} : @{@"height": sizes[edge]}];
+			continue;
+		}
+		[placement restore:record];
+		const BOOL visible = [record[@"visible"] boolValue];
+		switch (identifier.integerValue)
+		{
+			case 44070: self.documentListVisible = visible; break;
+			case 43045: self.searchResultsVisible = visible; break;
+			case 44085: _folderWorkspaceVisible = visible; break;
+			case 44081: case 44082: case 44083:
+			{
+				NSUInteger index = identifier.integerValue - 44081;
+				if (visible)
+					[_visibleProjects addIndex:index];
+				else
+					[_visibleProjects removeIndex:index];
+				break;
+			}
+
+		}
+	}
+	for (EditorDocument *document in self.documents)
+		[document refreshDockPlacements];
+	[self refreshSearchPanel];
+	[self refreshDocumentList];
+	[self refreshFolderWorkspace];
+	[_activeDocument displayProjectPanels:_visibleProjects];
 }
 
 - (EditorDockPlacement *)documentListPlacement

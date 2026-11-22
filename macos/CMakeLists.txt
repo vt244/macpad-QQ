@@ -29,7 +29,7 @@ add_executable(macpad macos-main.mm EditorDocument.mm EditorChrome.mm EditorReso
 	EditorText.mm EditorFileSearch.mm EditorSearchResultsView.mm
 	EditorDocumentList.mm EditorPanelChrome.mm EditorContextMenus.mm EditorDock.mm EditorFolderPanel.mm EditorProjectPanel.mm
 	EditorIncrementalSearch.mm
-	)
+	EditorSettings.mm)
 set_target_properties(macpad PROPERTIES OUTPUT_NAME "macpad++")
 target_compile_options(macpad PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
 target_include_directories(macpad PRIVATE "${root}/PowerEditor/src/pugixml" "${sci}/src")

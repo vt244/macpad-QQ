@@ -76,6 +76,7 @@
 - (void)moveTab:(EditorDocument *)document toEnd:(BOOL)toEnd;
 - (BOOL)cycleRecentTabsBackwards:(BOOL)backwards;
 - (BOOL)finishRecentTabSwitch:(BOOL)accept;
+- (void)applyImportedDockLayout;
 - (IBAction)chooseWorkspaceFolders:(id)sender;
 - (IBAction)toggleFolderWorkspace:(id)sender;
 - (IBAction)toggleProjectPanel:(NSMenuItem *)sender;
