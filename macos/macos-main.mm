@@ -95,6 +95,23 @@ static void AddEditorCommand(NSMenu *menu, NSString *title, unsigned int message
 	AddItem(menu, title, @selector(runEditorCommand:), key).tag = message;
 }
 
+static void AlignEditMenu(NSMenu *menu)
+{
+	NSDictionary<NSString *, NSString *> *symbols = @{@"undo:": @"arrow.uturn.backward", @"redo:": @"arrow.uturn.forward",
+		@"cut:": @"scissors", @"copy:": @"document.on.document", @"paste:": @"clipboard", @"selectAll:": @"selection.pin.in.out"};
+	NSImage *empty = [NSImage imageWithSize:NSMakeSize(15, 15) flipped:NO drawingHandler:^BOOL(NSRect rect) { return YES; }];
+	[empty setTemplate:YES];
+	for (NSMenuItem *item in menu.itemArray)
+	{
+		if (item.separatorItem)
+			continue;
+		NSString *symbol = item.action ? symbols[NSStringFromSelector(item.action)] : nil;
+		NSImage *image = symbol ? [NSImage imageWithSystemSymbolName:symbol accessibilityDescription:nil] : nil;
+		item.image = image ? [image imageWithSymbolConfiguration:[NSImageSymbolConfiguration configurationWithPointSize:13
+			weight:NSFontWeightRegular]] : empty;
+	}
+}
+
 static NSString *HashName(EditorHashAlgorithm algorithm)
 {
 	return @[@"MD5", @"SHA-1", @"SHA-256", @"SHA-512"][algorithm];
@@ -444,6 +461,7 @@ static void AddCharacterSets(NSMenu *menu)
 	AddItem(lineEndings, Label(@"45001", @"Windows (CR LF)"), @selector(convertLineEndings:), @"").tag = SC_EOL_CRLF;
 	AddItem(lineEndings, Label(@"45002", @"Unix (LF)"), @selector(convertLineEndings:), @"").tag = SC_EOL_LF;
 	AddItem(lineEndings, Label(@"45003", @"Macintosh (CR)"), @selector(convertLineEndings:), @"").tag = SC_EOL_CR;
+	AlignEditMenu(edit);
 
 	NSMenu *search = AddMenu(main, Label(@"search", @"Search"));
 	AddItem(search, Label(@"43001", @"Find…"), @selector(findText:), @"f");
@@ -1509,34 +1527,71 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 	}
 }
 
-- (void)showLicense:(id)sender
+static NSScrollView *LegalTextView(NSString *contents)
 {
-	NSURL *license = [NSBundle.mainBundle URLForResource:@"LICENSE" withExtension:nil];
-	NSString *contents = license ? [NSString stringWithContentsOfURL:license encoding:NSUTF8StringEncoding error:nullptr] : nil;
-	if (!contents)
-		return;
-	NSAlert *alert = [[NSAlert alloc] init];
-	alert.messageText = @"macpad++ License";
 	NSScrollView *view = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 540, 360)];
 	view.hasVerticalScroller = YES;
+	view.borderType = NSBezelBorder;
 	NSTextView *text = [[NSTextView alloc] initWithFrame:view.contentView.bounds];
 	text.string = contents;
 	text.font = [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightRegular];
 	text.autoresizingMask = NSViewWidthSizable;
+	text.verticallyResizable = YES;
 	text.editable = NO;
 	view.documentView = text;
-	alert.accessoryView = view;
-	[alert runModal];
+	return view;
+}
+
+- (void)showLicense:(id)sender
+{
+	NSURL *license = [NSBundle.mainBundle URLForResource:@"LICENSE" withExtension:nil];
+	NSString *contents = license ? [NSString stringWithContentsOfURL:license encoding:NSUTF8StringEncoding error:nullptr] : nil;
+	NSAlert *alert = [NSAlert new];
+	alert.icon = NSApp.applicationIconImage;
+	alert.messageText = Label(@"app-license-title", @"macpad++ License");
+	[alert addButtonWithTitle:Label(@"app-ok", @"OK")];
+	if (!contents.length)
+	{
+		alert.informativeText = Label(@"app-license-unavailable", @"The license text could not be opened.");
+		[alert runModal];
+		return;
+	}
+	alert.informativeText = Label(@"app-license-description",
+		@"macpad++ is distributed under version 3 of the GNU GPL. The original license text follows.");
+	NSRange heading = [contents rangeOfString:@"GNU GENERAL PUBLIC LICENSE"];
+	alert.accessoryView = LegalTextView(heading.location == NSNotFound ? contents : [contents substringFromIndex:heading.location]);
+	[alert addButtonWithTitle:Label(@"app-notices", @"Copyright and Notices…")];
+	if ([alert runModal] == NSAlertSecondButtonReturn)
+	{
+		NSURL *notices = [NSBundle.mainBundle URLForResource:@"THIRD_PARTY_NOTICES" withExtension:@"md"];
+		NSString *attribution = notices ? [NSString stringWithContentsOfURL:notices encoding:NSUTF8StringEncoding error:nullptr] : nil;
+		NSString *upstream = heading.location == NSNotFound ? contents : [contents substringToIndex:heading.location];
+		NSString *combined = attribution.length ? [NSString stringWithFormat:@"%@\n\n%@", upstream, attribution] : upstream;
+		NSAlert *credits = [NSAlert new];
+		credits.icon = NSApp.applicationIconImage;
+		credits.messageText = Label(@"app-notices-title", @"Copyright and Notices");
+		credits.accessoryView = LegalTextView(combined);
+		[credits addButtonWithTitle:Label(@"app-ok", @"OK")];
+		[credits runModal];
+	}
 }
 
 - (void)showAbout:(id)sender
 {
-	[NSApp orderFrontStandardAboutPanelWithOptions:@{
-		NSAboutPanelOptionCredits: [[NSAttributedString alloc] initWithString:
-			@"Independent fork of Notepad++ by Don Ho and contributors.\n"
-			@"Built with Scintilla and Lexilla. Distributed under GNU GPL version 3.\n"
-			@"This software comes without warranty. See License in the macpad++ menu."]
-	}];
+	NSBundle *bundle = NSBundle.mainBundle;
+	NSString *version = [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+	NSString *build = [bundle objectForInfoDictionaryKey:@"CFBundleVersion"];
+	NSAlert *about = [NSAlert new];
+	about.icon = NSApp.applicationIconImage;
+	about.messageText = @"macpad++";
+	NSString *versionLine = [NSString stringWithFormat:Label(@"app-version", @"Version %@ (build %@)"), version, build];
+	NSString *description = Label(@"app-about-description",
+		@"Native text and code editor for macOS. Built with Scintilla and Lexilla and distributed under version 3 of the GNU GPL.");
+	about.informativeText = [NSString stringWithFormat:@"%@\n\n%@", versionLine, description];
+	[about addButtonWithTitle:Label(@"app-ok", @"OK")];
+	[about addButtonWithTitle:Label(@"app-license", @"macpad++ License…")];
+	if ([about runModal] == NSAlertSecondButtonReturn)
+		[self showLicense:nil];
 }
 @end
 

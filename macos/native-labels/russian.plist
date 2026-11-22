@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>42011</key><string>Поменять местами текущую и предыдущую строки</string>
+	<key>app-about</key><string>О программе macpad++</string>
+	<key>app-license</key><string>Лицензия macpad++…</string>
+	<key>app-license-title</key><string>Лицензия macpad++</string>
+	<key>app-hide</key><string>Скрыть macpad++</string>
+	<key>app-quit</key><string>Завершить macpad++</string>
+	<key>app-about-description</key><string>Нативный редактор текста и кода для macOS. Использует Scintilla и Lexilla. Распространяется по лицензии GNU GPL версии 3.</string>
+	<key>app-version</key><string>Версия %@ (сборка %@)</string>
+	<key>app-license-description</key><string>macpad++ распространяется по лицензии GNU GPL версии 3. Ниже приведён её оригинальный текст.</string>
+	<key>app-notices</key><string>Авторские права и уведомления…</string>
+	<key>app-notices-title</key><string>Авторские права и уведомления</string>
+	<key>app-license-unavailable</key><string>Не удалось открыть текст лицензии.</string>
+	<key>app-ok</key><string>ОК</string>
+	<key>native-findInProjects</key><string>Найти в проектах…</string>
+	<key>native-lineNumbers</key><string>Номера строк</string>
+	<key>native-zoomIn</key><string>Увеличить масштаб</string>
+	<key>native-zoomOut</key><string>Уменьшить масштаб</string>
+	<key>native-showHiddenLines</key><string>Показать скрытые строки</string>
+	<key>native-closeOtherView</key><string>Закрыть вторую область</string>
+	<key>native-theme</key><string>Тема оформления</string>
+	<key>native-default</key><string>По умолчанию</string>
+	<key>native-detectLanguage</key><string>Определять по расширению файла</string>
+	<key>native-normalText</key><string>Обычный текст</string>
+	<key>native-importUDL</key><string>Импортировать пользовательский синтаксис…</string>
+	<key>native-editUDL</key><string>Создать или изменить пользовательский синтаксис…</string>
+	<key>native-exportUDL</key><string>Экспортировать пользовательский синтаксис…</string>
+	<key>native-editEditorMenu</key><string>Изменить контекстное меню редактора…</string>
+	<key>native-editTabMenu</key><string>Изменить контекстное меню вкладок…</string>
+	<key>native-interfaceLanguage</key><string>Язык интерфейса</string>
+	<key>native-defaultLanguage</key><string>По умолчанию / nativeLang.xml</string>
+	<key>native-importMacros</key><string>Импортировать макросы…</string>
+	<key>native-deleteMacro</key><string>Удалить сохранённый макрос…</string>
+	<key>native-modifyMacroShortcut</key><string>Изменить сочетание клавиш макроса…</string>
+	<key>native-pluginCatalogSource</key><string>Источник каталога плагинов…</string>
+	<key>native-window</key><string>Окно</string>
+	<key>native-minimize</key><string>Свернуть</string>
+	<key>native-zoomWindow</key><string>Изменить размер окна</string>
+	<key>native-importXML</key><string>Импортировать XML…</string>
+	<key>native-apply</key><string>Применить</string>
+	<key>native-cancel</key><string>Отмена</string>
+	<key>native-closeNamedTab</key><string>Закрыть %@</string>
+	<key>native-untitled</key><string>новый %lu</string>
+	<key>native-showSelectionInFinder</key><string>Показать папку в Finder</string>
+	<key>native-importConfig</key><string>Импорт настроек Notepad++…</string>
+	<key>native-invalidConfig</key><string>Выберите действительный файл config.xml редактора Notepad++.</string>
+	<key>native-configImported</key><string>Настройки импортированы</string>
+	<key>native-configImportedInfo</key><string>Применены поддерживаемые настройки. Исходный файл сохранён в профиле как imported-config.xml.</string>
+	<key>pref-editor</key><string>Правка</string>
+	<key>pref-display</key><string>Вид</string>
+	<key>pref-files</key><string>Файлы и вкладки</string>
+	<key>pref-search</key><string>Поиск</string>
+	<key>pref-backup</key><string>Копии и сеансы</string>
+	<key>pref-insertSpaces</key><string>Вставлять пробелы для отступов</string>
+	<key>pref-backspaceUnindent</key><string>Уменьшать отступ клавишей Backspace</string>
+	<key>pref-virtualSpace</key><string>Разрешить курсор за концом строки</string>
+	<key>pref-multipleSelections</key><string>Разрешить несколько выделений</string>
+	<key>pref-autocomplete</key><string>Предлагать автодополнение при вводе</string>
+	<key>pref-autoPairs</key><string>Вставлять парные символы и закрывающие теги</string>
+	<key>pref-tabWidth</key><string>Ширина табуляции</string>
+	<key>pref-autocompleteMinimum</key><string>Символов до автодополнения</string>
+	<key>pref-wordWrap</key><string>Переносить длинные строки</string>
+	<key>pref-lineNumbers</key><string>Показывать номера строк</string>
+	<key>pref-bookmarkMargin</key><string>Показывать поле закладок</string>
+	<key>pref-indentGuide</key><string>Показывать направляющие отступов</string>
+	<key>pref-whitespace</key><string>Показывать пробелы и табуляцию</string>
+	<key>pref-showEOL</key><string>Показывать символы конца строки</string>
+	<key>pref-showWrapSymbol</key><string>Показывать символы переноса</string>
+	<key>pref-scrollBeyondLastLine</key><string>Прокручивать за последнюю строку</string>
+	<key>pref-toolbarStyle</key><string>Значки панели инструментов</string>
+	<key>pref-toolbarStyle-0</key><string>Контурные (малые)</string>
+	<key>pref-toolbarStyle-1</key><string>Контурные (большие)</string>
+	<key>pref-toolbarStyle-2</key><string>Сплошные (малые)</string>
+	<key>pref-toolbarStyle-3</key><string>Сплошные (большие)</string>
+	<key>pref-toolbarStyle-4</key><string>Классические</string>
+	<key>pref-autoReload</key><string>Автоматически перечитывать файлы без правок</string>
+	<key>pref-reloadToEnd</key><string>Переходить в конец при перечитывании</string>
+	<key>pref-hideToolbar</key><string>Скрыть панель инструментов</string>
+	<key>pref-hideStatusBar</key><string>Скрыть строку состояния</string>
+	<key>pref-hideTabBar</key><string>Скрыть панель вкладок</string>
+	<key>pref-tabCloseButtons</key><string>Показывать кнопки закрытия вкладок</string>
+	<key>pref-doubleClickClosesTab</key><string>Закрывать вкладку двойным щелчком</string>
+	<key>pref-fileStatusMode</key><string>Проверка изменений файла</string>
+	<key>pref-fileStatusMode-0</key><string>Отключена</string>
+	<key>pref-fileStatusMode-1</key><string>Активный документ</string>
+	<key>pref-fileStatusMode-2</key><string>Все открытые документы</string>
+	<key>pref-newDocumentEOL</key><string>Конец строки нового файла</string>
+	<key>pref-newDocumentEOL-1</key><string>Классический Mac (CR)</string>
+	<key>pref-newDocumentEncoding</key><string>Кодировка нового файла</string>
+	<key>pref-newDocumentEncoding-1</key><string>UTF-8 с BOM</string>
+	<key>pref-newDocumentEncoding-2</key><string>UTF-16 BE с BOM</string>
+	<key>pref-newDocumentEncoding-3</key><string>UTF-16 LE с BOM</string>
+	<key>pref-fillFindSelection</key><string>Подставлять выделение при открытии поиска</string>
+	<key>pref-fillFindWord</key><string>Без выделения подставлять слово под курсором</string>
+	<key>pref-findFilesOnDisk</key><string>Искать на диске, даже если в редакторе есть несохранённые правки</string>
+	<key>pref-rememberSession</key><string>Восстанавливать последний сеанс при запуске</string>
+	<key>pref-checkpointDrafts</key><string>Периодически сохранять несохранённые правки для восстановления</string>
+	<key>pref-instanceMode</key><string>Открывать файлы в</string>
+	<key>pref-instanceMode-0</key><string>Текущем экземпляре</string>
+	<key>pref-instanceMode-1</key><string>Новом экземпляре для сеансов</string>
+	<key>pref-instanceMode-2</key><string>Новом экземпляре для каждого файла</string>
+	<key>pref-backupMode</key><string>Резервные копии файлов</string>
+	<key>pref-backupMode-0</key><string>Нет</string>
+	<key>pref-backupMode-1</key><string>Одна копия .bak</string>
+	<key>pref-backupMode-2</key><string>Хранить копии с отметкой времени</string>
+	<key>pref-backupDirectory</key><string>Папка для копий (необязательно)</string>
+	<key>pref-checkpointMilliseconds</key><string>Интервал восстановления (мс)</string>
+	<key>search-selectRange</key><string>Сначала выделите текст.</string>
+	<key>search-absoluteDirectory</key><string>Укажите абсолютный путь к папке.</string>
+	<key>search-noProjectFiles</key><string>В выбранных проектах нет файлов.</string>
+	<key>search-searching</key><string>Выполняется поиск…</string>
+	<key>search-cancelled</key><string>Поиск отменён.</string>
+	<key>search-cancelling</key><string>Отмена поиска…</string>
+	<key>search-emptyQuery</key><string>Введите текст для поиска.</string>
+	<key>search-invalidRegex</key><string>Неверное регулярное выражение.</string>
+	<key>search-noMatches</key><string>Совпадений не найдено.</string>
+	<key>search-count</key><string>Совпадений: %lu</string>
+	<key>results-summary</key><string>Поиск «%@» (совпадений: %lu, файлов с совпадениями: %lu из %lu)</string>
+	<key>results-skipped</key><string> · пропущено: %lu</string>
+	<key>results-file-one</key><string>  %@ (%lu совпадение)&#10;</string>
+	<key>results-file-many</key><string>  %@ (совпадений: %lu)&#10;</string>
+	<key>results-line</key><string>&#9;Строка %lu: </string>
+	<key>panel-close</key><string>Закрыть %@</string>
+	<key>panel-addFolder</key><string>Добавить папку…</string>
+	<key>panel-openDocuments</key><string>Открытые документы</string>
+	<key>settings-Language</key><string>Язык</string>
+	<key>settings-Style</key><string>Стиль</string>
+	<key>settings-Font family</key><string>Шрифт</string>
+	<key>settings-Font size</key><string>Размер шрифта</string>
+	<key>settings-Shortcut key</key><string>Клавиши</string>
+	<key>panel-expandAll</key><string>Развернуть всё</string>
+	<key>panel-foldAll</key><string>Свернуть всё</string>
+	<key>panel-locateFile</key><string>Найти текущий файл в дереве</string>
+	<key>panel-removeAll</key><string>Удалить все папки</string>
+	<key>panel-copyPath</key><string>Копировать путь</string>
+	<key>panel-refresh</key><string>Обновить папку</string>
+	<key>panel-remove</key><string>Убрать из рабочей области</string>
+	<key>dock-edge-0</key><string>Закрепить слева</string>
+	<key>dock-edge-1</key><string>Закрепить справа</string>
+	<key>dock-edge-2</key><string>Закрепить сверху</string>
+	<key>dock-edge-3</key><string>Закрепить снизу</string>
+	<key>dock-edge-4</key><string>Отстыковать панель</string>
+	<key>dock-redock</key><string>Закрепить панель</string>
+	<key>dock-panelTabs</key><string>Закреплённые панели</string>
+	<key>panel-view1</key><string>Область 1</string>
+	<key>panel-view2</key><string>Область 2</string>
+	<key>status-normalText</key><string>Обычный текст</string>
+	<key>settings-Theme: %@</key><string>Тема: %@</string>
+	<key>settings-Global Styles</key><string>Общие стили</string>
+	<key>settings-Use foreground color</key><string>Использовать цвет текста</string>
+	<key>settings-Use background color</key><string>Использовать цвет фона</string>
+	<key>settings-Inherit</key><string>Унаследовать</string>
+	<key>settings-Apply</key><string>Применить</string>
+	<key>settings-Cancel</key><string>Отмена</string>
+	<key>settings-Restore Default</key><string>По умолчанию</string>
+	<key>settings-Enter a key or F1–F20. Leave the key empty to remove the shortcut.</key><string>Введите клавишу или F1–F20. Очистите поле, чтобы удалить сочетание.</string>
+	<key>chrome-new</key><string>Создать документ</string>
+	<key>chrome-openDocuments</key><string>Открытые документы</string>
+	<key>chrome-closeTab</key><string>Закрыть текущую вкладку</string>
+	<key>pref-tabs</key><string>Вкладки</string>
+	<key>pref-largeFiles</key><string>Большие файлы</string>
+	<key>pref-mruTabSwitcher</key><string>Переключать недавние документы через Control-Tab</string>
+	<key>pref-tabPreview</key><string>Показывать содержимое неактивной вкладки при наведении</string>
+	<key>pref-verticalTabs</key><string>Показывать вкладки слева</string>
+	<key>pref-multilineTabs</key><string>Размещать вкладки в несколько рядов</string>
+	<key>pref-dateTimeFormat</key><string>Формат даты и времени</string>
+	<key>pref-limitLargeFiles</key><string>Отключать подсветку синтаксиса в больших файлах</string>
+	<key>pref-largeFileCompletion</key><string>Разрешать автодополнение в больших файлах</string>
+	<key>pref-largeFileBraceMatch</key><string>Разрешать поиск парных скобок в больших файлах</string>
+	<key>pref-largeFileDisableWrap</key><string>Отключать перенос строк в больших файлах</string>
+	<key>pref-largeFileMegabytes</key><string>Порог размера файла (МиБ)</string>
+	<key>function-filter</key><string>Фильтр функций</string>
+	<key>view-tab-switcher</key><string>Открытые документы</string>
+	<key>character-range-find</key><string>Найти</string>
+	<key>character-range-backward</key><string>Искать назад</string>
+	<key>character-range-wrap</key><string>Зациклить поиск</string>
+	<key>character-range-first</key><string>Первый код Unicode</string>
+	<key>character-range-last</key><string>Последний код Unicode</string>
+	<key>character-range-invalid</key><string>Введите диапазон от 0 до 1114111 в порядке возрастания.</string>
+	<key>custom-search-engine</key><string>Пользовательский</string>
+	<key>custom-search-url</key><string>URL поисковика</string>
+	<key>custom-search-invalid</key><string>Введите URL с http или https и подстановкой $(CURRENT_WORD).</string>
+	<key>settings-Continue</key><string>Продолжить</string>
+	<key>settings-Create New Language…</key><string>Создать новый язык…</string>
+	<key>settings-User Defined Language</key><string>Пользовательский язык</string>
+	<key>settings-New User Defined Language</key><string>Новый пользовательский язык</string>
+	<key>settings-Export User Defined Language</key><string>Экспорт пользовательского языка</string>
+	<key>settings-Edit the language name, extensions, keywords, comments and styles in the UDL XML definition.</key><string>Имя языка, расширения, ключевые слова, комментарии и стили задаются в XML.</string>
+	<key>settings-The language could not be saved.</key><string>Не удалось сохранить язык.</string>
+	<key>settings-Save</key><string>Сохранить</string>
+	<key>project-Project</key><string>Проект</string>
+	<key>project-New Workspace</key><string>Новая рабочая область</string>
+	<key>project-Open Workspace…</key><string>Открыть рабочую область…</string>
+	<key>project-Save Workspace</key><string>Сохранить рабочую область</string>
+	<key>project-Save Workspace As…</key><string>Сохранить рабочую область как…</string>
+	<key>project-Add Project…</key><string>Добавить проект…</string>
+	<key>project-Add Folder…</key><string>Добавить папку…</string>
+	<key>project-Add Files…</key><string>Добавить файлы…</string>
+	<key>project-Rename…</key><string>Переименовать…</string>
+	<key>project-Rename</key><string>Переименовать</string>
+	<key>project-Open</key><string>Открыть</string>
+	<key>project-Show in Finder</key><string>Показать в Finder</string>
+	<key>project-Remove from Workspace</key><string>Убрать из рабочей области</string>
+	<key>project-Move Up</key><string>Переместить выше</string>
+	<key>project-Move Down</key><string>Переместить ниже</string>
+	<key>project-Discard unsaved changes to this project workspace?</key><string>Отменить несохранённые изменения рабочей области?</string>
+	<key>project-Discard Changes</key><string>Отменить изменения</string>
+	<key>project-Project name</key><string>Имя проекта</string>
+	<key>project-Folder name</key><string>Имя папки</string>
+</dict>
+</plist>

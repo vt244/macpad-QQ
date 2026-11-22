@@ -467,6 +467,13 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	if (LoadXML(document, url ?: existing))
 	{
 		auto root = TranslationRoot(document);
+		NSString *filename = String(root.attribute("filename").value());
+		NSString *language = (filename.length ? filename : (url ?: existing).lastPathComponent)
+			.lastPathComponent.stringByDeletingPathExtension;
+		NSURL *native = language.length ? [NSBundle.mainBundle URLForResource:language withExtension:@"plist" subdirectory:@"native-labels"] : nil;
+		NSDictionary *nativeLabels = native ? [NSDictionary dictionaryWithContentsOfURL:native] : nil;
+		if (nativeLabels)
+			[labels addEntriesFromDictionary:nativeLabels];
 		auto menu = root.child("Menu");
 		CollectLabels(menu.child("Main"), labels);
 		for (auto item : menu.child("TabBar").children("Item"))

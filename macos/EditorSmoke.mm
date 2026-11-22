@@ -840,6 +840,11 @@ int RunSmokeTest(void)
 	[resources chooseTranslation:translation];
 	if (!Check([[resources label:@"file" fallback:@"File"] isEqualToString:@"Файл"], "apply Russian menu labels"))
 		return 1;
+	if (!Check([[resources label:@"app-about" fallback:@"About macpad++"] hasPrefix:@"О программе"] &&
+		![[resources label:@"edit-comment" fallback:@"Comment/Uncomment"] isEqualToString:@"Comment/Uncomment"],
+		"apply both native and upstream Russian menu labels"))
+		return 1;
+
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	if (!CheckCharacterSet(test, controller) || !CheckFileModes(controller, test))
 		return 1;

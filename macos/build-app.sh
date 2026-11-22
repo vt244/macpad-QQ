@@ -50,6 +50,7 @@ done
 cp '.tmp/native-build/macpad++' "$app/Contents/MacOS/"
 cp PowerEditor/src/{langs.model.xml,stylers.model.xml} "$resources/"
 cp -R PowerEditor/installer/nativeLang "$resources/localization"
+cp -R macos/native-labels "$resources/"
 cp -R PowerEditor/installer/themes "$resources/"
 cp -R PowerEditor/installer/functionList "$resources/"
 cp -R PowerEditor/installer/APIs "$resources/autoCompletion"
