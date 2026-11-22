@@ -13,10 +13,12 @@
 #import "EditorIncrementalSearch.h"
 #import "EditorInsertPanels.h"
 #import "EditorLaunchOptions.h"
+#import "EditorHash.h"
 #import "EditorMacros.h"
 #import "EditorPlugins.h"
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
+#import "EditorRun.h"
 #import "EditorSettings.h"
 #import "EditorText.h"
 #import "EditorWorkspace.h"
@@ -600,6 +602,41 @@ static bool CheckSearchMacro(EditorDocument *document, NSURL *test)
 	return true;
 }
 
+static bool CheckTools(NSURL *test)
+{
+	NSData *abc = [@"abc" dataUsingEncoding:NSUTF8StringEncoding];
+	if (!Check([EditorHashData(abc, EditorHashMD5) isEqualToString:@"900150983cd24fb0d6963f7d28e17f72"] &&
+		[EditorHashData(abc, EditorHashSHA1) isEqualToString:@"a9993e364706816aba3e25717850c26c9cd0d89d"] &&
+		[EditorHashData(abc, EditorHashSHA256) isEqualToString:@"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"] &&
+		[EditorHashData(abc, EditorHashSHA512) isEqualToString:
+			@"ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a"
+			"2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f"],
+		"produce four standard digests for the same UTF-8 text"))
+		return false;
+	NSURL *file = [test URLByAppendingPathComponent:@"hash.bin"];
+	NSMutableData *blocks = [NSMutableData dataWithLength:130000];
+	[blocks appendData:abc];
+	NSError *error = nil;
+	if (!Check([blocks writeToURL:file options:NSDataWritingAtomic error:&error] &&
+		[EditorHashFile(file, EditorHashSHA256, &error) isEqualToString:EditorHashData(blocks, EditorHashSHA256)],
+		"hash a file across several read buffers"))
+		return false;
+
+	NSString *name = @"a file with 'quotes', \"double quotes\" and & spaces.txt";
+	NSDictionary *variables = @{@"FILE_NAME": name};
+	NSTask *task = EditorRunTask(@"printf '%s\\n' $(FILE_NAME) \"$(FILE_NAME)\" '$(FILE_NAME)'", variables, test);
+	NSPipe *output = [NSPipe pipe];
+	task.standardOutput = output;
+	if (!Check([task launchAndReturnError:&error], "launch the Run command with editor variables"))
+		return false;
+	NSData *data = [output.fileHandleForReading readDataToEndOfFile];
+	[task waitUntilExit];
+	NSString *actual = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+	NSString *expected = [NSString stringWithFormat:@"%@\n%@\n%@\n", name, name, name];
+	return Check(task.terminationStatus == 0 && [actual isEqualToString:expected],
+		"keep paths as individual arguments in quoted and unquoted Run placeholders");
+}
+
 static bool CheckCharacterSet(NSURL *test, EditorDocumentController *controller)
 {
 	NSString *text = @"Привет, редактор!\r\n";
@@ -693,6 +730,8 @@ int RunSmokeTest(void)
 		return 1;
 	EditorResources *resources = EditorResources.shared;
 	NSURL *test = [NSURL fileURLWithPath:directory isDirectory:YES];
+	if (!CheckTools(test))
+		return 1;
 	NSURL *fixture = [test URLByAppendingPathComponent:@"данные smoke.py"];
 	NSString *source = @"def пример():\r\n    pass\r\n";
 	NSMutableData *encoded = [NSMutableData dataWithBytes:"\xff\xfe" length:2];
@@ -1173,6 +1212,6 @@ int RunSmokeTest(void)
 	if (!Check([workspace startAtDirectory:recoveryDirectory] && ![otherInstance startAtDirectory:recoveryDirectory],
 		"prevent another instance from overwriting the same recovery workspace"))
 		return 1;
-	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands, session recovery, terminal options, macros.");
+	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands, session recovery, terminal options, macros, Run.");
 	return 0;
 }

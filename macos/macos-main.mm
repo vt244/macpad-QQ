@@ -7,10 +7,12 @@
 #import "EditorDocument.h"
 #import "EditorChrome.h"
 #import "EditorContextMenus.h"
+#import "EditorHash.h"
 #import "EditorLaunchOptions.h"
 #import "EditorMacros.h"
 #import "EditorPlugins.h"
 #import "EditorResources.h"
+#import "EditorRun.h"
 #import "EditorSettings.h"
 #import "Scintilla.h"
 #import "ScintillaView.h"
@@ -92,6 +94,26 @@ static void AddEditorCommand(NSMenu *menu, NSString *title, unsigned int message
 	AddItem(menu, title, @selector(runEditorCommand:), key).tag = message;
 }
 
+static NSString *HashName(EditorHashAlgorithm algorithm)
+{
+	return @[@"MD5", @"SHA-1", @"SHA-256", @"SHA-512"][algorithm];
+}
+
+static NSScrollView *HashTextView(NSString *text, BOOL editable)
+{
+	NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 480, 180)];
+	scroll.borderType = NSBezelBorder;
+	scroll.hasVerticalScroller = YES;
+	NSTextView *view = [[NSTextView alloc] initWithFrame:scroll.bounds];
+	view.font = [NSFont monospacedSystemFontOfSize:12 weight:NSFontWeightRegular];
+	view.richText = NO;
+	view.editable = editable;
+	view.string = text;
+	view.autoresizingMask = NSViewWidthSizable;
+	scroll.documentView = view;
+	return scroll;
+}
+
 static void CopyText(NSString *text)
 {
 	NSPasteboard *clipboard = NSPasteboard.generalPasteboard;
@@ -158,6 +180,7 @@ static void AddCharacterSets(NSMenu *menu)
 	NSMenu *_macroMenu;
 	NSMenu *_recentMenu;
 	NSInteger _macroMenuBaseItems;
+	NSString *_lastRunCommand;
 }
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification
@@ -621,6 +644,20 @@ static void AddCharacterSets(NSMenu *menu)
 	standardLanguage.state = EditorResources.shared.selectedTranslation ? NSControlStateValueOff : NSControlStateValueOn;
 	[self fillCatalog:translations theme:NO];
 
+	NSMenu *tools = AddMenu(main, Label(@"tools", @"Tools"));
+	NSArray<NSString *> *toolIDs = @[@"tools-md5", @"tools-sha1", @"tools-sha256", @"tools-sha512"];
+	NSInteger firstIDs[] = {48501, 48507, 48504, 48510};
+	for (NSInteger i = 0; i < toolIDs.count; ++i)
+	{
+		NSMenu *hash = AddMenu(tools, Label(toolIDs[i], HashName(static_cast<EditorHashAlgorithm>(i))));
+		NSArray<NSString *> *actions = @[@"Generate…", @"Generate from files…", @"Generate from selection into clipboard"];
+		for (NSInteger action = 0; action < actions.count; ++action)
+		{
+			NSString *key = [@(firstIDs[i] + action) stringValue];
+			AddItem(hash, Label(key, actions[action]), @selector(generateHash:), @"", self).tag = i * actions.count + action;
+		}
+	}
+
 	NSMenu *macro = AddMenu(main, Label(@"macro", @"Macro"));
 	_macroMenu = macro;
 	AddItem(macro, Label(@"42018", @"Start Recording"), @selector(startRecordingMacro:), @"");
@@ -635,6 +672,19 @@ static void AddCharacterSets(NSMenu *menu)
 	_macroMenuBaseItems = macro.numberOfItems;
 	macro.delegate = self;
 	[self menuNeedsUpdate:macro];
+
+	NSMenu *run = AddMenu(main, Label(@"run", @"Run"));
+	NSMenuItem *runCommand = AddItem(run, Label(@"49000", @"Run…"), @selector(runExternalCommand:),
+		[NSString stringWithFormat:@"%C", (unichar)NSF5FunctionKey], self);
+	runCommand.keyEquivalentModifierMask = 0;
+	NSDictionary<NSString *, NSString *> *runCommands = [EditorResources.shared setting:@"runCommands" fallback:@{}];
+	if (runCommands.count)
+	{
+		AddItem(run, Label(@"48017", @"Manage Saved Commands…"), @selector(removeSavedRunCommand:), @"", self);
+		[run addItem:NSMenuItem.separatorItem];
+		for (NSString *name in [runCommands.allKeys sortedArrayUsingSelector:@selector(localizedStandardCompare:)])
+			AddItem(run, name, @selector(executeSavedRunCommand:), @"", self).representedObject = name;
+	}
 
 	NSMenu *plugins = AddMenu(main, Label(@"Plugins", @"Plugins"));
 	[_plugins populateMenu:plugins];
@@ -692,6 +742,141 @@ static void AddCharacterSets(NSMenu *menu)
 		}
 	}
 	[self openDocuments:@[url]];
+}
+
+- (void)runExternalCommand:(id)sender
+{
+	NSAlert *prompt = [[NSAlert alloc] init];
+	prompt.messageText = Label(@"49000", @"Run");
+	prompt.informativeText = @"Program and arguments";
+	[prompt addButtonWithTitle:@"Run"];
+	[prompt addButtonWithTitle:@"Cancel"];
+	[prompt addButtonWithTitle:@"Save…"];
+	NSTextField *input = [NSTextField textFieldWithString:_lastRunCommand ?: @""];
+	input.frame = NSMakeRect(0, 0, 510, 26);
+	prompt.accessoryView = input;
+	prompt.window.initialFirstResponder = input;
+	NSModalResponse response = [prompt runModal];
+	if (response == NSAlertSecondButtonReturn)
+		return;
+	NSString *command = [input.stringValue stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+	if (!command.length)
+		return;
+	_lastRunCommand = command;
+	if (response == NSAlertThirdButtonReturn)
+		[self saveRunCommand:command];
+	else
+		[self executeRunCommand:command];
+}
+
+- (void)saveRunCommand:(NSString *)command
+{
+	NSAlert *dialog = [NSAlert new];
+	dialog.messageText = @"Save Run Command";
+	[dialog addButtonWithTitle:@"Save"];
+	[dialog addButtonWithTitle:@"Cancel"];
+	NSTextField *name = [NSTextField textFieldWithString:@""];
+	name.placeholderString = @"Command name";
+	name.frame = NSMakeRect(0, 0, 325, 24);
+	dialog.accessoryView = name;
+	dialog.window.initialFirstResponder = name;
+	if ([dialog runModal] != NSAlertFirstButtonReturn)
+		return;
+	NSString *title = [name.stringValue stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+	if (!title.length)
+		return;
+	EditorResources *resources = EditorResources.shared;
+	NSMutableDictionary *commands = [[resources setting:@"runCommands" fallback:@{}] mutableCopy];
+	if (commands[title])
+	{
+		NSAlert *confirm = [NSAlert new];
+		confirm.messageText = [NSString stringWithFormat:@"Replace the saved command “%@”?", title];
+		[confirm addButtonWithTitle:@"Cancel"];
+		[confirm addButtonWithTitle:@"Replace"];
+		if ([confirm runModal] != NSAlertSecondButtonReturn)
+			return;
+	}
+	commands[title] = command;
+	[resources setSetting:commands forName:@"runCommands"];
+	[self buildMenu];
+}
+
+- (void)removeSavedRunCommand:(id)sender
+{
+	EditorResources *resources = EditorResources.shared;
+	NSMutableDictionary *commands = [[resources setting:@"runCommands" fallback:@{}] mutableCopy];
+	if (!commands.count)
+		return;
+	NSAlert *dialog = [NSAlert new];
+	dialog.messageText = @"Manage Saved Run Commands";
+	[dialog addButtonWithTitle:@"Remove"];
+	[dialog addButtonWithTitle:@"Cancel"];
+	NSPopUpButton *choices = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 350, 28) pullsDown:NO];
+	[choices addItemsWithTitles:[commands.allKeys sortedArrayUsingSelector:@selector(localizedStandardCompare:)]];
+	dialog.accessoryView = choices;
+	if ([dialog runModal] != NSAlertFirstButtonReturn)
+		return;
+	[commands removeObjectForKey:choices.titleOfSelectedItem];
+	[resources setSetting:commands forName:@"runCommands"];
+	[self buildMenu];
+}
+
+- (void)executeSavedRunCommand:(NSMenuItem *)sender
+{
+	NSDictionary *commands = [EditorResources.shared setting:@"runCommands" fallback:@{}];
+	NSString *command = commands[sender.representedObject];
+	if ([command isKindOfClass:NSString.class] && command.length)
+		[self executeRunCommand:command];
+}
+
+- (void)executeRunCommand:(NSString *)command
+{
+	EditorDocumentController *documents = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	EditorDocument *document = documents.focusedDocument;
+	ScintillaView *editor = document.editor;
+	NSURL *directory = document.fileURL.URLByDeletingLastPathComponent;
+	NSString *filename = document.fileURL.lastPathComponent ?: @"";
+	const auto position = [editor message:SCI_GETCURRENTPOS];
+	const auto line = [editor message:SCI_LINEFROMPOSITION wParam:position];
+	NSString *word = editor.selectedString;
+	if (!word.length && editor)
+	{
+		auto start = [editor message:SCI_WORDSTARTPOSITION wParam:position lParam:1];
+		auto end = [editor message:SCI_WORDENDPOSITION wParam:position lParam:1];
+		const auto *bytes = reinterpret_cast<const char *>([editor message:SCI_GETCHARACTERPOINTER]);
+		if (end > start)
+			word = [[NSString alloc] initWithBytes:bytes + start length:end - start encoding:NSUTF8StringEncoding];
+	}
+	NSString *lineText = @"";
+	if (editor)
+	{
+		auto start = [editor message:SCI_POSITIONFROMLINE wParam:line];
+		auto end = [editor message:SCI_GETLINEENDPOSITION wParam:line];
+		const auto *bytes = reinterpret_cast<const char *>([editor message:SCI_GETCHARACTERPOINTER]);
+		if (end > start)
+			lineText = [[NSString alloc] initWithBytes:bytes + start length:end - start encoding:NSUTF8StringEncoding] ?: @"";
+	}
+	NSDictionary *values = @{
+		@"FULL_CURRENT_PATH": document.fileURL.path ?: @"",
+		@"CURRENT_DIRECTORY": directory.path ?: @"",
+		@"FILE_NAME": filename, @"NAME_PART": filename.stringByDeletingPathExtension, @"EXT_PART": filename.pathExtension,
+		@"CURRENT_WORD": word ?: @"", @"CURRENT_LINESTR": lineText,
+		@"CURRENT_LINE": [@(line + 1) stringValue], @"CURRENT_COLUMN": [@([editor message:SCI_GETCOLUMN wParam:position] + 1) stringValue],
+		@"NPP_DIRECTORY": NSBundle.mainBundle.bundleURL.URLByDeletingLastPathComponent.path ?: @"",
+		@"NPP_FULL_FILE_PATH": NSBundle.mainBundle.executableURL.path ?: @"",
+	};
+	NSTask *task = EditorRunTask(command, values, directory ?: [NSURL fileURLWithPath:NSHomeDirectory() isDirectory:YES]);
+	task.terminationHandler = ^(NSTask *completed) {
+		if (completed.terminationStatus)
+			dispatch_async(dispatch_get_main_queue(), ^{
+				NSAlert *failure = [[NSAlert alloc] init];
+				failure.messageText = [NSString stringWithFormat:@"Command exited with status %d", completed.terminationStatus];
+				[failure runModal];
+			});
+	};
+	NSError *error = nil;
+	if (![task launchAndReturnError:&error])
+		[NSApp presentError:error];
 }
 
 - (void)menuNeedsUpdate:(NSMenu *)menu
@@ -753,6 +938,11 @@ static void AddCharacterSets(NSMenu *menu)
 			document && (item.tag != 42106 || ![document.editor message:SCI_GETREADONLY]));
 	if (item.action == @selector(copyDocumentPath:))
 		return item.tag >= 42087 ? controller.tabDocuments.count > 0 : document.fileURL != nil;
+	if (item.action == @selector(generateHash:) && item.tag % 3 == 2)
+	{
+		EditorDocumentController *documents = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+		return documents.focusedDocument.editor.selectedString.length > 0;
+	}
 	return item.action != @selector(deleteSavedMacro:) || EditorMacroLibrary.shared.macros.count > 0;
 }
 
@@ -972,6 +1162,85 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 		return;
 	NSString *value = item.tag == 42030 ? url.lastPathComponent : item.tag == 42031 ? url.URLByDeletingLastPathComponent.path : url.path;
 	CopyText(value);
+}
+
+- (void)showHashResults:(NSString *)contents algorithm:(EditorHashAlgorithm)algorithm
+{
+	NSAlert *result = [[NSAlert alloc] init];
+	result.messageText = HashName(algorithm);
+	[result addButtonWithTitle:@"Copy"];
+	[result addButtonWithTitle:@"Close"];
+	result.accessoryView = HashTextView(contents, NO);
+	if ([result runModal] == NSAlertFirstButtonReturn)
+		CopyText(contents);
+}
+
+- (void)generateHash:(NSMenuItem *)sender
+{
+	auto algorithm = static_cast<EditorHashAlgorithm>(sender.tag / 3);
+	switch (sender.tag % 3)
+	{
+	case 0:
+	{
+		NSAlert *input = [[NSAlert alloc] init];
+		input.messageText = HashName(algorithm);
+		[input addButtonWithTitle:@"Generate"];
+		[input addButtonWithTitle:@"Cancel"];
+		NSScrollView *scroll = HashTextView(@"", YES);
+		NSTextView *editor = (NSTextView *)scroll.documentView;
+		NSButton *perLine = [NSButton checkboxWithTitle:@"Treat each line as a separate string" target:nil action:nil];
+		NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 480, 210)];
+		scroll.frame = NSMakeRect(0, 30, 480, 180);
+		perLine.frame = NSMakeRect(0, 0, 480, 24);
+		[form addSubview:scroll];
+		[form addSubview:perLine];
+		input.accessoryView = form;
+		input.window.initialFirstResponder = editor;
+		if ([input runModal] != NSAlertFirstButtonReturn)
+			return;
+		NSString *text = editor.string;
+		if (perLine.state == NSControlStateValueOn)
+		{
+			NSMutableArray<NSString *> *lines = [NSMutableArray array];
+			[text enumerateLinesUsingBlock:^(NSString *line, BOOL *stop) {
+				[lines addObject:EditorHashData([line dataUsingEncoding:NSUTF8StringEncoding], algorithm)];
+			}];
+			[self showHashResults:[lines componentsJoinedByString:@"\n"] algorithm:algorithm];
+		}
+		else
+			[self showHashResults:EditorHashData([text dataUsingEncoding:NSUTF8StringEncoding], algorithm) algorithm:algorithm];
+		break;
+	}
+	case 1:
+	{
+		NSOpenPanel *panel = NSOpenPanel.openPanel;
+		panel.allowsMultipleSelection = YES;
+		if ([panel runModal] != NSModalResponseOK)
+			return;
+		NSArray<NSURL *> *urls = panel.URLs;
+		dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+			NSMutableArray<NSString *> *lines = [NSMutableArray array];
+			for (NSURL *url in urls)
+			{
+				NSError *error = nil;
+				NSString *digest = EditorHashFile(url, algorithm, &error);
+				[lines addObject:digest ? [NSString stringWithFormat:@"%@  %@", digest, url.lastPathComponent] :
+					[NSString stringWithFormat:@"%@ — %@", url.lastPathComponent, error.localizedDescription]];
+			}
+			NSString *result = [lines componentsJoinedByString:@"\n"];
+			dispatch_async(dispatch_get_main_queue(), ^{ [self showHashResults:result algorithm:algorithm]; });
+		});
+		break;
+	}
+	case 2:
+	{
+		EditorDocumentController *documents = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+		NSString *selection = documents.focusedDocument.editor.selectedString;
+		if (selection.length)
+			CopyText(EditorHashData([selection dataUsingEncoding:NSUTF8StringEncoding], algorithm));
+		break;
+	}
+	}
 }
 
 - (void)importMacros:(id)sender
