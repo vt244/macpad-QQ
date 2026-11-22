@@ -80,6 +80,9 @@
 - (IBAction)chooseWorkspaceFolders:(id)sender;
 - (IBAction)toggleFolderWorkspace:(id)sender;
 - (IBAction)toggleProjectPanel:(NSMenuItem *)sender;
+- (IBAction)toggleFunctionList:(id)sender;
+- (IBAction)toggleDocumentMap:(id)sender;
+- (IBAction)toggleInsertPanel:(NSMenuItem *)sender;
 - (IBAction)stepSearchResult:(NSMenuItem *)sender;
 - (void)addWorkspaceFolders:(NSArray<NSURL *> *)folders;
 - (void)prepareToShowDocument:(EditorDocument *)document;

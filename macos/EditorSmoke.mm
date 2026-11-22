@@ -4,9 +4,12 @@
 #import "EditorContextMenus.h"
 #import "EditorDock.h"
 #import "EditorDocumentList.h"
+#import "EditorDocumentMap.h"
 #import "EditorFileSearch.h"
 #import "EditorFolderPanel.h"
+#import "EditorFunctionList.h"
 #import "EditorIncrementalSearch.h"
+#import "EditorInsertPanels.h"
 #import "EditorPlugins.h"
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
@@ -128,6 +131,53 @@ static bool CheckProjectWorkspace(EditorDocumentController *controller, EditorDo
 		"independently show and capture the second project panel"))
 		return false;
 	[controller toggleProjectPanel:command];
+	return true;
+}
+
+static bool CheckFunctionList()
+{
+	NSString *python = @"# def ignore():\nclass Example:\n    def method(self):\n        pass\n\ndef outside():\n    pass\n";
+	NSURL *rules = [NSBundle.mainBundle URLForResource:@"python" withExtension:@"xml" subdirectory:@"functionList"];
+	NSArray<EditorFunction *> *symbols = EditorReadFunctions([python dataUsingEncoding:NSUTF8StringEncoding], rules, nil);
+	return Check(symbols.count == 2 && [symbols[0].name isEqualToString:@"method(self)"] &&
+		[symbols[0].group isEqualToString:@"Example"] && [symbols[1].name isEqualToString:@"outside()"] &&
+		symbols[1].bytePosition == [python rangeOfString:@"outside"].location, "parse class methods and free functions using the bundled Python XML");
+}
+
+static bool CheckDocumentMap(EditorDocumentController *controller, EditorDocument *document)
+{
+	ScintillaView *source = controller.focusedDocument.editor;
+	[controller toggleDocumentMap:nil];
+	EditorDocumentMap *panel = (EditorDocumentMap *)ViewMatching(document.editor.window.contentView, ^BOOL(NSView *view) {
+		return [view isKindOfClass:EditorDocumentMap.class];
+	});
+	ScintillaView *map = (ScintillaView *)ViewMatching(panel, ^BOOL(NSView *view) { return [view isKindOfClass:ScintillaView.class]; });
+	if (!Check(map && !map.isHiddenOrHasHiddenAncestor && [map message:SCI_GETDOCPOINTER] == [source message:SCI_GETDOCPOINTER] &&
+		[map message:SCI_STYLEGETSIZE wParam:STYLE_DEFAULT] < [source message:SCI_STYLEGETSIZE wParam:STYLE_DEFAULT],
+		"preview the same live document in miniature without changing the editor"))
+		return false;
+	[controller toggleDocumentMap:nil];
+	return Check([map message:SCI_GETDOCPOINTER] != [source message:SCI_GETDOCPOINTER], "release the preview buffer on hide");
+}
+
+static bool CheckInsertPanels()
+{
+	__block NSString *inserted = nil;
+	EditorClipboardHistory *history = [[EditorClipboardHistory alloc] initWithInsert:^(NSString *text) { inserted = text; } dismiss:^{}];
+	[history setEntries:@[@"first line\nsecond line"]];
+	EditorCharacterPanel *characters = [[EditorCharacterPanel alloc] initWithInsert:^(NSString *text) { inserted = text; } dismiss:^{}];
+	NSEvent *enter = [NSEvent keyEventWithType:NSEventTypeKeyDown location:NSZeroPoint modifierFlags:0 timestamp:0
+		windowNumber:0 context:nil characters:@"\r" charactersIgnoringModifiers:@"\r" isARepeat:NO keyCode:36];
+	for (NSView *panel in @[history, characters])
+	{
+		NSTableView *table = (NSTableView *)ViewMatching(panel, ^BOOL(NSView *view) { return [view isKindOfClass:NSTableView.class]; });
+		BOOL clipboard = panel == history;
+		[table selectRowIndexes:[NSIndexSet indexSetWithIndex:clipboard ? 0 : 65] byExtendingSelection:NO];
+		[table keyDown:enter];
+		if (!Check([inserted isEqualToString:clipboard ? @"first line\nsecond line" : @"A"],
+			"insert complete clipboard contents or the selected character when pressing Return"))
+			return false;
+	}
 	return true;
 }
 
@@ -652,6 +702,8 @@ int RunSmokeTest(void)
 	if (!CheckFolderWorkspace(controller, second, test))
 		return 1;
 	if (!CheckProjectWorkspace(controller, second, test))
+		return 1;
+	if (!CheckFunctionList() || !CheckDocumentMap(controller, second) || !CheckInsertPanels())
 		return 1;
 	if (!CheckSplitTabs(controller, second, document))
 		return 1;

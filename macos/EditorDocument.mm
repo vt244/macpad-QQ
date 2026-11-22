@@ -3,10 +3,13 @@
 #import "EditorChrome.h"
 #import "EditorContextMenus.h"
 #import "EditorDocumentList.h"
+#import "EditorDocumentMap.h"
 #import "EditorDock.h"
 #import "EditorFileSearch.h"
 #import "EditorFolderPanel.h"
+#import "EditorFunctionList.h"
 #import "EditorIncrementalSearch.h"
+#import "EditorInsertPanels.h"
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
 #import "EditorText.h"
@@ -111,6 +114,10 @@ static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
 	focused:(EditorDocument *)focused focusOther:(BOOL)focusOther groupByView:(BOOL)groupByView visible:(BOOL)visible;
 - (void)displayFolderWorkspace:(NSArray<NSURL *> *)folders visible:(BOOL)visible;
 - (void)displayProjectPanels:(NSIndexSet *)visible;
+- (void)displayFunctionsOf:(EditorDocument *)document visible:(BOOL)visible;
+- (void)displayDocumentMap:(ScintillaView *)editor visible:(BOOL)visible;
+- (void)displayInsertPanels:(NSIndexSet *)visible clipboard:(NSArray<NSString *> *)entries encoding:(NSStringEncoding)encoding;
+- (NSStringEncoding)currentTextEncoding;
 - (void)checkDiskChanges:(BOOL)checkNormal allowPrompt:(BOOL)allowPrompt;
 - (NSData *)editorUTF8;
 - (void)displayOtherDocument:(EditorDocument *)document;
@@ -157,7 +164,15 @@ static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
 @property(nonatomic, readonly) EditorDockPlacement *folderWorkspacePlacement;
 @property(nonatomic, readonly) NSArray<EditorProjectWorkspace *> *projectWorkspaces;
 @property(nonatomic, readonly) NSArray<EditorDockPlacement *> *projectPlacements;
+@property(nonatomic, readonly) EditorDockPlacement *functionListPlacement;
+@property(nonatomic, readonly) EditorDockPlacement *documentMapPlacement;
+@property(nonatomic, readonly) NSArray<EditorDockPlacement *> *insertPlacements;
 - (void)setProjectPanel:(NSUInteger)index visible:(BOOL)visible;
+- (void)refreshFunctionList;
+- (void)refreshDocumentMap;
+- (void)setInsertPanel:(NSUInteger)index visible:(BOOL)visible;
+- (void)refreshInsertPanels;
+- (void)insertPanelText:(NSString *)text;
 - (void)showSearchReport:(EditorSearchReport *)report;
 - (void)refreshSearchPanel;
 - (void)openSearchMatch:(EditorSearchMatch *)match;
@@ -205,6 +220,15 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	NSArray<EditorProjectWorkspace *> *_projectWorkspaces;
 	NSArray<EditorDockPlacement *> *_projectPlacements;
 	NSMutableIndexSet *_visibleProjects;
+	EditorDockPlacement *_functionListPlacement;
+	BOOL _functionListVisible;
+	EditorDockPlacement *_documentMapPlacement;
+	BOOL _documentMapVisible;
+	NSArray<EditorDockPlacement *> *_insertPlacements;
+	NSMutableIndexSet *_visibleInsertPanels;
+	NSMutableArray<NSString *> *_clipboardEntries;
+	NSTimer *_clipboardTimer;
+	NSInteger _clipboardChangeCount;
 	NSTimer *_fileStatusTimer;
 	__weak EditorSearchMatch *_currentSearchMatch;
 }
@@ -218,10 +242,13 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	NSDictionary *panels = WorkspaceValue(layout, @"panes", NSDictionary.class);
 	if (!_visibleProjects)
 		_visibleProjects = [NSMutableIndexSet indexSet];
+	if (!_visibleInsertPanels)
+		_visibleInsertPanels = [NSMutableIndexSet indexSet];
 	NSDictionary<NSString *, EditorDockPlacement *> *placements = @{
 		@"44070": self.documentListPlacement, @"43045": self.searchResultsPlacement,
-		@"44085": self.folderWorkspacePlacement,
-		@"44081": self.projectPlacements[0], @"44082": self.projectPlacements[1], @"44083": self.projectPlacements[2]};
+		@"44085": self.folderWorkspacePlacement, @"44084": self.functionListPlacement, @"44080": self.documentMapPlacement,
+		@"44081": self.projectPlacements[0], @"44082": self.projectPlacements[1], @"44083": self.projectPlacements[2],
+		@"42052": self.insertPlacements[0], @"42051": self.insertPlacements[1]};
 	for (NSString *identifier in placements)
 	{
 		EditorDockPlacement *placement = placements[identifier];
@@ -240,6 +267,8 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 			case 44070: self.documentListVisible = visible; break;
 			case 43045: self.searchResultsVisible = visible; break;
 			case 44085: _folderWorkspaceVisible = visible; break;
+			case 44084: _functionListVisible = visible; break;
+			case 44080: _documentMapVisible = visible; break;
 			case 44081: case 44082: case 44083:
 			{
 				NSUInteger index = identifier.integerValue - 44081;
@@ -249,7 +278,11 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 					[_visibleProjects removeIndex:index];
 				break;
 			}
-
+			default:
+			{
+				[self setInsertPanel:identifier.integerValue == 42052 ? 0 : 1 visible:visible];
+				break;
+			}
 		}
 	}
 	for (EditorDocument *document in self.documents)
@@ -258,6 +291,9 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	[self refreshDocumentList];
 	[self refreshFolderWorkspace];
 	[_activeDocument displayProjectPanels:_visibleProjects];
+	[self refreshFunctionList];
+	[self refreshDocumentMap];
+	[self refreshInsertPanels];
 }
 
 - (EditorDockPlacement *)documentListPlacement
@@ -359,6 +395,137 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	else
 		[_visibleProjects removeIndex:index];
 	[_activeDocument displayProjectPanels:_visibleProjects];
+}
+
+- (EditorDockPlacement *)functionListPlacement
+{
+	if (!_functionListPlacement)
+		_functionListPlacement = [[EditorDockPlacement alloc] initWithEdge:EditorDockRight];
+	return _functionListPlacement;
+}
+
+- (void)refreshFunctionList
+{
+	[_activeDocument displayFunctionsOf:self.focusedDocument visible:_functionListVisible];
+}
+
+- (IBAction)toggleFunctionList:(id)sender
+{
+	if (!_activeDocument)
+		[self newDocument:nil];
+	_functionListVisible = !_functionListVisible;
+	[self refreshFunctionList];
+}
+
+- (EditorDockPlacement *)documentMapPlacement
+{
+	if (!_documentMapPlacement)
+		_documentMapPlacement = [[EditorDockPlacement alloc] initWithEdge:EditorDockRight];
+	return _documentMapPlacement;
+}
+
+- (void)refreshDocumentMap
+{
+	[_activeDocument displayDocumentMap:self.focusedDocument.editor visible:_documentMapVisible];
+}
+
+- (IBAction)toggleDocumentMap:(id)sender
+{
+	if (!_activeDocument)
+		[self newDocument:nil];
+	_documentMapVisible = !_documentMapVisible;
+	[self refreshDocumentMap];
+}
+
+- (NSArray<EditorDockPlacement *> *)insertPlacements
+{
+	if (!_insertPlacements)
+		_insertPlacements = @[[[EditorDockPlacement alloc] initWithEdge:EditorDockRight],
+			[[EditorDockPlacement alloc] initWithEdge:EditorDockBottom]];
+	return _insertPlacements;
+}
+
+- (void)captureClipboardChange
+{
+	NSPasteboard *clipboard = NSPasteboard.generalPasteboard;
+	const NSInteger count = clipboard.changeCount;
+	if (_clipboardChangeCount == count)
+		return;
+	_clipboardChangeCount = count;
+	NSString *entry = [clipboard stringForType:NSPasteboardTypeString];
+	if (!entry.length || [entry lengthOfBytesUsingEncoding:NSUTF8StringEncoding] > 1024 * 1024)
+		return;
+	if (!_clipboardEntries)
+		_clipboardEntries = [NSMutableArray array];
+	[_clipboardEntries removeObject:entry];
+	[_clipboardEntries insertObject:entry atIndex:0];
+	if (_clipboardEntries.count > 32)
+		[_clipboardEntries removeLastObject];
+	[self refreshInsertPanels];
+}
+
+- (void)startClipboardHistory
+{
+	if (_clipboardTimer)
+		return;
+	_clipboardChangeCount = NSPasteboard.generalPasteboard.changeCount - 1;
+	[self captureClipboardChange];
+	__weak EditorDocumentController *weakSelf = self;
+	_clipboardTimer = [NSTimer timerWithTimeInterval:0.4 repeats:YES block:^(NSTimer *timer) {
+		[weakSelf captureClipboardChange];
+	}];
+	[NSRunLoop.mainRunLoop addTimer:_clipboardTimer forMode:NSRunLoopCommonModes];
+}
+
+- (IBAction)toggleInsertPanel:(NSMenuItem *)sender
+{
+	[self setInsertPanel:sender.tag visible:![_visibleInsertPanels containsIndex:sender.tag]];
+}
+
+- (void)setInsertPanel:(NSUInteger)index visible:(BOOL)visible
+{
+	if (index >= self.insertPlacements.count)
+		return;
+	if (!_activeDocument && visible)
+		[self newDocument:nil];
+	if (!_visibleInsertPanels)
+		_visibleInsertPanels = [NSMutableIndexSet indexSet];
+	if (visible)
+	{
+		[_visibleInsertPanels addIndex:index];
+		if (index == 0)
+			[self startClipboardHistory];
+	}
+	else
+	{
+		[_visibleInsertPanels removeIndex:index];
+		if (index == 0)
+		{
+			[_clipboardTimer invalidate];
+			_clipboardTimer = nil;
+		}
+	}
+	[self refreshInsertPanels];
+}
+
+- (void)refreshInsertPanels
+{
+	[_activeDocument displayInsertPanels:_visibleInsertPanels clipboard:_clipboardEntries encoding:[self.focusedDocument currentTextEncoding]];
+}
+
+- (void)insertPanelText:(NSString *)text
+{
+	EditorDocument *document = self.focusedDocument;
+	ScintillaView *editor = document.editor;
+	if (!editor || [editor message:SCI_GETREADONLY])
+		return;
+	NSData *bytes = [text dataUsingEncoding:NSUTF8StringEncoding];
+	const auto start = [editor message:SCI_GETSELECTIONSTART];
+	const auto end = [editor message:SCI_GETSELECTIONEND];
+	[editor message:SCI_SETTARGETRANGE wParam:start lParam:end];
+	[editor message:SCI_REPLACETARGET wParam:bytes.length lParam:reinterpret_cast<sptr_t>(bytes.bytes)];
+	[document focusEditor];
+	[editor message:SCI_GOTOPOS wParam:start + bytes.length];
 }
 
 - (NSArray<EditorDocument *> *)tabDocuments
@@ -552,6 +719,9 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 		[_activeDocument displayDocumentList:nil otherView:nil focused:nil focusOther:NO groupByView:NO visible:NO];
 		[_activeDocument displayFolderWorkspace:nil visible:NO];
 		[_activeDocument displayProjectPanels:nil];
+		[_activeDocument displayFunctionsOf:nil visible:NO];
+		[_activeDocument displayDocumentMap:nil visible:NO];
+		[_activeDocument displayInsertPanels:nil clipboard:nil encoding:0];
 		_activeDocument = document;
 		if (previous.visible)
 		{
@@ -566,6 +736,9 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	[self refreshDocumentTabs];
 	[self refreshFolderWorkspace];
 	[document displayProjectPanels:_visibleProjects];
+	[self refreshFunctionList];
+	[self refreshDocumentMap];
+	[self refreshInsertPanels];
 	if (!_fileStatusTimer)
 	{
 		__weak EditorDocumentController *weakSelf = self;
@@ -936,6 +1109,14 @@ static BOOL IsAvailableEncoding(NSStringEncoding encoding)
 	EditorFolderPanel *_folderWorkspace;
 	NSArray<EditorDockPane *> *_projectPanes;
 	NSArray<EditorProjectPanel *> *_projectPanels;
+	EditorDockPane *_functionListPane;
+	EditorFunctionList *_functionList;
+	EditorDockPane *_documentMapPane;
+	EditorDocumentMap *_documentMap;
+	EditorClipboardHistory *_clipboardHistory;
+	EditorCharacterPanel *_characterPanel;
+	EditorDockPane *_clipboardPane;
+	EditorDockPane *_characterPane;
 	EditorIncrementalSearch *_incremental;
 	NSLayoutConstraint *_incrementalHeight;
 	NSLayoutConstraint *_dockUnderChrome;
@@ -1222,6 +1403,28 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	}
 	_projectPanes = [panes copy];
 	_projectPanels = [panels copy];
+	void (^dismissFunctions)(void) = ^{ [weakController toggleFunctionList:nil]; };
+	_functionList = [[EditorFunctionList alloc] initWithNavigate:^(NSUInteger position) {
+		EditorDocument *focused = weakController.focusedDocument;
+		[focused focusEditor];
+		[focused.editor message:SCI_GOTOPOS wParam:MIN(position, [focused.editor message:SCI_GETLENGTH])];
+		[focused.editor message:SCI_SCROLLCARET];
+	} dismiss:dismissFunctions];
+	_functionListPane = [dock addPanel:_functionList title:[resources label:@"44084" fallback:@"Function List"]
+		placement:controller.functionListPlacement dismiss:dismissFunctions];
+	void (^dismissMap)(void) = ^{ [weakController toggleDocumentMap:nil]; };
+	_documentMap = [[EditorDocumentMap alloc] initWithDismiss:dismissMap];
+	_documentMapPane = [dock addPanel:_documentMap title:[resources label:@"44080" fallback:@"Document Map"]
+		placement:controller.documentMapPlacement dismiss:dismissMap];
+	void (^insert)(NSString *) = ^(NSString *text) { [weakController insertPanelText:text]; };
+	void (^dismissClipboard)(void) = ^{ [weakController setInsertPanel:0 visible:NO]; };
+	void (^dismissCharacters)(void) = ^{ [weakController setInsertPanel:1 visible:NO]; };
+	_clipboardHistory = [[EditorClipboardHistory alloc] initWithInsert:insert dismiss:dismissClipboard];
+	_characterPanel = [[EditorCharacterPanel alloc] initWithInsert:insert dismiss:dismissCharacters];
+	_clipboardPane = [dock addPanel:_clipboardHistory title:[resources label:@"42052" fallback:@"Clipboard History"]
+		placement:controller.insertPlacements[0] dismiss:dismissClipboard];
+	_characterPane = [dock addPanel:_characterPanel title:[resources label:@"42051" fallback:@"Character Panel"]
+		placement:controller.insertPlacements[1] dismiss:dismissCharacters];
 	[content addSubview:_chrome];
 	[content addSubview:dock];
 	_incremental = [[EditorIncrementalSearch alloc] initWithDismiss:^{ [weakDocument dismissIncrementalSearch]; }];
@@ -1577,6 +1780,33 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	}
 }
 
+- (void)displayFunctionsOf:(EditorDocument *)document visible:(BOOL)visible
+{
+	_functionListPane.shown = visible;
+	if (visible && document)
+		[_functionList refresh:[document editorUTF8] language:document->_languageIdentifier];
+	else
+		[_functionList cancel];
+}
+
+- (void)displayDocumentMap:(ScintillaView *)editor visible:(BOOL)visible
+{
+	_documentMapPane.shown = visible;
+	[_documentMap showEditor:visible ? editor : nil];
+}
+
+- (void)displayInsertPanels:(NSIndexSet *)visible clipboard:(NSArray<NSString *> *)entries encoding:(NSStringEncoding)encoding
+{
+	_clipboardPane.shown = [visible containsIndex:0];
+	_characterPane.shown = [visible containsIndex:1];
+	if (_clipboardPane.isShown)
+		[_clipboardHistory setEntries:entries];
+	if (_characterPane.isShown)
+		[_characterPanel useEncoding:encoding];
+}
+
+- (NSStringEncoding)currentTextEncoding { return _encoding; }
+
 - (IBAction)toggleSearchResults:(id)sender
 {
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
@@ -1625,7 +1855,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		{@"indentGuide", @"44020", @"Show Indent Guide", @"decrease.indent", @selector(toggleIndentGuides:), self},
 		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
 		{@"udl", @"native-editUDL", @"Define User Language…", @"curlybraces", @selector(editUserLanguage:), NSApp.delegate},
+		{@"docMap", @"44080", @"Document Map", @"map", @selector(toggleDocumentMap:), NSDocumentController.sharedDocumentController},
 		{@"docList", @"44070", @"Document List", @"sidebar.left", @selector(toggleDocumentList:), self},
+		{@"funcList", @"44084", @"Function List", @"list.bullet", @selector(toggleFunctionList:), NSDocumentController.sharedDocumentController},
 		{@"fileBrowser", @"44085", @"Folder as Workspace", @"folder", @selector(toggleFolderWorkspace:), NSDocumentController.sharedDocumentController},
 		{@"monitoring", @"44097", @"Monitoring (tail -f)", @"waveform.path", @selector(monitorFile:), self},
 		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
@@ -1954,6 +2186,12 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[_resultsView refreshTheme];
 	self.windowControllers.firstObject.window.appearance = _chrome.appearance;
 	[self updateStatus];
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	if (controller.focusedDocument == self)
+	{
+		[controller refreshFunctionList];
+		[[controller windowOwnerForDocument:self]->_documentMap refreshStyle];
+	}
 }
 
 - (IBAction)selectLanguage:(NSMenuItem *)sender
@@ -2257,6 +2495,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			[[(EditorDocumentController *)NSDocumentController.sharedDocumentController windowOwnerForDocument:self].chrome refreshToolbar];
 			[[(EditorDocumentController *)NSDocumentController.sharedDocumentController windowOwnerForDocument:self].chrome refreshTabs];
 			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentList];
+			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshFunctionList];
+			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentMap];
+			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshInsertPanels];
 			break;
 		case SCN_MODIFIED:
 			if (_selectionStart && notification->position < *_selectionStart)
@@ -2265,6 +2506,12 @@ static void ApplyPreferencesToView(ScintillaView *view)
 					*_selectionStart += notification->length;
 				else if (notification->modificationType & SC_MOD_DELETETEXT)
 					*_selectionStart = std::max<sptr_t>(notification->position, *_selectionStart - notification->length);
+			}
+			if (notification->modificationType & (SC_MOD_INSERTTEXT | SC_MOD_DELETETEXT))
+			{
+				EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+				if (controller.focusedDocument == self)
+					[controller refreshFunctionList];
 			}
 			break;
 		case SCN_SAVEPOINTLEFT:
@@ -2286,6 +2533,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			[_chrome refreshToolbar];
 			if (notification->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
 				[(EditorDocumentController *)NSDocumentController.sharedDocumentController syncScrollFromDocument:self changes:notification->updated];
+			if (notification->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_CONTENT))
+				[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentMap];
 			break;
 		case SCN_MARGINCLICK:
 			if (notification->margin == 1)
@@ -3055,6 +3304,9 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	_documentListPane.shown = _resultsPane.shown = NO;
 	_folderPane.shown = NO;
 	[self displayProjectPanels:nil];
+	[self displayFunctionsOf:nil visible:NO];
+	[self displayDocumentMap:nil visible:NO];
+	[self displayInsertPanels:nil clipboard:nil encoding:0];
 	[_incremental end];
 	[self closeClonedView];
 	[_fileSearch cancel];

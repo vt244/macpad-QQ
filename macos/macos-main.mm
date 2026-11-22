@@ -263,6 +263,8 @@ static void AddCharacterSets(NSMenu *menu)
 	AddItem(copyPath, Label(@"42087", @"Copy All Filenames"), @selector(copyDocumentPath:), @"", self).tag = 42087;
 	AddItem(copyPath, Label(@"42088", @"Copy All File Paths"), @selector(copyDocumentPath:), @"", self).tag = 42088;
 	AddItem(edit, Label(@"42028", @"Read-Only on Current Document"), @selector(toggleDocumentReadOnly:), @"");
+	AddItem(edit, Label(@"42052", @"Clipboard History"), @selector(toggleInsertPanel:), @"", documents).tag = 0;
+	AddItem(edit, Label(@"42051", @"Character Panel"), @selector(toggleInsertPanel:), @"", documents).tag = 1;
 	NSMenu *letterCase = AddMenu(edit, Label(@"edit-convertCaseTo", @"Convert Case"));
 	AddEditorCommand(letterCase, Label(@"42016", @"Uppercase"), SCI_UPPERCASE);
 	AddEditorCommand(letterCase, Label(@"42017", @"Lowercase"), SCI_LOWERCASE);
@@ -351,6 +353,8 @@ static void AddCharacterSets(NSMenu *menu)
 	AddItem(symbols, Label(@"44041", @"Show Wrap Symbol"), @selector(toggleSymbolDisplay:), @"").tag = 44041;
 	AddItem(view, Label(@"44070", @"Document List"), @selector(toggleDocumentList:), @"");
 	AddItem(view, Label(@"44085", @"Folder as Workspace"), @selector(toggleFolderWorkspace:), @"", documents);
+	AddItem(view, Label(@"44084", @"Function List"), @selector(toggleFunctionList:), @"", documents);
+	AddItem(view, Label(@"44080", @"Document Map"), @selector(toggleDocumentMap:), @"", documents);
 	NSMenu *projects = AddMenu(view, Label(@"view-project", @"Project Panels"));
 	for (NSInteger index = 0; index < 3; ++index)
 		AddItem(projects, Label([@(44081 + index) stringValue], [NSString stringWithFormat:@"Project Panel %ld", index + 1]),

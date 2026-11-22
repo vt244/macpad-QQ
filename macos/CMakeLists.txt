@@ -30,7 +30,7 @@ target_include_directories(editor PRIVATE "${sci}/src" "${lex}/lexlib" "${root}/
 add_executable(macpad macos-main.mm EditorDocument.mm EditorChrome.mm EditorResources.mm EditorPlugins.mm EditorSmoke.mm
 	EditorText.mm EditorFileSearch.mm EditorSearchResultsView.mm
 	EditorDocumentList.mm EditorPanelChrome.mm EditorContextMenus.mm EditorDock.mm EditorFolderPanel.mm EditorProjectPanel.mm
-	EditorIncrementalSearch.mm
+	EditorFunctionList.mm EditorDocumentMap.mm EditorInsertPanels.mm EditorIncrementalSearch.mm
 	EditorSettings.mm)
 set_target_properties(macpad PROPERTIES OUTPUT_NAME "macpad++")
 target_compile_options(macpad PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
