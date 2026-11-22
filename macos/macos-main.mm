@@ -11,6 +11,7 @@
 #import "EditorLaunchOptions.h"
 #import "EditorMacros.h"
 #import "EditorPlugins.h"
+#import "EditorPluginCatalog.h"
 #import "EditorResources.h"
 #import "EditorRun.h"
 #import "EditorSettings.h"
@@ -687,6 +688,10 @@ static void AddCharacterSets(NSMenu *menu)
 	}
 
 	NSMenu *plugins = AddMenu(main, Label(@"Plugins", @"Plugins"));
+	AddItem(plugins, Label(@"48014", @"Open Plugins Folder…"), @selector(openPluginsFolder:), @"", self);
+	AddItem(plugins, Label(@"48015", @"Plugins Admin…"), @selector(managePlugins:), @"", self);
+	AddItem(plugins, Label(@"native-pluginCatalogSource", @"Plugin Catalog Source…"), @selector(choosePluginCatalog:), @"", self);
+	[plugins addItem:NSMenuItem.separatorItem];
 	[_plugins populateMenu:plugins];
 
 	NSMenu *window = AddMenu(main, Label(@"native-window", @"Window"));
@@ -743,6 +748,75 @@ static void AddCharacterSets(NSMenu *menu)
 	}
 	[self openDocuments:@[url]];
 }
+
+- (void)openPluginsFolder:(id)sender
+{
+	NSError *error = nil;
+	if (![NSFileManager.defaultManager createDirectoryAtURL:_plugins.directory withIntermediateDirectories:YES attributes:nil error:&error])
+	{
+		[NSApp presentError:error];
+		return;
+	}
+	[NSWorkspace.sharedWorkspace openURL:_plugins.directory];
+}
+
+- (void)managePlugins:(id)sender
+{
+	for (;;)
+	{
+		NSArray<NSURL *> *plugins = _plugins.pluginFiles;
+		NSAlert *panel = [[NSAlert alloc] init];
+		panel.messageText = @"Plugins Admin";
+		panel.informativeText = @"Install or disable native macOS plugins. Restart macpad++ to apply changes.";
+		[panel addButtonWithTitle:@"Close"];
+		[panel addButtonWithTitle:@"Install…"];
+		NSButton *disable = [panel addButtonWithTitle:@"Disable"];
+		disable.enabled = plugins.count > 0;
+		[panel addButtonWithTitle:@"Catalog…"];
+		if (!plugins.count)
+			panel.accessoryView = [NSTextField labelWithString:@"No native plugins installed."];
+		NSPopUpButton *files = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 365, 26) pullsDown:NO];
+		for (NSURL *file in plugins)
+		{
+			NSString *title = [_plugins loadedTitleForFile:file];
+			NSString *description = title ? [NSString stringWithFormat:@"%@ — %@", file.lastPathComponent, title] :
+				[NSString stringWithFormat:@"%@ — Not loaded", file.lastPathComponent];
+			NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:description action:nil keyEquivalent:@""];
+			item.representedObject = file;
+			[files.menu addItem:item];
+		}
+		if (plugins.count)
+		{
+			[files selectItemAtIndex:0];
+			panel.accessoryView = files;
+		}
+
+		NSModalResponse response = [panel runModal];
+		NSError *error = nil;
+		if (response == NSAlertSecondButtonReturn)
+		{
+			NSOpenPanel *picker = NSOpenPanel.openPanel;
+			picker.allowedContentTypes = @[[UTType typeWithFilenameExtension:@"dylib"] ?: UTTypeData];
+			picker.message = @"Choose a macOS plugin to install.";
+			if ([picker runModal] == NSModalResponseOK && ![_plugins installPluginAtURL:picker.URL error:&error] && error)
+				[NSApp presentError:error];
+		}
+		else if (response == NSAlertThirdButtonReturn && files.selectedItem)
+		{
+			if (![_plugins disablePluginAtURL:files.selectedItem.representedObject error:&error] && error)
+				[NSApp presentError:error];
+		}
+		else if (response == NSAlertThirdButtonReturn + 1)
+		{
+			EditorShowPluginCatalog(_plugins);
+			return;
+		}
+		else
+			return;
+	}
+}
+
+- (void)choosePluginCatalog:(id)sender { EditorChoosePluginCatalog(); }
 
 - (void)runExternalCommand:(id)sender
 {

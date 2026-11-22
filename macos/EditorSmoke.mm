@@ -16,6 +16,7 @@
 #import "EditorHash.h"
 #import "EditorMacros.h"
 #import "EditorPlugins.h"
+#import "EditorPluginCatalog.h"
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
 #import "EditorRun.h"
@@ -602,6 +603,40 @@ static bool CheckSearchMacro(EditorDocument *document, NSURL *test)
 	return true;
 }
 
+static bool CheckPluginCatalog(EditorDocumentController *controller, EditorDocument *document, NSURL *test)
+{
+	NSURL *catalog = [NSBundle.mainBundle URLForResource:@"plugins-catalog" withExtension:@"json"];
+	NSArray<EditorPluginPackage *> *packages = EditorPluginPackages([NSData dataWithContentsOfURL:catalog], catalog, nullptr);
+	EditorPluginPackage *package = packages.firstObject;
+	NSData *data = package.url ? [NSData dataWithContentsOfURL:package.url] : nil;
+	NSURL *directory = [test URLByAppendingPathComponent:@"catalog-fixture" isDirectory:YES];
+	EditorPlugins *installer = [[EditorPlugins alloc] initWithDirectory:directory];
+	if (!Check(package && [EditorHashData(data, EditorHashSHA256) isEqualToString:package.sha256] &&
+		[installer installCatalogPlugin:data filename:package.filename updating:NO error:nullptr] &&
+		[installer installCatalogPlugin:data filename:package.filename updating:YES error:nullptr],
+		"verify the bundled plugin package and install or update it"))
+		return false;
+	EditorPlugins *host = [[EditorPlugins alloc] initWithDirectory:directory];
+	NSMenu *menu = [NSMenu new];
+	[host populateMenu:menu];
+	NSMenu *group = [menu itemWithTitle:@"Document Tools"].submenu;
+	NSMenuItem *command = [group itemWithTitle:@"Open Documents"];
+	if (!Check(group.numberOfItems == 2 && [host performCommand:command inDocument:document],
+		"load a version 2 plugin with multiple menu commands"))
+		return false;
+	NSWindow *panel = [NSApp.windows filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"title == %@", @"Open Documents"]].firstObject;
+	NSTextView *inventory = (NSTextView *)ViewMatching(panel.contentView, ^BOOL(NSView *view) {
+		return [view isKindOfClass:NSTextView.class];
+	});
+	BOOL hasDocument = [inventory.string containsString:document.displayName];
+	EditorDocument *draft = [controller makeUntitledDocumentOfType:controller.defaultType error:nullptr];
+	[controller addDocument:draft];
+	BOOL refreshed = [inventory.string containsString:@"Untitled"];
+	[draft close];
+	[panel close];
+	return Check(hasDocument && refreshed, "display plugin-provided AppKit content and deliver document events");
+}
+
 static bool CheckTools(NSURL *test)
 {
 	NSData *abc = [@"abc" dataUsingEncoding:NSUTF8StringEncoding];
@@ -844,7 +879,7 @@ int RunSmokeTest(void)
 	[second changeTabPin];
 	if (!Check([[document.editor menuForEvent:contextClick] itemWithTag:SCI_LINEDUPLICATE] != nil, "populate the editor's right-click menu"))
 		return 1;
-	if (!CheckCustomMenus(document, contextClick) || !CheckSettingsAndLaunch(document))
+	if (!CheckCustomMenus(document, contextClick) || !CheckSettingsAndLaunch(document) || !CheckPluginCatalog(controller, document, test))
 		return 1;
 	[second showWindows];
 	if (!Check(!document.windowControllers.firstObject.window.visible && second.windowControllers.firstObject.window.visible,
@@ -1028,6 +1063,16 @@ int RunSmokeTest(void)
 		return 1;
 
 	EditorPlugins *plugins = [[EditorPlugins alloc] initWithDirectory:[test URLByAppendingPathComponent:@"plugins"]];
+	NSURL *pluginFixture = plugins.pluginFiles.firstObject;
+	EditorPlugins *managed = [[EditorPlugins alloc] initWithDirectory:[test URLByAppendingPathComponent:@"managed-plugins"]];
+	if (!Check(pluginFixture && [managed installPluginAtURL:pluginFixture error:&error] && managed.pluginFiles.count == 1,
+		"install a native plugin through the plugin manager"))
+		return 1;
+	NSURL *installed = managed.pluginFiles.firstObject;
+	if (!Check([managed disablePluginAtURL:installed error:&error] && managed.pluginFiles.count == 0 &&
+		[files fileExistsAtPath:[[managed.directory URLByAppendingPathComponent:@"Disabled"] URLByAppendingPathComponent:installed.lastPathComponent].path],
+		"disable a plugin and retain its library for later installation"))
+		return 1;
 	NSMenu *menu = [[NSMenu alloc] initWithTitle:@"Plugins"];
 	[plugins populateMenu:menu];
 	NSMenuItem *item = [menu itemWithTitle:@"Smoke: Replace Selection"];
@@ -1212,6 +1257,6 @@ int RunSmokeTest(void)
 	if (!Check([workspace startAtDirectory:recoveryDirectory] && ![otherInstance startAtDirectory:recoveryDirectory],
 		"prevent another instance from overwriting the same recovery workspace"))
 		return 1;
-	puts("Passed: dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands, session recovery, terminal options, macros, Run.");
+	puts("Passed: dockable panels, tab transfers and split rotation, editing commands, monitoring, search and history, settings, XML, macros, terminal options, Run, native plugins and catalog updates.");
 	return 0;
 }

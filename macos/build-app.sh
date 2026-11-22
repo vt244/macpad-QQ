@@ -53,6 +53,13 @@ cp -R PowerEditor/installer/nativeLang "$resources/localization"
 cp -R PowerEditor/installer/themes "$resources/"
 cp -R PowerEditor/installer/functionList "$resources/"
 cp -R PowerEditor/installer/APIs "$resources/autoCompletion"
+mkdir -p "$resources/catalog"
+xcrun clang++ -fobjc-arc -dynamiclib -arch arm64 -arch x86_64 -mmacosx-version-min=13.0 \
+	-framework Cocoa -I macos macos/plugins/DocumentTools.mm -o "$resources/catalog/DocumentTools.dylib"
+codesign --force --sign - "$resources/catalog/DocumentTools.dylib"
+plugin_hash=$(shasum -a 256 "$resources/catalog/DocumentTools.dylib")
+printf '{"plugins":[{"name":"Document Tools","version":"1.0.0","file":"DocumentTools.dylib","url":"catalog/DocumentTools.dylib","sha256":"%s"}]}\n' \
+	"${plugin_hash%% *}" > "$resources/plugins-catalog.json"
 cp -R PowerEditor/bin/userDefineLangs "$resources/"
 cp PowerEditor/bin/{change.log,readme.txt} "$resources/"
 cp LICENSE THIRD_PARTY_NOTICES.md README.md "$resources/"

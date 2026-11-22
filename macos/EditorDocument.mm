@@ -14,10 +14,12 @@
 #import "EditorInsertPanels.h"
 #import "EditorMacros.h"
 #import "EditorProjectPanel.h"
+#import "EditorPlugins.h"
 #import "EditorResources.h"
 #import "EditorText.h"
 #import "EditorWorkspace.h"
 #import "ScintillaView.h"
+#include "MacpadPlugin.h"
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 
 #include "SciLexer.h"
@@ -40,6 +42,14 @@ static constexpr int TokenMarkCount = 5;
 static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor);
 static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end);
 static NSUInteger NextUntitledNumber = 1;
+static uint64_t NextRuntimeDocumentID = 1;
+
+static void NotifyPlugins(EditorDocument *document, MacpadDocumentEventV2 event)
+{
+	if (document)
+		[NSNotificationCenter.defaultCenter postNotificationName:EditorPluginDocumentDidChange object:document
+			userInfo:@{@"event": @(event)}];
+}
 
 struct RecordedSearch
 {
@@ -824,6 +834,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 		}];
 	}
 	[self workspaceChanged];
+	NotifyPlugins(document, MACPAD_DOCUMENT_ACTIVATED);
 }
 
 - (void)checkOpenFilesOnDisk
@@ -1019,6 +1030,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	BOOL wasActive = document == _activeDocument;
 	NSRect frame = document.windowControllers.firstObject.window.frame;
 	[super removeDocument:document];
+	NotifyPlugins((EditorDocument *)document, MACPAD_DOCUMENT_CLOSED);
 	[_tabOrder removeObjectIdenticalTo:(EditorDocument *)document];
 	if (wasActive)
 	{
@@ -1039,6 +1051,12 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	}
 	[self refreshDocumentTabs];
 	[self workspaceChanged];
+}
+
+- (void)addDocument:(NSDocument *)document
+{
+	[super addDocument:document];
+	NotifyPlugins((EditorDocument *)document, MACPAD_DOCUMENT_OPENED);
 }
 
 - (NSURL *)closedTabURL
@@ -1647,6 +1665,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	self = [super init];
 	if (self)
 	{
+		_runtimeIdentifier = NextRuntimeDocumentID++;
 		static const NSStringEncoding encodings[] = {NSWindowsCP1252StringEncoding, NSUTF8StringEncoding,
 			NSUTF16BigEndianStringEncoding, NSUTF16LittleEndianStringEncoding, NSUTF8StringEncoding,
 			NSASCIIStringEncoding, NSUTF16BigEndianStringEncoding, NSUTF16LittleEndianStringEncoding};
@@ -3409,6 +3428,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshFunctionList];
 			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentMap];
 			[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshInsertPanels];
+			NotifyPlugins(self, MACPAD_DOCUMENT_ACTIVATED);
 			break;
 		case SCN_MODIFIED:
 			if (_selectionStart && notification->position < *_selectionStart)
@@ -3425,6 +3445,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 				EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 				if (controller.focusedDocument == self)
 					[controller refreshFunctionList];
+				NotifyPlugins(self, MACPAD_DOCUMENT_CHANGED);
 			}
 			break;
 		case SCN_CHARADDED:

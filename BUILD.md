@@ -19,7 +19,9 @@ Run the smoke test in a macOS graphical session:
 macos/test-app.sh
 ```
 
-It checks dockable panels, tab transfers and split rotation, monitoring, search and history, XML, native plugins, settings, editing commands, session recovery, terminal options, macros, Run.
+It checks panel docking, tab transfers and split rotation, document I/O, XML resources,
+search scopes and history, editing commands, macro playback, native plugins and
+session recovery through quit and relaunch.
 The [macOS workflow](.github/workflows/macos.yml) builds, tests and archives
 the app with its corresponding source.
 
@@ -27,7 +29,9 @@ the app with its corresponding source.
 
 Implement the entry point and callbacks in [MacpadPlugin.h](macos/MacpadPlugin.h).
 [SelectionPlugin.c](macos/tests/SelectionPlugin.c) demonstrates reading and
-replacing the current selection. To build the example for both architectures:
+replacing the current selection with ABI v1. The bundled
+[Document Tools](macos/plugins/DocumentTools.mm) uses ABI v2 for multiple
+commands, document events and an AppKit panel. To build the v1 example for both architectures:
 
 ```sh
 mkdir -p .tmp
@@ -37,6 +41,15 @@ xcrun clang -dynamiclib -arch arm64 -arch x86_64 -mmacosx-version-min=13.0 \
 
 Copy a plugin you trust into the `plugins/` directory in the macpad++ profile
 and restart the app. Plugins run in the editor process with its permissions.
+ABI v2 host callbacks are valid during the synchronous command or event call
+on the main thread. Panel views are retained while open.
+
+**Plugins → Plugin Catalog Source…** accepts a local JSON manifest or an HTTPS
+manifest URL. The manifest contains a `plugins` array with `name`, `version`,
+`file` (a dylib basename), `url` (absolute or relative to the manifest), and
+`sha256` (the packaged library's SHA-256 digest). Increment the version when
+publishing an update. The build generates the bundled manifest after signing
+the library.
 
 ## Windows editor build
 
