@@ -22,11 +22,17 @@
 - (void)setSetting:(id)value forName:(NSString *)name;
 - (void)setSettings:(NSDictionary<NSString *, id> *)settings;
 - (BOOL)importWindowsConfiguration:(NSURL *)url error:(NSError **)error;
+- (NSDictionary<NSString *, NSArray<NSDictionary *> *> *)styleDefinitions;
+- (BOOL)saveStyles:(NSDictionary<NSString *, NSArray<NSDictionary *> *> *)styles error:(NSError **)error;
 - (NSURL *)importXML:(NSURL *)url theme:(BOOL)theme error:(NSError **)error;
 - (NSString *)configure:(ScintillaView *)view extension:(NSString *)extension language:(NSString *)name
 	syntaxHighlighting:(BOOL)highlight identifier:(NSString **)identifier;
 - (NSDictionary<NSString *, NSString *> *)languages;
+- (NSArray<NSString *> *)userLanguages;
 - (NSArray<NSString *> *)commentSymbolsForLanguage:(NSString *)identifier;
+- (BOOL)importUserLanguages:(NSURL *)url error:(NSError **)error;
+- (NSString *)userLanguageXML:(NSString *)name;
+- (BOOL)saveUserLanguageXML:(NSString *)xml replacing:(NSString *)previousName error:(NSError **)error;
 - (NSColor *)widgetColor:(NSString *)name background:(BOOL)background;
 - (void)styleSearchResults:(ScintillaView *)view;
 @end

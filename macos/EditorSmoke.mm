@@ -299,6 +299,18 @@ static bool CheckSettings(EditorDocument *document)
 		return false;
 	[resources setSetting:width forName:@"tabWidth"];
 	[document applyPreferences];
+	NSDictionary *styles = [resources styleDefinitions];
+	if (!Check(styles[@"python"] && [resources saveStyles:@{@"": @[@{@"name": @"Document map", @"fgColor": @"123456"}]}
+		error:nullptr] && [resources widgetColor:@"Document map" background:NO], "customize an XML theme and reload it"))
+		return false;
+	NSString *xml = @"<NotepadPlus><UserLang name=\"Smoke Custom Language\" ext=\"smokeudl\" udlVersion=\"2.1\"/></NotepadPlus>";
+	if (!Check([resources saveUserLanguageXML:xml replacing:nil error:nullptr] &&
+		[[resources userLanguageXML:@"Smoke Custom Language"] containsString:@"smokeudl"] &&
+		[resources saveUserLanguageXML:[xml stringByReplacingOccurrencesOfString:@"smokeudl" withString:@"smoke2"]
+		replacing:@"Smoke Custom Language" error:nullptr] &&
+		[[resources userLanguageXML:@"Smoke Custom Language"] containsString:@"smoke2"],
+		"create, edit and export a compatible user language"))
+		return false;
 	return true;
 }
 
@@ -742,6 +754,23 @@ int RunSmokeTest(void)
 		"jump to a bookmark in the document"))
 		return 1;
 	[document clearBookmarks:nil];
+
+	NSURL *udl = [test URLByAppendingPathComponent:@"User Language.xml"];
+	NSString *definition = @"<NotepadPlus><UserLang name='Smoke language' ext='smk' udlVersion='2.1'>"
+		"<Settings><Global caseIgnored='yes'/><Prefix/></Settings>"
+		"<KeywordLists><Keywords name='Keywords1'>def</Keywords></KeywordLists>"
+		"<Styles><WordsStyle name='KEYWORDS1' fgColor='009944'/></Styles></UserLang></NotepadPlus>";
+	if (!Check([definition writeToURL:udl atomically:YES encoding:NSUTF8StringEncoding error:&error] &&
+		[resources importUserLanguages:udl error:&error], "import UDL 2.1 XML"))
+		return 1;
+	NSMenuItem *chooseLexer = [[NSMenuItem alloc] init];
+	chooseLexer.representedObject = @"udl:Smoke language";
+	[document selectLanguage:chooseLexer];
+	if (!Check([editor message:SCI_GETLEXER] == SCLEX_USER && [editor message:SCI_GETSTYLEAT wParam:0] == SCE_USER_STYLE_KEYWORD1 &&
+		[editor message:SCI_STYLEGETFORE wParam:SCE_USER_STYLE_KEYWORD1] == 0x449900, "apply imported UDL keywords and colors"))
+		return 1;
+	chooseLexer.representedObject = nil;
+	[document selectLanguage:chooseLexer];
 
 	NSMenuItem *unixEndings = [[NSMenuItem alloc] init];
 	unixEndings.tag = SC_EOL_LF;

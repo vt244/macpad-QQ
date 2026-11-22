@@ -98,10 +98,110 @@ static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes
 	[view message:SCI_STYLESETUNDERLINE wParam:index lParam:(flags.as_int() & 4) != 0];
 }
 
+static NSString *UDLKeywords(const char *source)
+{
+	std::string result;
+	char quote = 0;
+	for (size_t i = 0; source[i]; ++i)
+	{
+		char c = source[i];
+		char next = source[i + 1];
+		if (c == '\\' && (next == '"' || next == '\'' || next == '\\'))
+		{
+			result += next;
+			++i;
+		}
+		else if ((c == '"' || c == '\'') && (!quote || quote == c))
+			quote = quote ? 0 : c;
+		else if (!quote || static_cast<unsigned char>(c) > ' ')
+			result += c;
+		else if (!result.empty() && source[i - 1] != quote && next != quote && static_cast<unsigned char>(next) > ' ')
+			result += quote == '"' ? '\v' : '\b';
+	}
+	return String(result.c_str());
+}
+
 static void SetProperty(ScintillaView *view, const char *key, NSString *value)
 {
 	[view message:SCI_SETPROPERTY wParam:reinterpret_cast<uptr_t>(key)
 		lParam:reinterpret_cast<sptr_t>(value.UTF8String)];
+}
+
+static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
+{
+	auto global = language.child("Settings").child("Global");
+	auto prefix = language.child("Settings").child("Prefix");
+	auto keywords = language.child("KeywordLists");
+	auto list = [&](const char *key) {
+		auto entry = keywords.find_child_by_attribute("Keywords", "name", key);
+		if (!entry && std::string_view(language.attribute("udlVersion").value()) == "2.0")
+		{
+			const char *legacy[][2] = {
+				{"Numbers, range", "Numbers, additional"}, {"Numbers, prefix2", "Numbers, prefixes"},
+				{"Numbers, extras2", "Numbers, extras with prefixes"}, {"Numbers, suffix2", "Numbers, suffixes"},
+			};
+			for (const auto &names : legacy)
+				if (std::string_view(key) == names[0])
+					return keywords.find_child_by_attribute("Keywords", "name", names[1]).child_value();
+		}
+		return entry.child_value();
+	};
+	[view message:SCI_SETILEXER wParam:0 lParam:reinterpret_cast<sptr_t>(CreateLexer("user"))];
+	SetProperty(view, "fold", @"1");
+	for (const char *key : {"caseIgnored", "allowFoldOfComments", "foldCompact"})
+	{
+		std::string property = std::string("userDefine.") + (std::string_view(key) == "caseIgnored" ? "isCaseIgnored" : key);
+		SetProperty(view, property.c_str(), std::string_view(global.attribute(key).value()) == "yes" ? @"1" : @"0");
+	}
+	SetProperty(view, "userDefine.forcePureLC", @(global.attribute("forcePureLC").as_int()).stringValue);
+	SetProperty(view, "userDefine.decimalSeparator", @(global.attribute("decimalSeparator").as_int()).stringValue);
+	for (int i = 1; i <= 8; ++i)
+	{
+		auto number = std::to_string(i);
+		auto key = "Keywords" + number;
+		SetProperty(view, ("userDefine.prefixKeywords" + number).c_str(),
+			std::string_view(prefix.attribute(key.c_str()).value()) == "yes" ? @"1" : @"0");
+	}
+	const char *properties[][2] = {
+		{"Comments", "comments"}, {"Delimiters", "delimiters"}, {"Operators1", "operators1"},
+		{"Numbers, prefix1", "numberPrefix1"}, {"Numbers, prefix2", "numberPrefix2"},
+		{"Numbers, extras1", "numberExtras1"}, {"Numbers, extras2", "numberExtras2"},
+		{"Numbers, suffix1", "numberSuffix1"}, {"Numbers, suffix2", "numberSuffix2"}, {"Numbers, range", "numberRange"},
+		{"Folders in code1, open", "foldersInCode1Open"}, {"Folders in code1, middle", "foldersInCode1Middle"},
+		{"Folders in code1, close", "foldersInCode1Close"},
+	};
+	for (const auto &entry : properties)
+		SetProperty(view, (std::string("userDefine.") + entry[1]).c_str(), String(list(entry[0])));
+	const char *wordLists[] = {"Operators2", "Folders in code2, open", "Folders in code2, middle", "Folders in code2, close",
+		"Folders in comment, open", "Folders in comment, middle", "Folders in comment, close",
+		"Keywords1", "Keywords2", "Keywords3", "Keywords4", "Keywords5", "Keywords6", "Keywords7", "Keywords8"};
+	for (NSUInteger i = 0; i < std::size(wordLists); ++i)
+		[view setStringProperty:SCI_SETKEYWORDS parameter:i value:UDLKeywords(list(wordLists[i]))];
+
+	const char *styleNames[] = {"DEFAULT", "COMMENTS", "LINE COMMENTS", "NUMBERS",
+		"KEYWORDS1", "KEYWORDS2", "KEYWORDS3", "KEYWORDS4", "KEYWORDS5", "KEYWORDS6", "KEYWORDS7", "KEYWORDS8",
+		"OPERATORS", "FOLDER IN CODE1", "FOLDER IN CODE2", "FOLDER IN COMMENT",
+		"DELIMITERS1", "DELIMITERS2", "DELIMITERS3", "DELIMITERS4", "DELIMITERS5", "DELIMITERS6", "DELIMITERS7", "DELIMITERS8"};
+	auto styles = language.child("Styles");
+	for (NSUInteger i = 0; i < std::size(styleNames); ++i)
+	{
+		auto style = styles.find_child_by_attribute("WordsStyle", "name", styleNames[i]);
+		ApplyStyle(view, i, style);
+		char property[32];
+		snprintf(property, sizeof(property), "userDefine.nesting.%02u", static_cast<unsigned>(i));
+		SetProperty(view, property, @(style.attribute("nesting").as_int()).stringValue);
+	}
+	// Scintilla uses a numeric ID for each open buffer's nesting cache.
+	static int nextBufferID = 0;
+	static NSMapTable<ScintillaView *, NSNumber *> *bufferIDs = [NSMapTable weakToStrongObjectsMapTable];
+	NSNumber *bufferID = [bufferIDs objectForKey:view];
+	if (!bufferID)
+	{
+		bufferID = @(++nextBufferID);
+		[bufferIDs setObject:bufferID forKey:view];
+	}
+	SetProperty(view, "userDefine.currentBufferID", bufferID.stringValue);
+	SetProperty(view, "userDefine.udlName", bufferID.stringValue);
 }
 
 @implementation EditorResources
@@ -112,6 +212,8 @@ static void SetProperty(ScintillaView *view, const char *key, NSString *value)
 	NSMutableDictionary<NSString *, id> *_settings;
 	pugi::xml_document _languages;
 	pugi::xml_document _theme;
+	pugi::xml_document _userLanguages;
+	NSMutableDictionary<NSString *, NSURL *> *_userLanguageFiles;
 }
 
 + (instancetype)shared
@@ -136,6 +238,7 @@ static void SetProperty(ScintillaView *view, const char *key, NSString *value)
 		if (LoadXML(english, [NSBundle.mainBundle URLForResource:@"english" withExtension:@"xml" subdirectory:@"localization"]))
 			CollectLabels(TranslationRoot(english).child("Menu").child("Main"), englishLabels);
 		_englishLabels = [englishLabels copy];
+		[self loadUserLanguages];
 		NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfURL:[_profile URLByAppendingPathComponent:@"native-settings.plist"]];
 		_settings = [preferences mutableCopy] ?: [NSMutableDictionary dictionary];
 		NSURL *theme = [preferences[@"theme"] isKindOfClass:NSString.class] ? self.themes[preferences[@"theme"]] : nil;
@@ -175,6 +278,135 @@ static void SetProperty(ScintillaView *view, const char *key, NSString *value)
 	return [self catalog:@"localization"];
 }
 
+- (void)loadUserLanguages
+{
+	_userLanguages.reset();
+	_userLanguageFiles = [NSMutableDictionary dictionary];
+	auto root = _userLanguages.append_child("NotepadPlus");
+	NSMutableArray<NSURL *> *files = [NSMutableArray arrayWithObject:[_profile URLByAppendingPathComponent:@"userDefineLang.xml"]];
+	NSDictionary *catalog = [self catalog:@"userDefineLangs"];
+	for (NSString *file in [catalog.allKeys sortedArrayUsingSelector:@selector(compare:)])
+		[files addObject:catalog[file]];
+	for (NSURL *url in files)
+	{
+		pugi::xml_document definitions;
+		if (!LoadXML(definitions, url))
+			continue;
+		for (auto entry : definitions.child("NotepadPlus").children("UserLang"))
+		{
+			auto name = entry.attribute("name");
+			std::string_view version = entry.attribute("udlVersion").value();
+			if (name && *name.value() && (version == "2.1" || version == "2.0") &&
+				!root.find_child_by_attribute("UserLang", "name", name.value()))
+			{
+				root.append_copy(entry);
+				_userLanguageFiles[String(name.value())] = url;
+			}
+		}
+	}
+}
+
+- (NSString *)userLanguageXML:(NSString *)name
+{
+	if (!name.length)
+		return nil;
+	auto language = _userLanguages.child("NotepadPlus").find_child_by_attribute("UserLang", "name", name.UTF8String);
+	if (!language)
+		return nil;
+	pugi::xml_document copy;
+	copy.append_child("NotepadPlus").append_copy(language);
+	std::ostringstream stream;
+	copy.save(stream);
+	return String(stream.str().c_str());
+}
+
+- (BOOL)saveUserLanguageXML:(NSString *)xml replacing:(NSString *)previousName error:(NSError **)error
+{
+	pugi::xml_document source;
+	NSData *bytes = [xml dataUsingEncoding:NSUTF8StringEncoding];
+	auto parsed = bytes.length && source.load_buffer(bytes.bytes, bytes.length);
+	auto definition = source.child("NotepadPlus").child("UserLang");
+	NSString *name = String(definition.attribute("name").value());
+	std::string_view version = definition.attribute("udlVersion").value();
+	if (!parsed || !name.length || (version != "2.0" && version != "2.1") || definition.next_sibling("UserLang") ||
+		(![name isEqualToString:previousName] && _userLanguageFiles[name]))
+	{
+		if (error)
+			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileWriteInapplicableStringEncodingError
+				userInfo:@{NSLocalizedDescriptionKey: @"Enter one valid UDL 2.0 or 2.1 XML definition with a unique language name."}];
+		return NO;
+	}
+	NSURL *destination = previousName ? _userLanguageFiles[previousName] : nil;
+	pugi::xml_document output;
+	if (destination)
+	{
+		if (!LoadXML(output, destination))
+		{
+			if (error)
+				*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError userInfo:@{NSURLErrorKey: destination}];
+			return NO;
+		}
+		auto root = output.child("NotepadPlus");
+		auto entry = root.find_child_by_attribute("UserLang", "name", previousName.UTF8String);
+		if (!entry)
+			return NO;
+		root.insert_copy_before(definition, entry);
+		root.remove_child(entry);
+	}
+	else
+	{
+		NSURL *folder = [_profile URLByAppendingPathComponent:@"userDefineLangs" isDirectory:YES];
+		if (![NSFileManager.defaultManager createDirectoryAtURL:folder withIntermediateDirectories:YES attributes:nil error:error])
+			return NO;
+		destination = [folder URLByAppendingPathComponent:[NSUUID.UUID.UUIDString stringByAppendingPathExtension:@"xml"]];
+		output.append_child("NotepadPlus").append_copy(definition);
+	}
+	std::ostringstream stream;
+	output.save(stream);
+	const auto result = stream.str();
+	if (![[NSData dataWithBytes:result.data() length:result.size()] writeToURL:destination options:NSDataWritingAtomic error:error])
+		return NO;
+	[self loadUserLanguages];
+	return YES;
+}
+
+- (NSArray<NSString *> *)userLanguages
+{
+	NSMutableArray<NSString *> *names = [NSMutableArray array];
+	for (auto language : _userLanguages.child("NotepadPlus").children("UserLang"))
+		[names addObject:String(language.attribute("name").value())];
+	return [names sortedArrayUsingSelector:@selector(localizedStandardCompare:)];
+}
+
+- (BOOL)importUserLanguages:(NSURL *)url error:(NSError **)error
+{
+	pugi::xml_document definitions;
+	bool supported = false;
+	if ([url.pathExtension.lowercaseString isEqualToString:@"xml"] && LoadXML(definitions, url))
+		for (auto language : definitions.child("NotepadPlus").children("UserLang"))
+		{
+			std::string_view version = language.attribute("udlVersion").value();
+			supported |= *language.attribute("name").value() && (version == "2.0" || version == "2.1");
+		}
+	if (!supported)
+	{
+		if (error)
+			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError userInfo:@{
+				NSURLErrorKey: url, NSLocalizedDescriptionKey: @"Choose an XML file with a named UDL 2.0 or 2.1 definition."}];
+		return NO;
+	}
+	NSURL *directory = [_profile URLByAppendingPathComponent:@"userDefineLangs" isDirectory:YES];
+	NSFileManager *fm = NSFileManager.defaultManager;
+	if (![fm createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:error])
+		return NO;
+	NSURL *destination = [directory URLByAppendingPathComponent:url.lastPathComponent];
+	if (![url.URLByStandardizingPath isEqual:destination.URLByStandardizingPath] &&
+		![fm copyItemAtURL:url toURL:destination error:error])
+		return NO;
+	[self loadUserLanguages];
+	return YES;
+}
+
 - (NSDictionary<NSString *, NSString *> *)languages
 {
 	NSMutableDictionary *languages = [NSMutableDictionary dictionary];
@@ -191,6 +423,24 @@ static void SetProperty(ScintillaView *view, const char *key, NSString *value)
 
 - (NSArray<NSString *> *)commentSymbolsForLanguage:(NSString *)identifier
 {
+	if ([identifier hasPrefix:@"udl:"])
+	{
+		auto definition = _userLanguages.child("NotepadPlus").find_child_by_attribute("UserLang", "name",
+			[identifier substringFromIndex:4].UTF8String);
+		auto keywords = definition.child("KeywordLists").find_child_by_attribute("Keywords", "name", "Comments");
+		NSString *entry = String(keywords.child_value());
+		NSMutableArray<NSString *> *symbols = [NSMutableArray arrayWithArray:@[@"", @"", @""]];
+		for (NSString *item in [entry componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet])
+		{
+			if (item.length <= 2)
+				continue;
+			NSString *code = [item substringToIndex:2];
+			NSInteger index = [code isEqualToString:@"00"] ? 0 : [code isEqualToString:@"03"] ? 1 : [code isEqualToString:@"04"] ? 2 : -1;
+			if (index >= 0 && !symbols[index].length)
+				symbols[index] = [item substringFromIndex:2];
+		}
+		return symbols;
+	}
 	auto language = _languages.child("NotepadPlus").child("Languages").find_child_by_attribute("Language", "name",
 		(identifier ?: @"normal").UTF8String);
 	return @[String(language.attribute("commentLine").value()), String(language.attribute("commentStart").value()),
@@ -460,6 +710,75 @@ static void SetProperty(ScintillaView *view, const char *key, NSString *value)
 	return YES;
 }
 
+- (NSDictionary<NSString *, NSArray<NSDictionary *> *> *)styleDefinitions
+{
+	NSMutableDictionary *definitions = [NSMutableDictionary dictionary];
+	auto collect = [](pugi::xml_node node, const char *type) {
+		NSMutableArray *styles = [NSMutableArray array];
+		for (auto style : node.children(type))
+		{
+			NSMutableDictionary *descriptor = [NSMutableDictionary dictionary];
+			for (auto attribute : style.attributes())
+				descriptor[String(attribute.name())] = String(attribute.value());
+			[styles addObject:descriptor];
+		}
+		return styles;
+	};
+	auto root = _theme.child("NotepadPlus");
+	definitions[@""] = collect(root.child("GlobalStyles"), "WidgetStyle");
+	for (auto lexer : root.child("LexerStyles").children("LexerType"))
+	{
+		NSString *name = String(lexer.attribute("name").value());
+		if (name.length)
+			definitions[name] = collect(lexer, "WordsStyle");
+	}
+	return definitions;
+}
+
+- (BOOL)saveStyles:(NSDictionary<NSString *, NSArray<NSDictionary *> *> *)styles error:(NSError **)error
+{
+	pugi::xml_document copy;
+	copy.reset(_theme);
+	auto root = copy.child("NotepadPlus");
+	for (NSString *language in styles)
+	{
+		auto group = language.length ? root.child("LexerStyles").find_child_by_attribute("LexerType", "name", language.UTF8String) :
+			root.child("GlobalStyles");
+		const char *type = language.length ? "WordsStyle" : "WidgetStyle";
+		for (NSDictionary *values in styles[language])
+		{
+			NSString *name = values[@"name"];
+			auto style = group.find_child_by_attribute(type, "name", name.UTF8String);
+			if (!style)
+				continue;
+			for (NSString *key in @[@"fgColor", @"bgColor", @"fontName", @"fontSize", @"fontStyle", @"colorStyle"])
+			{
+				NSString *value = values[key];
+				if (!value)
+					continue;
+				auto attribute = style.attribute(key.UTF8String);
+				if (!attribute)
+					attribute = style.append_attribute(key.UTF8String);
+				attribute = value.UTF8String;
+			}
+		}
+	}
+	NSURL *folder = [_profile URLByAppendingPathComponent:@"themes" isDirectory:YES];
+	if (![NSFileManager.defaultManager createDirectoryAtURL:folder withIntermediateDirectories:YES attributes:nil error:error])
+		return NO;
+	NSString *name = _selectedTheme.lastPathComponent ?: @"Custom.xml";
+	NSURL *url = [folder URLByAppendingPathComponent:name];
+	if (!_selectedTheme)
+		for (NSUInteger number = 2; [NSFileManager.defaultManager fileExistsAtPath:url.path]; ++number)
+			url = [folder URLByAppendingPathComponent:[NSString stringWithFormat:@"Custom %lu.xml", number]];
+	std::ostringstream stream;
+	copy.save(stream);
+	const std::string xml = stream.str();
+	if (![[NSData dataWithBytes:xml.data() length:xml.size()] writeToURL:url options:NSDataWritingAtomic error:error])
+		return NO;
+	[self chooseTheme:url];
+	return YES;
+}
 - (NSString *)label:(NSString *)identifier fallback:(NSString *)fallback
 {
 	NSString *label = _labels[identifier];
@@ -662,6 +981,43 @@ static void SetProperty(ScintillaView *view, const char *key, NSString *value)
 	for (int i = 0; i < std::size(changes); ++i)
 		if (auto color = Color(widgets.find_child_by_attribute("WidgetStyle", "name", changes[i]).attribute("bgColor")))
 			[view message:SCI_MARKERSETBACK wParam:SC_MARKNUM_HISTORY_REVERTED_TO_ORIGIN + i lParam:*color];
+
+	auto definitions = _userLanguages.child("NotepadPlus");
+	pugi::xml_node userLanguage;
+	if ([mode hasPrefix:@"udl:"])
+		userLanguage = definitions.find_child_by_attribute("UserLang", "name", [mode substringFromIndex:4].UTF8String);
+	else if (!mode && extension.length)
+	{
+		const BOOL dark = self.usesDarkColors;
+		for (auto entry : definitions.children("UserLang"))
+		{
+			auto extensions = [String(entry.attribute("ext").value()) componentsSeparatedByCharactersInSet:NSCharacterSet.whitespaceCharacterSet];
+			if (![extensions containsObject:extension])
+				continue;
+			const bool darkDefinition = std::string_view(entry.attribute("darkModeTheme").value()) == "yes";
+			if (!userLanguage || darkDefinition == dark)
+				userLanguage = entry;
+			if (darkDefinition == dark)
+				break;
+		}
+	}
+	if (userLanguage)
+	{
+		if (highlight)
+		{
+			ConfigureUDL(view, userLanguage);
+			[view message:SCI_COLOURISE wParam:0 lParam:-1];
+		}
+		else
+		{
+			[view message:SCI_SETILEXER wParam:0 lParam:0];
+			[view message:SCI_CLEARDOCUMENTSTYLE];
+		}
+		NSString *name = String(userLanguage.attribute("name").value());
+		if (identifier)
+			*identifier = [@"udl:" stringByAppendingString:name];
+		return name;
+	}
 
 	auto language = mode ? _languages.child("NotepadPlus").child("Languages").find_child_by_attribute("Language", "name", mode.UTF8String) :
 		[self languageForExtension:extension];

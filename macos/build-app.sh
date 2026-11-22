@@ -21,7 +21,7 @@ mkdir -p "$app/Contents/MacOS" "$resources/licenses"
 cp macos/Info.plist "$app/Contents/"
 cp macos/AppIcon.icns "$resources/"
 mkdir -p "$resources/toolbar" "$resources/tabbar"
-toolbar_icons=(new open save saveall close closeall print cut copy paste undo redo find findrep zoomIn zoomOut syncV syncH wrap allChars indentGuide docList fileBrowser monitoring)
+toolbar_icons=(new open save saveall close closeall print cut copy paste undo redo find findrep zoomIn zoomOut syncV syncH wrap allChars indentGuide udl docList fileBrowser monitoring)
 for scheme in light dark; do
 	for style in regular filled; do
 		destination="$resources/toolbar/$scheme/$style"
@@ -51,6 +51,7 @@ cp '.tmp/native-build/macpad++' "$app/Contents/MacOS/"
 cp PowerEditor/src/{langs.model.xml,stylers.model.xml} "$resources/"
 cp -R PowerEditor/installer/nativeLang "$resources/localization"
 cp -R PowerEditor/installer/themes "$resources/"
+cp -R PowerEditor/bin/userDefineLangs "$resources/"
 cp PowerEditor/bin/{change.log,readme.txt} "$resources/"
 cp LICENSE THIRD_PARTY_NOTICES.md README.md "$resources/"
 cp licenses/*.txt "$resources/licenses/"

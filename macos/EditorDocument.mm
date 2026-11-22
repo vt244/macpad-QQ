@@ -1624,6 +1624,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		{@"allChars", @"44019", @"Show All Characters", @"paragraphsign", @selector(toggleInvisibles:), self},
 		{@"indentGuide", @"44020", @"Show Indent Guide", @"decrease.indent", @selector(toggleIndentGuides:), self},
 		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
+		{@"udl", @"native-editUDL", @"Define User Language…", @"curlybraces", @selector(editUserLanguage:), NSApp.delegate},
 		{@"docList", @"44070", @"Document List", @"sidebar.left", @selector(toggleDocumentList:), self},
 		{@"fileBrowser", @"44085", @"Folder as Workspace", @"folder", @selector(toggleFolderWorkspace:), NSDocumentController.sharedDocumentController},
 		{@"monitoring", @"44097", @"Monitoring (tail -f)", @"waveform.path", @selector(monitorFile:), self},

@@ -10,15 +10,17 @@ set(lex "${root}/lexilla")
 file(GLOB scintilla_sources CONFIGURE_DEPENDS "${sci}/src/*.cxx" "${sci}/cocoa/*.mm")
 file(GLOB lexilla_sources CONFIGURE_DEPENDS "${lex}/lexlib/*.cxx" "${lex}/lexers/Lex*.cxx")
 
-# The upstream UDL lexer uses Win32. Drop its entry from the generated registry
-# for this target while keeping the vendored sources intact.
+# Use the standard headers on macOS and keep the vendored sources intact.
 list(FILTER lexilla_sources EXCLUDE REGEX "/LexUser[.]cxx$")
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${lex}/src/Lexilla.cxx")
-file(READ "${lex}/src/Lexilla.cxx" registry)
-string(REGEX REPLACE "[^\n]*lmUserDefine[^\n]*\n" "" registry "${registry}")
-file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/Lexilla.cxx" CONTENT "${registry}")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${lex}/lexers/LexUser.cxx")
+file(READ "${lex}/lexers/LexUser.cxx" user_lexer)
+string(REPLACE "#include <windows.h>" "#include <cctype>\n#include <cstdio>\n#include <cstdlib>" user_lexer "${user_lexer}")
+string(REGEX REPLACE "_itoa\\(([^,]+),[ ]*\\(nestingBuffer[+]([0-9]+)\\),[ ]*10\\)"
+	"std::snprintf(nestingBuffer + \\2, sizeof(nestingBuffer) - \\2, \"%d\", \\1)" user_lexer "${user_lexer}")
+file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/LexUser.cxx" CONTENT "${user_lexer}")
 
-add_library(editor STATIC ${scintilla_sources} ${lexilla_sources} "${CMAKE_CURRENT_BINARY_DIR}/Lexilla.cxx"
+add_library(editor STATIC ${scintilla_sources} ${lexilla_sources} "${lex}/src/Lexilla.cxx"
+	"${CMAKE_CURRENT_BINARY_DIR}/LexUser.cxx"
 	"${root}/boostregex/BoostRegExSearch.cxx" "${root}/boostregex/UTF8DocumentIterator.cxx")
 target_compile_definitions(editor PRIVATE SCI_OWNREGEX BOOST_REGEX_STANDALONE)
 target_compile_options(editor PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)

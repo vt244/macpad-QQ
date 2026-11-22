@@ -128,3 +128,222 @@ void EditorShowPreferences(void)
 	for (EditorDocument *document in NSDocumentController.sharedDocumentController.documents)
 		[document applyPreferences];
 }
+
+static NSColor *Color(NSString *hex, NSColor *fallback)
+{
+	unsigned number = 0;
+	if (hex.length != 6 || ![[NSScanner scannerWithString:hex] scanHexInt:&number])
+		return fallback;
+	return [NSColor colorWithSRGBRed:(number >> 16) / 255.0 green:((number >> 8) & 255) / 255.0 blue:(number & 255) / 255.0 alpha:1];
+}
+
+static NSString *Hex(NSColor *color)
+{
+	color = [color colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+	return [NSString stringWithFormat:@"%02X%02X%02X", (int)lround(color.redComponent * 255),
+		(int)lround(color.greenComponent * 255), (int)lround(color.blueComponent * 255)];
+}
+
+@interface StyleForm : NSObject
+- (BOOL)edit;
+@end
+
+@implementation StyleForm
+{
+	NSMutableDictionary<NSString *, NSArray<NSMutableDictionary *> *> *_definitions;
+	NSPopUpButton *_language;
+	NSPopUpButton *_style;
+	NSColorWell *_foreground;
+	NSColorWell *_background;
+	NSButton *_useForeground;
+	NSButton *_useBackground;
+	NSButton *_bold;
+	NSButton *_italic;
+	NSButton *_underline;
+	NSTextField *_font;
+	NSTextField *_size;
+	NSMutableDictionary *_current;
+}
+
+- (void)saveCurrent
+{
+	if (!_current)
+		return;
+	_current[@"fgColor"] = Hex(_foreground.color);
+	_current[@"bgColor"] = Hex(_background.color);
+	_current[@"colorStyle"] = [@((_useForeground.state ? 1 : 0) | (_useBackground.state ? 2 : 0)) stringValue];
+	_current[@"fontStyle"] = [@((_bold.state ? 1 : 0) | (_italic.state ? 2 : 0) | (_underline.state ? 4 : 0)) stringValue];
+	_current[@"fontName"] = _font.stringValue;
+	_current[@"fontSize"] = _size.stringValue.length ? [@(MIN(96, MAX(0, _size.integerValue))) stringValue] : @"";
+}
+
+- (void)chooseLanguage:(id)sender
+{
+	[self saveCurrent];
+	_current = nil;
+	[_style removeAllItems];
+	NSArray *styles = _definitions[_language.selectedItem.representedObject];
+	[_style addItemsWithTitles:[styles valueForKey:@"name"]];
+	for (NSUInteger index = 0; index < styles.count; ++index)
+		[_style itemAtIndex:index].representedObject = styles[index];
+	[self chooseStyle:nil];
+}
+
+- (void)chooseStyle:(id)sender
+{
+	[self saveCurrent];
+	_current = _style.selectedItem.representedObject;
+	int fontStyle = [_current[@"fontStyle"] intValue];
+	int colorStyle = _current[@"colorStyle"] ? [_current[@"colorStyle"] intValue] : 3;
+	_foreground.color = Color(_current[@"fgColor"], NSColor.textColor);
+	_background.color = Color(_current[@"bgColor"], NSColor.textBackgroundColor);
+	_useForeground.state = (colorStyle & 1) != 0;
+	_useBackground.state = (colorStyle & 2) != 0;
+	_bold.state = (fontStyle & 1) != 0;
+	_italic.state = (fontStyle & 2) != 0;
+	_underline.state = (fontStyle & 4) != 0;
+	_font.stringValue = _current[@"fontName"] ?: @"";
+	_size.stringValue = _current[@"fontSize"] ?: @"";
+}
+
+- (BOOL)edit
+{
+	EditorResources *resources = EditorResources.shared;
+	_definitions = [[resources styleDefinitions] mutableCopy];
+	if (!_definitions.count)
+		return NO;
+	NSAlert *dialog = [NSAlert new];
+	dialog.messageText = [resources label:@"StyleConfig:title" fallback:@"Style Configurator"];
+	dialog.informativeText = [NSString stringWithFormat:SettingsLabel(@"Theme: %@"), resources.selectedTheme.URLByDeletingPathExtension.lastPathComponent ?: @"Default"];
+	[dialog addButtonWithTitle:[resources label:@"StyleConfig:2301" fallback:@"Save & Close"]];
+	[dialog addButtonWithTitle:[resources label:@"StyleConfig:2" fallback:@"Cancel"]];
+	NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 400, 240)];
+	_language = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+	_style = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+	_language.target = _style.target = self;
+	_language.action = @selector(chooseLanguage:);
+	_style.action = @selector(chooseStyle:);
+	for (NSString *language in [_definitions.allKeys sortedArrayUsingSelector:@selector(localizedStandardCompare:)])
+	{
+		[_language addItemWithTitle:language.length ? language : SettingsLabel(@"Global Styles")];
+		_language.lastItem.representedObject = language;
+	}
+	Label(form, @"Language", 212);
+	Place(form, _language, 152, 212, 245);
+	Label(form, @"Style", 179);
+	Place(form, _style, 152, 179, 245);
+	_foreground = [[NSColorWell alloc] initWithFrame:NSZeroRect];
+	_background = [[NSColorWell alloc] initWithFrame:NSZeroRect];
+	_useForeground = [NSButton checkboxWithTitle:SettingsLabel(@"Use foreground color") target:nil action:nullptr];
+	_useBackground = [NSButton checkboxWithTitle:SettingsLabel(@"Use background color") target:nil action:nullptr];
+	Place(form, _useForeground, 0, 144, 230);
+	Place(form, _foreground, 240, 144, 72);
+	Place(form, _useBackground, 0, 111, 230);
+	Place(form, _background, 240, 111, 72);
+	_font = [NSTextField textFieldWithString:@""];
+	_font.placeholderString = SettingsLabel(@"Inherit");
+	_size = [NSTextField textFieldWithString:@""];
+	_size.placeholderString = SettingsLabel(@"Inherit");
+	Label(form, @"Font family", 77);
+	Place(form, _font, 152, 77, 245);
+	Label(form, @"Font size", 43);
+	Place(form, _size, 152, 43, 85);
+	_bold = [NSButton checkboxWithTitle:[resources label:@"StyleConfig:2204" fallback:@"Bold"] target:nil action:nullptr];
+	_italic = [NSButton checkboxWithTitle:[resources label:@"StyleConfig:2205" fallback:@"Italic"] target:nil action:nullptr];
+	_underline = [NSButton checkboxWithTitle:[resources label:@"StyleConfig:2218" fallback:@"Underline"] target:nil action:nullptr];
+	Place(form, _bold, 0, 8, 87);
+	Place(form, _italic, 92, 8, 87);
+	Place(form, _underline, 184, 8, 115);
+	dialog.accessoryView = form;
+	[self chooseLanguage:nil];
+	if ([dialog runModal] != NSAlertFirstButtonReturn)
+		return NO;
+	[self saveCurrent];
+	NSError *error = nil;
+	if (![resources saveStyles:_definitions error:&error])
+	{
+		if (error)
+			[NSApp presentError:error];
+		return NO;
+	}
+	for (EditorDocument *document in NSDocumentController.sharedDocumentController.documents)
+		[document applyTheme];
+	return YES;
+}
+@end
+
+BOOL EditorShowStyleConfigurator(void) { return [[StyleForm new] edit]; }
+
+static NSString *ChooseLanguage(NSString *title, BOOL creating)
+{
+	NSArray *names = EditorResources.shared.userLanguages;
+	if (!names.count && !creating)
+		return nil;
+	NSAlert *chooser = [NSAlert new];
+	chooser.messageText = title;
+	[chooser addButtonWithTitle:SettingsLabel(@"Continue")];
+	[chooser addButtonWithTitle:SettingsLabel(@"Cancel")];
+	NSPopUpButton *languages = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 286, 29) pullsDown:NO];
+	if (creating)
+		[languages addItemWithTitle:SettingsLabel(@"Create New Language…")];
+	[languages addItemsWithTitles:names];
+	chooser.accessoryView = languages;
+	if ([chooser runModal] != NSAlertFirstButtonReturn)
+		return nil;
+	return creating && languages.indexOfSelectedItem == 0 ? @"" : languages.titleOfSelectedItem;
+}
+
+BOOL EditorShowUserLanguageEditor(void)
+{
+	NSString *name = ChooseLanguage(SettingsLabel(@"User Defined Language"), YES);
+	if (!name)
+		return NO;
+	NSString *initial = name.length ? [EditorResources.shared userLanguageXML:name] :
+		@"<NotepadPlus>\n\t<UserLang name=\"My language\" ext=\"\" udlVersion=\"2.1\">\n"
+		"\t\t<Settings><Global caseIgnored=\"no\" allowFoldOfComments=\"no\" foldCompact=\"no\"/></Settings>\n"
+		"\t\t<KeywordLists>\n\t\t\t<Keywords name=\"Comments\">00# 01 02 03 04</Keywords>\n"
+		"\t\t\t<Keywords name=\"Keywords1\"></Keywords>\n\t\t</KeywordLists>\n"
+		"\t\t<Styles><WordsStyle name=\"KEYWORDS1\" styleID=\"4\" fgColor=\"000080\" fontStyle=\"1\"/></Styles>\n"
+		"\t</UserLang>\n</NotepadPlus>\n";
+	NSAlert *dialog = [NSAlert new];
+	dialog.messageText = name.length ? name : SettingsLabel(@"New User Defined Language");
+	dialog.informativeText = SettingsLabel(@"Edit the language name, extensions, keywords, comments and styles in the UDL XML definition.");
+	[dialog addButtonWithTitle:SettingsLabel(@"Save")];
+	[dialog addButtonWithTitle:SettingsLabel(@"Cancel")];
+	NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 560, 360)];
+	scroll.hasVerticalScroller = YES;
+	scroll.borderType = NSBezelBorder;
+	NSTextView *text = [[NSTextView alloc] initWithFrame:scroll.bounds];
+	text.font = [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightRegular];
+	text.richText = NO;
+	text.automaticQuoteSubstitutionEnabled = NO;
+	text.automaticDashSubstitutionEnabled = NO;
+	text.string = initial ?: @"";
+	text.verticallyResizable = YES;
+	text.autoresizingMask = NSViewWidthSizable;
+	scroll.documentView = text;
+	dialog.accessoryView = scroll;
+	dialog.window.initialFirstResponder = text;
+	while ([dialog runModal] == NSAlertFirstButtonReturn)
+	{
+		NSError *error = nil;
+		if ([EditorResources.shared saveUserLanguageXML:text.string replacing:name.length ? name : nil error:&error])
+			return YES;
+		dialog.informativeText = error.localizedDescription ?: SettingsLabel(@"The language could not be saved.");
+	}
+	return NO;
+}
+
+void EditorExportUserLanguage(void)
+{
+	NSString *name = ChooseLanguage(SettingsLabel(@"Export User Defined Language"), NO);
+	if (!name)
+		return;
+	NSSavePanel *panel = NSSavePanel.savePanel;
+	panel.nameFieldStringValue = [name stringByAppendingPathExtension:@"xml"];
+	if ([panel runModal] != NSModalResponseOK)
+		return;
+	NSError *error = nil;
+	if (![[EditorResources.shared userLanguageXML:name] writeToURL:panel.URL atomically:YES encoding:NSUTF8StringEncoding error:&error] && error)
+		[NSApp presentError:error];
+}

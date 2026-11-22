@@ -441,8 +441,16 @@ static void AddCharacterSets(NSMenu *menu)
 			groups[initial] = group = AddMenu(language, initial);
 		AddItem(group, name, @selector(selectLanguage:), @"").representedObject = key;
 	}
+	[language addItem:NSMenuItem.separatorItem];
+	for (NSString *name in resources.userLanguages)
+		AddItem(language, name, @selector(selectLanguage:), @"").representedObject = [@"udl:" stringByAppendingString:name];
+	AddItem(language, Label(@"native-importUDL", @"Import User Defined Language…"), @selector(importUserLanguage:), @"", self);
+	AddItem(language, Label(@"native-editUDL", @"Define or Edit User Language…"), @selector(editUserLanguage:), @"", self);
+	AddItem(language, Label(@"native-exportUDL", @"Export User Defined Language…"), @selector(exportUserLanguage:), @"", self);
+
 	NSMenu *settings = AddMenu(main, Label(@"settings", @"Settings"));
 	AddItem(settings, Label(@"48011", @"Preferences…"), @selector(showPreferences:), @"", self);
+	AddItem(settings, Label(@"46001", @"Style Configurator…"), @selector(showStyleConfigurator:), @"", self);
 	AddItem(settings, Label(@"native-importConfig", @"Import Notepad++ Configuration…"), @selector(importWindowsConfiguration:), @"", self);
 	AddItem(settings, Label(@"native-editEditorMenu", @"Edit Editor Context Menu…"), @selector(editContextMenu:), @"", self);
 	AddItem(settings, Label(@"native-editTabMenu", @"Edit Tab Context Menu…"), @selector(editContextMenu:), @"", self).tag = 1;
@@ -469,6 +477,17 @@ static void AddCharacterSets(NSMenu *menu)
 }
 
 - (void)showPreferences:(id)sender { EditorShowPreferences(); }
+- (void)showStyleConfigurator:(id)sender { if (EditorShowStyleConfigurator()) [self buildMenu]; }
+- (void)editUserLanguage:(id)sender
+{
+	if (!EditorShowUserLanguageEditor())
+		return;
+	for (EditorDocument *document in NSDocumentController.sharedDocumentController.documents)
+		[document applyTheme];
+	[self buildMenu];
+}
+- (void)exportUserLanguage:(id)sender { EditorExportUserLanguage(); }
+
 - (void)editContextMenu:(NSMenuItem *)sender
 {
 	BOOL tabs = sender.tag == 1;
@@ -691,6 +710,23 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 {
 	if (closed)
 		[controller newDocument:nil];
+}
+
+- (void)importUserLanguage:(id)sender
+{
+	NSOpenPanel *panel = NSOpenPanel.openPanel;
+	panel.allowedContentTypes = @[UTTypeXML];
+	if ([panel runModal] != NSModalResponseOK)
+		return;
+	NSError *error = nil;
+	if (![EditorResources.shared importUserLanguages:panel.URL error:&error])
+	{
+		[NSApp presentError:error];
+		return;
+	}
+	for (EditorDocument *document in NSDocumentController.sharedDocumentController.documents)
+		[document applyTheme];
+	[self buildMenu];
 }
 
 - (void)fillCatalog:(NSMenu *)menu theme:(BOOL)theme
