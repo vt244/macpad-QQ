@@ -1095,7 +1095,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Define your language...", IDM_LANG_USER_DLG
         MENUITEM "Open User Defined Language folder...",      IDM_LANG_OPENUDLDIR
-        MENUITEM "Notepad++ User Defined Languages Collection", IDM_LANG_UDLCOLLECTION_PROJECT_SITE
+        MENUITEM "Upstream User Defined Languages Collection", IDM_LANG_UDLCOLLECTION_PROJECT_SITE
         MENUITEM "User-Defined",            IDM_LANG_USER
     END
 
@@ -1258,7 +1258,7 @@ BEGIN
     BEGIN
         MENUITEM "Define your language...",   IDM_LANG_USER_DLG
         MENUITEM "Open User Defined Language folder...",        IDM_LANG_OPENUDLDIR
-        MENUITEM "Notepad++ User Defined Languages Collection", IDM_LANG_UDLCOLLECTION_PROJECT_SITE
+        MENUITEM "Upstream User Defined Languages Collection", IDM_LANG_UDLCOLLECTION_PROJECT_SITE
     END
     MENUITEM "User-Defined",              IDM_LANG_USER
     END
@@ -1353,8 +1353,8 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "macpad++ Home",                 IDM_HOMESWEETHOME
         MENUITEM "macpad++ Project Page",         IDM_PROJECTPAGE
-        MENUITEM "Notepad++ Online User Manual",   IDM_ONLINEDOCUMENT
-        MENUITEM "Notepad++ Community (Forum)",    IDM_FORUM
+        MENUITEM "Upstream User Manual",   IDM_ONLINEDOCUMENT
+        MENUITEM "Upstream Community Forum",    IDM_FORUM
         MENUITEM SEPARATOR
         MENUITEM "Update macpad++",               IDM_UPDATE_NPP
         MENUITEM "Set Updater Proxy...",           IDM_CONFUPDATERPROXY

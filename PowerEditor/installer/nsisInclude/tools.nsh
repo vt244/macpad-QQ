@@ -54,9 +54,9 @@ FunctionEnd
 		IntCmp $R0 0 NotRunning
 			StrCpy $runningNppDetected "true"
 			System::Call 'kernel32::CloseHandle(i $R0)'
-			MessageBox MB_RETRYCANCEL|MB_DEFBUTTON1|MB_ICONSTOP "Cannot continue the installation: Notepad++ is running.\
+			MessageBox MB_RETRYCANCEL|MB_DEFBUTTON1|MB_ICONSTOP "Cannot continue the installation: macpad++ is running.\
 			          $\n$\n\
-                      Please close Notepad++, then click ''Retry''." IDRETRY Retry IDCANCEL Cancel
+                      Please close macpad++, then click ''Retry''." IDRETRY Retry IDCANCEL Cancel
 			Retry:
 				Goto Check
 			
@@ -106,7 +106,7 @@ Function ExtraOptions
 	${NSD_Check} $ShortcutCheckboxHandle
 	${NSD_OnClick} $ShortcutCheckboxHandle OnChange_ShortcutCheckBox
 
-	${NSD_CreateCheckbox} 0 80 100% 30u "Don't use %APPDATA%$\nEnable this option to make Notepad++ load/write the configuration files from/to its install directory. Check it if you use Notepad++ in a USB device."
+	${NSD_CreateCheckbox} 0 80 100% 30u "Don't use %APPDATA%$\nEnable this option to make macpad++ load/write the configuration files from/to its install directory. Check it if you use macpad++ on a USB device."
 	Pop $NoUserDataCheckboxHandle
 	IfFileExists $INSTDIR\doLocalConf.xml doLocalConfExists doLocalConfDoesNotExists
 	doLocalConfExists:
@@ -140,23 +140,23 @@ Function checkCompatibility
 	${GetWindowsVersion} $WinVer
 	
 	StrCmp $WinVer "95" 0 +3
-		MessageBox MB_OK|MB_ICONSTOP "Notepad++ does not support your OS. The installation will be aborted."
+		MessageBox MB_OK|MB_ICONSTOP "macpad++ does not support your OS. The installation will be aborted."
 		Abort
 		
 	StrCmp $WinVer "98" 0 +3
-		MessageBox MB_OK|MB_ICONSTOP "Notepad++ does not support your OS. The installation will be aborted."
+		MessageBox MB_OK|MB_ICONSTOP "macpad++ does not support your OS. The installation will be aborted."
 		Abort
 		
 	StrCmp $WinVer "ME" 0 +3
-		MessageBox MB_OK|MB_ICONSTOP "Notepad++ does not support your OS. The installation will be aborted."
+		MessageBox MB_OK|MB_ICONSTOP "macpad++ does not support your OS. The installation will be aborted."
 		Abort
 		
 	StrCmp $WinVer "2000" 0 +3 ; Windows 2000
-		MessageBox MB_OK|MB_ICONSTOP "Notepad++ does not support your OS. The installation will be aborted."
+		MessageBox MB_OK|MB_ICONSTOP "macpad++ does not support your OS. The installation will be aborted."
 		Abort
 		
 	StrCmp $WinVer "XP" 0 xp_endTest ; XP
-		MessageBox MB_YESNO|MB_ICONSTOP "This version of Notepad++ doesn't support Windows XP. The installation will be aborted.$\n$\nDo you want to go to Notepad++ download page for downloading the last version which supports XP (v7.9.2)?" IDYES xp_openDlPage IDNO xp_goQuit
+		MessageBox MB_YESNO|MB_ICONSTOP "This version of macpad++ doesn't support Windows XP. The installation will be aborted.$\n$\nDo you want to go to the upstream download page for downloading the last version which supports XP (v7.9.2)?" IDYES xp_openDlPage IDNO xp_goQuit
 xp_openDlPage:
 		ExecShell "open" "https://notepad-plus-plus.org/downloads/v7.9.2/"
 xp_goQuit:
@@ -164,7 +164,7 @@ xp_goQuit:
 xp_endTest:
 		
 	StrCmp $WinVer "2003" 0 ws2003_endTest ; Windows Server 2003
-		MessageBox MB_YESNO|MB_ICONSTOP "This version of Notepad++ doesn't support Windows Server 2003. The installation will be aborted.$\n$\nDo you want to go to Notepad++ download page for downloading the last version which supports this OS?" IDYES ws2003_openDlPage IDNO ws2003_goQuit
+		MessageBox MB_YESNO|MB_ICONSTOP "This version of macpad++ doesn't support Windows Server 2003. The installation will be aborted.$\n$\nDo you want to go to the upstream download page for downloading the last version which supports this OS?" IDYES ws2003_openDlPage IDNO ws2003_goQuit
 ws2003_openDlPage:
 		ExecShell "open" "https://notepad-plus-plus.org/downloads/v7.9.2/"
 ws2003_goQuit:
@@ -176,7 +176,7 @@ ws2003_endTest:
 		; OK
 	${Else}
 		; we cannot run ARM64 binaries on a x86/x64 CPU (the other way around is possible - x86 on ARM64 CPU)
-		MessageBox MB_YESNO|MB_ICONSTOP "This installer contains ARM64 version of Notepad++ incompatible with your computer processor running, so the installation will be aborted.$\n$\nDo you want to go to the Notepad++ site to download a compatible (x86/x64) installer instead?" IDYES arm64_openDlPage IDNO arm64_goQuit
+		MessageBox MB_YESNO|MB_ICONSTOP "This installer contains ARM64 version of macpad++ incompatible with your computer processor running, so the installation will be aborted.$\n$\nDo you want to go to the upstream site to download a compatible (x86/x64) installer instead?" IDYES arm64_openDlPage IDNO arm64_goQuit
 arm64_openDlPage:
 		ExecShell "open" "https://notepad-plus-plus.org/downloads/"
 arm64_goQuit:
@@ -192,13 +192,13 @@ Function writeInstallInfoInRegistry
 	
 	WriteRegStr HKLM "Software\${APPNAME}" "" "$INSTDIR"
 	!ifdef ARCH64
-		WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "DisplayName" "${APPNAME} (64-bit x64)"
+		WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "DisplayName" "${APPDISPLAYNAME} (64-bit x64)"
 	!else ifdef ARCHARM64
-		WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "DisplayName" "${APPNAME} (ARM 64-bit)"
+		WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "DisplayName" "${APPDISPLAYNAME} (ARM 64-bit)"
 	!else
-		WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "DisplayName" "${APPNAME} (32-bit x86)"
+		WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "DisplayName" "${APPDISPLAYNAME} (32-bit x86)"
 	!endif
-	WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "Publisher" "Notepad++ Team"
+	WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "Publisher" "macpad++ contributors"
 	WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "MajorVersion" "${VERSION_MAJOR}"
 	WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "MinorVersion" "${VERSION_MINOR}"
 	WriteRegStr HKLM "${UNINSTALL_REG_KEY}" "UninstallString" '"$INSTDIR\uninstall.exe"'

@@ -393,7 +393,7 @@ void doException(Notepad_plus_Window & notepad_plus_plus)
 	wchar_t tmpDir[1024];
 	GetTempPath(1024, tmpDir);
 	std::wstring emergencySavedDir = tmpDir;
-	emergencySavedDir += L"\\Notepad++ RECOV";
+	emergencySavedDir += L"\\macpad++ RECOV";
 
 	bool res = notepad_plus_plus.emergency(emergencySavedDir);
 	if (res)

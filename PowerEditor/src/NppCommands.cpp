@@ -3828,7 +3828,7 @@ void Notepad_plus::command(int id)
 			{
 				long res = _nativeLangSpeaker.messageBox("XpUpdaterProblem",
 					_pPublicInterface->getHSelf(),
-					L"macpad++ updater is not compatible with XP due to the obsolete security layer under XP.\rDo you want to go to the Notepad++ downloads page?",
+					L"macpad++ updater is not compatible with XP due to the obsolete security layer under XP.\rDo you want to go to the upstream downloads page?",
 					L"macpad++ Updater",
 					MB_YESNO);
 

@@ -52,7 +52,7 @@ OutFile ".\build\npp.${APPVERSION}.Installer.exe"
 ; ------------------------------------------------------------------------
 ; Version Information
    VIProductVersion	"${Version}"
-   VIAddVersionKey	"ProductName"		"${APPNAME}"
+   VIAddVersionKey	"ProductName"		"${APPDISPLAYNAME}"
    VIAddVersionKey	"CompanyName"		"${CompanyName}"
    VIAddVersionKey	"LegalCopyright"	"${LegalCopyright}"
    VIAddVersionKey	"FileDescription"	"${Description}"
@@ -274,13 +274,13 @@ relaunchNppDone:
 		
 		; check if 32-bit version has been installed if yes, ask user to remove it
 		IfFileExists $PROGRAMFILES\${APPNAME}\notepad++.exe 0 noDelete32
-		MessageBox MB_YESNO "You are trying to install 64-bit version while 32-bit version is already installed. Would you like to remove Notepad++ 32 bit version before proceeding further?$\n(Your custom config files will be kept)" /SD IDYES IDYES doDelete32 IDNO noDelete32 ;IDYES remove
+		MessageBox MB_YESNO "You are trying to install 64-bit version while 32-bit version is already installed. Would you like to remove macpad++ 32 bit version before proceeding further?$\n(Your custom config files will be kept)" /SD IDYES IDYES doDelete32 IDNO noDelete32 ;IDYES remove
 doDelete32:
 		StrCpy $diffArchDir2Remove $PROGRAMFILES\${APPNAME}
 noDelete32:
 		
 	${Else} ; Windows 32 bits
-		MessageBox MB_OK "You cannot install Notepad++ 64-bit version on your 32-bit system.$\nPlease download and install Notepad++ 32-bit version instead."
+		MessageBox MB_OK "You cannot install macpad++ 64-bit version on your 32-bit system.$\nPlease download and install macpad++ 32-bit version instead."
 		Abort
 	${EndIf}
 
@@ -289,7 +289,7 @@ noDelete32:
 	${If} ${RunningX64}  ; Windows 64 bits
 		; check if 64-bit version has been installed if yes, ask user to remove it
 		IfFileExists $PROGRAMFILES64\${APPNAME}\notepad++.exe 0 noDelete64
-		MessageBox MB_YESNO "You are trying to install 32-bit version while 64-bit version is already installed. Would you like to remove Notepad++ 64 bit version before proceeding further?$\n(Your custom config files will be kept)"  /SD IDYES IDYES doDelete64 IDNO noDelete64
+		MessageBox MB_YESNO "You are trying to install 32-bit version while 64-bit version is already installed. Would you like to remove macpad++ 64 bit version before proceeding further?$\n(Your custom config files will be kept)"  /SD IDYES IDYES doDelete64 IDNO noDelete64
 doDelete64:
 		StrCpy $diffArchDir2Remove $PROGRAMFILES64\${APPNAME}
 noDelete64:
@@ -302,7 +302,7 @@ noDelete64:
 FunctionEnd
 
 
-Section -"Notepad++" mainSection
+Section -"macpad++" mainSection
 	${If} $showDetailsChecked == ${BST_CHECKED}
 		SetDetailsView show
 		SetAutoClose false
@@ -364,7 +364,7 @@ ${MementoSection} "Context Menu Entry" explorerContextMenu
 !endif
 
 	; Shell context menu entry
-	WriteRegStr HKCR "*\shell\ANotepad++64" "" "Notepad++ Context menu"
+	WriteRegStr HKCR "*\shell\ANotepad++64" "" "macpad++ Context menu"
 	WriteRegStr HKCR "*\shell\ANotepad++64" "ExplorerCommandHandler" "{B298D29A-A6ED-11DE-BA8C-A68E55D89593}"
 	WriteRegStr HKCR "*\shell\ANotepad++64" "NeverDefault" ""
 
@@ -413,16 +413,16 @@ FunctionEnd
 
 ;--------------------------------
   !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
-    !insertmacro MUI_DESCRIPTION_TEXT ${explorerContextMenu} 'Explorer context menu entry for Notepad++ : Open whatever you want in Notepad++ from Windows Explorer.'
+    !insertmacro MUI_DESCRIPTION_TEXT ${explorerContextMenu} 'Explorer context menu entry for macpad++ : Open whatever you want in macpad++ from Windows Explorer.'
     !insertmacro MUI_DESCRIPTION_TEXT ${autoCompletionComponent} 'Install the API files you need for the auto-completion feature (Ctrl+Space).'
     !insertmacro MUI_DESCRIPTION_TEXT ${functionListComponent} 'Install the function list files you need for the function list feature (Ctrl+Space).'
-    !insertmacro MUI_DESCRIPTION_TEXT ${Plugins} 'You may need these plugins to extend the capabilities of Notepad++.'
+    !insertmacro MUI_DESCRIPTION_TEXT ${Plugins} 'You may need these plugins to extend the capabilities of macpad++.'
     !insertmacro MUI_DESCRIPTION_TEXT ${NppExport} 'Copy your syntax highlighted source code as HTML/RTF into clipboard, or save them as HTML/RTF files.'
     !insertmacro MUI_DESCRIPTION_TEXT ${MimeTools} 'Encode/decode selected text with Base64, Quoted-printable, URL encoding, and SAML.'
     !insertmacro MUI_DESCRIPTION_TEXT ${Converter} 'Convert ASCII to binary, octal, hexadecimal and decimal string.'
-    !insertmacro MUI_DESCRIPTION_TEXT ${localization} 'To use Notepad++ in your favorite language(s), install all/desired language(s).'
+    !insertmacro MUI_DESCRIPTION_TEXT ${localization} 'To use macpad++ in your favorite language(s), install all/desired language(s).'
     !insertmacro MUI_DESCRIPTION_TEXT ${Themes} 'The eye-candy to change visual effects. Use Theme selector to switch among them.'
-    !insertmacro MUI_DESCRIPTION_TEXT ${AutoUpdater} 'Keep Notepad++ updated: Automatically download and install the latest updates.'
+    !insertmacro MUI_DESCRIPTION_TEXT ${AutoUpdater} 'Install the upstream updater.'
     !insertmacro MUI_DESCRIPTION_TEXT ${PluginsAdmin} 'Install, Update and Remove any plugin from a list by some clicks. It needs Auto-Updater installed.'
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
 ;--------------------------------
@@ -452,6 +452,6 @@ Section -FinishSection
 theEnd:
 SectionEnd
 
-BrandingText "The best things in life are free. Notepad++ is free so Notepad++ is the best"
+BrandingText "macpad++"
 
 ; eof
