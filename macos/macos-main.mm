@@ -49,6 +49,7 @@ static NSMenuItem *AddItem(NSMenu *menu, NSString *title, SEL action, NSString *
 	NSMenu *main = [[NSMenu alloc] initWithTitle:@""];
 	NSMenu *application = AddMenu(main, @"macpad++");
 	AddItem(application, @"About macpad++", @selector(showAbout:), @"", self);
+	AddItem(application, @"License…", @selector(showLicense:), @"", self);
 	[application addItem:NSMenuItem.separatorItem];
 	AddItem(application, @"Hide macpad++", @selector(hide:), @"h", NSApp);
 	AddItem(application, @"Quit macpad++", @selector(terminate:), @"q", NSApp);
@@ -182,11 +183,33 @@ static NSMenuItem *AddItem(NSMenu *menu, NSString *title, SEL action, NSString *
 	}
 }
 
+- (void)showLicense:(id)sender
+{
+	NSURL *license = [NSBundle.mainBundle URLForResource:@"LICENSE" withExtension:nil];
+	NSString *contents = license ? [NSString stringWithContentsOfURL:license encoding:NSUTF8StringEncoding error:nullptr] : nil;
+	if (!contents)
+		return;
+	NSAlert *alert = [[NSAlert alloc] init];
+	alert.messageText = @"macpad++ License";
+	NSScrollView *view = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 540, 360)];
+	view.hasVerticalScroller = YES;
+	NSTextView *text = [[NSTextView alloc] initWithFrame:view.contentView.bounds];
+	text.string = contents;
+	text.font = [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightRegular];
+	text.autoresizingMask = NSViewWidthSizable;
+	text.editable = NO;
+	view.documentView = text;
+	alert.accessoryView = view;
+	[alert runModal];
+}
+
 - (void)showAbout:(id)sender
 {
 	[NSApp orderFrontStandardAboutPanelWithOptions:@{
 		NSAboutPanelOptionCredits: [[NSAttributedString alloc] initWithString:
-			@"Based on Notepad++ by Don Ho and contributors. Built with Scintilla and Lexilla. Distributed under GPLv3."]
+			@"Independent fork of Notepad++ by Don Ho and contributors.\n"
+			@"Built with Scintilla and Lexilla. Distributed under GNU GPL version 3.\n"
+			@"This software comes without warranty. See License in the macpad++ menu."]
 	}];
 }
 @end

@@ -1,31 +1,56 @@
-# macpad++ license and third-party notices
+# macpad++ licensing and attribution
 
-macpad++ is based on Notepad++ by Don Ho and the Notepad++ contributors.
-The macOS port was added in November 2026. The native macOS port includes an AppKit interface,
-brand changes, and macOS build and packaging scripts.
-The editor is distributed under [GNU GPL version 3](LICENSE).
+macpad++ is an independent fork of Notepad++ by Don Ho and contributors.
+The fork was modified in November 2026 to add the native macOS editor, its
+build and packaging scripts, and macpad++ branding. The editor is distributed
+under GNU GPL version 3. The original license and copyright notices remain
+in the source and the application bundle. [LICENSE](LICENSE)
+
+## Native app
 
 | Component | Terms and attribution |
 | --- | --- |
-| Scintilla and Lexilla | Neil Hodgson and contributors. See [Scintilla](scintilla/License.txt) and [Lexilla](lexilla/License.txt). |
-| Boost.Regex | [Boost Software License 1.0](licenses/Boost-1.0.txt). |
-| pugixml | [MIT license](PowerEditor/src/pugixml/LICENSE.md), Arseny Kapoulkine and contributors. |
-| nlohmann/json | [MIT license](licenses/nlohmann-json.txt), Niels Lohmann and contributors. |
-| uchardet | Mozilla Universal Charset Detector and contributors. The bundled source carries MPL 1.1 / GPL 2.0 or later / LGPL 2.1 or later notices. This build uses the GPL option. |
+| Scintilla Cocoa | Neil Hodgson, Oracle, Sun Microsystems and other contributors. Files that offer both LGPL 2.1 and the Scintilla license are used under the Scintilla license. [Scintilla license](scintilla/License.txt) |
+| Lexilla | Neil Hodgson and contributors. [Lexilla license](lexilla/License.txt) |
+| pugixml | Arseny Kapoulkine and contributors. [MIT license](PowerEditor/src/pugixml/LICENSE.md) |
+| Localizations and language data | Original contributors' notices remain in the resource files. |
+| Themes | Separate XML works distributed with their original notices. See the details below. |
+| App icon | Artwork supplied for this fork. The supplied image has no documented redistribution license and depicts the Apple logo. Verify the art and trademark rights before public redistribution. [Apple trademark guidelines](https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html) |
+| Plugins | Added separately by users under their own terms. |
+
+## Theme terms
+
+- **Zenburn** and **DarkModeDefault** identify GPL version 2. Their XML source
+  is included, with the notices intact. [GPL version 2](licenses/GPL-2.0.txt)
+- **Bespin**, **Black board**, **Choco**, **Mono Industrial**, **Monokai**,
+  **Plastic Code Wrap** and **Twilight** carry permissive notices in the XML.
+- **HotFudgeSundae**, **khaki**, **MossyLawn**, **Navajo**, **Solarized** and
+  **Solarized-light** carry Creative Commons attribution notices in the XML.
+  [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)
+- **DansLeRuSH-Dark**, by Franck Albaret, carries both a permissive grant and
+  a CC BY-NC-SA 3.0 notice. Preserve its attribution and observe the
+  noncommercial terms unless the author clarifies the grant.
+  [CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/)
+- **Deep Black**, **Ruby Blue** and **Vibrant Ink** use the unspecific wording
+  “GNU Free License” in their original notices. The name and version of the
+  intended license remain to be confirmed before public redistribution.
+
+## Legacy Windows source
+
+| Component | Terms and attribution |
+| --- | --- |
+| Boost.Regex | [Boost Software License 1.0](licenses/Boost-1.0.txt) |
+| nlohmann/json | Niels Lohmann and contributors. [MIT license](licenses/nlohmann-json.txt) |
+| uchardet | Mozilla Universal Charset Detector and contributors. The source offers MPL 1.1, GPL 2.0 or later, or LGPL 2.1 or later. The Windows editor uses the GPL option. |
 | Windows dark-mode code | MIT notices for [win32-darkmode](licenses/win32-darkmode.txt), [UAHMenuBar](licenses/UAHMenuBar.txt) and [PolyHook 2.0](licenses/PolyHook-2.0.txt). |
-| Directory change monitor | James E Beveridge. MIT notice in [ReadDirectoryChanges.h](PowerEditor/src/WinControls/ReadDirectoryChanges/ReadDirectoryChanges.h). |
-| Hash implementations | The bundled MD5 implementation is derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm. See [md5.h](PowerEditor/src/MISC/md5/md5.h). Dominik Reichl's SHA-1 implementation is marked public domain. The SHA-256 source cites [Wikipedia's SHA-2 article](https://en.wikipedia.org/wiki/SHA-2) for its pseudocode and comments. |
-| Bundled Markdown language definitions | [MIT license](licenses/markdown-plus-plus.txt), Edditoria and contributors. |
-| Bundled themes | The themes are separate XML works with their original notices. Zenburn and DarkModeDefault identify [GPL version 2](licenses/GPL-2.0.txt). Several themes use MIT or [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). DansLeRuSH-Dark names [CC BY-NC-SA 3.0](https://creativecommons.org/licenses/by-nc-sa/3.0/) in addition to a permissive grant in the same file. Apply the noncommercial terms when redistributing that theme unless its author clarifies the grant. |
-| Localizations and other XML resources | Original contributors' notices and attribution remain in the resource files. |
-| Plugins | Added separately by users. Native plugins have their own terms. |
+| Directory change monitor | James E Beveridge. [MIT license](licenses/ReadDirectoryChanges.txt) |
+| Hash implementations | The MD5 code is derived from the RSA Data Security, Inc. MD5 Message-Digest Algorithm. Dominik Reichl's SHA-1 implementation is marked public domain. The SHA-256 code cites Wikipedia for its pseudocode and comments. [RSA MD5 notice](licenses/RSA-MD5.txt) · [SHA-2 article](https://en.wikipedia.org/wiki/SHA-2) |
+| Markdown language definitions | Edditoria and contributors. [MIT license](licenses/markdown-plus-plus.txt) |
 
-The notices also cover dependencies retained in the legacy Windows source.
+## Distributing builds
 
-When publishing a macOS binary, make the corresponding source archive from
-the same revision available alongside it for the same download period.
-The source includes the build scripts, the bundled library source and the XML
-resources. Keep the license texts and attribution in the app and on the source
-archive. Consult [GPLv3 §6](https://www.gnu.org/licenses/gpl-3.0.html#section6)
-for other distribution arrangements. Check the terms of any added runtime,
-plugin, or other components before including them in a release.
+For an online binary release, make the corresponding source from the same
+revision available alongside the binary with equivalent access. Include the
+build scripts, library source and resource files so recipients can rebuild.
+The macOS workflow packages the app and a source archive from the same revision.
+Preserve the license and attribution in both. [GPLv3 sections 5 and 6](https://www.gnu.org/licenses/gpl-3.0.html#section5)
