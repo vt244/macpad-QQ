@@ -671,7 +671,7 @@ static bool CheckSearchAndConfigurationParity(EditorDocumentController *controll
 	paint();
 	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 4, "highlight the bracket pair beside the caret"))
 		return false;
-	editor.string = @"  \"a\\\"b\"  'x'";
+	editor.string = @"  \"a\\\"b\"  'x'\nповтор фразы\nповтор фразы\nПовтор фразы";
 	[editor message:SCI_GOTOPOS wParam:8];
 	paint();
 	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 2, "match the closing double quote across an escaped quote"))
@@ -679,6 +679,25 @@ static bool CheckSearchAndConfigurationParity(EditorDocumentController *controll
 	[editor message:SCI_GOTOPOS wParam:11];
 	paint();
 	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 10, "match the opening single quote"))
+		return false;
+	const auto first = [editor message:SCI_POSITIONFROMLINE wParam:1];
+	const auto second = [editor message:SCI_POSITIONFROMLINE wParam:2];
+	const auto third = [editor message:SCI_POSITIONFROMLINE wParam:3];
+	[editor message:SCI_SETTARGETRANGE wParam:1 lParam:2];
+	[editor message:SCI_SETSEARCHFLAGS wParam:SCFIND_WHOLEWORD];
+	[editor message:SCI_SETSEL wParam:second - 1 lParam:first];
+	paint();
+	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 0 &&
+		[editor message:SCI_INDICATORALLONFOR wParam:second] &&
+		[editor message:SCI_INDICATORALLONFOR wParam:third - 2] &&
+		![editor message:SCI_INDICATORALLONFOR wParam:third] &&
+		[editor message:SCI_GETTARGETSTART] == 1 && [editor message:SCI_GETTARGETEND] == 2 &&
+		[editor message:SCI_GETSEARCHFLAGS] == SCFIND_WHOLEWORD,
+		"highlight an exact repeated UTF-8 phrase and preserve the search target"))
+		return false;
+	[editor message:SCI_GOTOPOS wParam:first];
+	paint();
+	if (!Check(![editor message:SCI_INDICATORALLONFOR wParam:second], "clear occurrence highlighting when the selection is removed"))
 		return false;
 	[editor message:SCI_SETINDENTATIONGUIDES wParam:SC_IV_NONE];
 	editor.string = @"foo (bar) foo\nFOO";

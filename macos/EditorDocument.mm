@@ -43,6 +43,7 @@ static constexpr int Bookmark = 20;
 static constexpr int FindMark = 8;
 static constexpr int FirstTokenMark = 10;
 static constexpr int TokenMarkCount = 5;
+static constexpr int SelectionMark = FirstTokenMark + TokenMarkCount;
 static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor);
 static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end);
 static void HighlightPair(ScintillaView *view, bool enabled);
@@ -177,6 +178,7 @@ static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
 - (void)applyPresentationMode:(NSInteger)mode;
 - (void)focusEditor;
 - (void)updateStatus;
+- (void)highlightSelectionInView:(ScintillaView *)view;
 - (void)refreshDockPlacements;
 - (BOOL)largeFileMode;
 - (void)setReaderEncoding:(NSStringEncoding)encoding;
@@ -2395,6 +2397,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[_editorSplit removeArrangedSubview:_otherPane];
 	[_otherPane removeFromSuperview];
 	[_editorSplit adjustSubviews];
+	[self highlightSelectionInView:_editor];
 }
 
 - (void)clonedViewNotification:(SCNotification *)notification
@@ -2958,11 +2961,18 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			[view message:SCI_INDICSETUNDER wParam:indicator lParam:1];
 		}
 	}
+	const auto selectionColor = GuideColor([EditorResources.shared widgetColor:@"Smart Highlighting" background:YES],
+		GuideColor(NSColor.systemGreenColor, 0x00FF00));
 	const bool matchPairs = !large || [[EditorResources.shared setting:@"largeFileBraceMatch" fallback:@NO] boolValue];
 	for (ScintillaView *view in _clone ? @[_editor, _clone] : @[_editor])
 	{
+		[view message:SCI_INDICSETSTYLE wParam:SelectionMark lParam:INDIC_STRAIGHTBOX];
+		[view message:SCI_INDICSETFORE wParam:SelectionMark lParam:selectionColor];
+		[view message:SCI_INDICSETALPHA wParam:SelectionMark lParam:75];
+		[view message:SCI_INDICSETUNDER wParam:SelectionMark lParam:1];
 		HighlightPair(view, matchPairs);
 	}
+	[self highlightSelectionInView:self.editor];
 	[_chrome refreshColors];
 	[_resultsView refreshTheme];
 	self.windowControllers.firstObject.window.appearance = _chrome.appearance;
@@ -3800,6 +3810,7 @@ static void HighlightPair(ScintillaView *view, bool enabled)
 	switch (notification->nmhdr.code)
 	{
 		case SCN_FOCUSIN:
+			[self highlightSelectionInView:view];
 			[self updateStatus];
 			[[(EditorDocumentController *)NSDocumentController.sharedDocumentController windowOwnerForDocument:self].chrome refreshToolbar];
 			[[(EditorDocumentController *)NSDocumentController.sharedDocumentController windowOwnerForDocument:self].chrome refreshTabs];
@@ -3857,6 +3868,8 @@ static void HighlightPair(ScintillaView *view, bool enabled)
 		case SCN_UPDATEUI:
 			if (notification->updated & (SC_UPDATE_SELECTION | SC_UPDATE_CONTENT))
 				HighlightPair(view, !self.largeFileMode || [[EditorResources.shared setting:@"largeFileBraceMatch" fallback:@NO] boolValue]);
+			if ((notification->updated & (SC_UPDATE_SELECTION | SC_UPDATE_TEXT)) && view == self.editor)
+				[self highlightSelectionInView:view];
 			[self updateStatus];
 			[_chrome refreshToolbar];
 			if (notification->updated & (SC_UPDATE_SELECTION | SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))
@@ -5322,6 +5335,46 @@ static void ClearMark(ScintillaView *editor, int indicator)
 {
 	[editor message:SCI_SETINDICATORCURRENT wParam:indicator];
 	[editor message:SCI_INDICATORCLEARRANGE wParam:0 lParam:[editor message:SCI_GETLENGTH]];
+}
+
+- (void)highlightSelectionInView:(ScintillaView *)view
+{
+	const auto previousIndicator = [view message:SCI_GETINDICATORCURRENT];
+	ClearMark(view, SelectionMark);
+	const auto start = [view message:SCI_GETSELECTIONSTART];
+	const auto end = [view message:SCI_GETSELECTIONEND];
+	if (start < end && [view message:SCI_GETSELECTIONS] == 1 && ![view message:SCI_SELECTIONISRECTANGLE] && !self.largeFileMode)
+	{
+		const auto *bytes = reinterpret_cast<const char *>([view message:SCI_GETRANGEPOINTER wParam:start lParam:end - start]);
+		const std::string query{bytes, static_cast<size_t>(end - start)};
+		const auto targetStart = [view message:SCI_GETTARGETSTART];
+		const auto targetEnd = [view message:SCI_GETTARGETEND];
+		const auto virtualStart = [view message:SCI_GETTARGETSTARTVIRTUALSPACE];
+		const auto virtualEnd = [view message:SCI_GETTARGETENDVIRTUALSPACE];
+		const auto flags = [view message:SCI_GETSEARCHFLAGS];
+		const auto indicatorValue = [view message:SCI_GETINDICATORVALUE];
+		[view message:SCI_SETSEARCHFLAGS wParam:SCFIND_MATCHCASE];
+		[view message:SCI_SETINDICATORVALUE wParam:1];
+		const auto highlight = [&](sptr_t first, sptr_t last) {
+			while (last - first >= end - start)
+			{
+				[view message:SCI_SETTARGETRANGE wParam:first lParam:last];
+				const auto match = [view message:SCI_SEARCHINTARGET wParam:query.size() lParam:reinterpret_cast<sptr_t>(query.data())];
+				if (match < 0)
+					break;
+				first = [view message:SCI_GETTARGETEND];
+				[view message:SCI_INDICATORFILLRANGE wParam:match lParam:first - match];
+			}
+		};
+		highlight(0, start);
+		highlight(end, [view message:SCI_GETLENGTH]);
+		[view message:SCI_SETTARGETRANGE wParam:targetStart lParam:targetEnd];
+		[view message:SCI_SETTARGETSTARTVIRTUALSPACE wParam:virtualStart];
+		[view message:SCI_SETTARGETENDVIRTUALSPACE wParam:virtualEnd];
+		[view message:SCI_SETSEARCHFLAGS wParam:flags];
+		[view message:SCI_SETINDICATORVALUE wParam:indicatorValue];
+	}
+	[view message:SCI_SETINDICATORCURRENT wParam:previousIndicator];
 }
 
 static std::vector<std::pair<sptr_t, sptr_t>> MarkRanges(ScintillaView *editor, int indicator)
