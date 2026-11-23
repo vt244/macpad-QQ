@@ -817,6 +817,8 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	for (const auto &entry : integers)
 		if (auto attribute = config(entry.section).attribute(entry.attribute))
 			settings[entry.setting] = @(std::clamp(attribute.as_int(entry.minimum), entry.minimum, entry.maximum));
+	if (auto value = std::string_view(config("SaveAllConfirm").child_value()); value == "yes" || value == "no")
+		settings[@"saveAllConfirm"] = @(value == "yes");
 	if (auto overrideStyle = config("globalOverride"))
 	{
 		const char *attributes[] = {"fg", "bg", "font", "fontSize", "bold", "italic", "underline"};

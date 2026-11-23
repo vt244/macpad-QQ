@@ -122,11 +122,12 @@ void EditorShowPreferences(void)
 		@[@"styleOverrideUnderline", @"Force underline choice for all styles", @NO]], 248);
 
 	NSView *files = tab(@"pref-files", @"Files and tabs");
-	checks(files, @[@[@"detectEncoding", @"Automatically detect legacy encodings", @YES]], 266);
+	checks(files, @[@[@"saveAllConfirm", @"Confirm Save All", @YES],
+		@[@"detectEncoding", @"Automatically detect legacy encodings", @YES]], 278);
 	checks(files, @[@[@"autoReload", @"Reload unchanged buffers automatically", @NO],
 		@[@"reloadToEnd", @"Go to the end after reloading", @NO], @[@"hideToolbar", @"Hide the toolbar", @NO],
 		@[@"hideTabBar", @"Hide the tab bar", @NO], @[@"tabCloseButtons", @"Show close buttons on tabs", @YES],
-		@[@"doubleClickClosesTab", @"Double-click a tab to close it", @NO], @[@"hideStatusBar", @"Hide the status bar", @NO]], 242);
+		@[@"doubleClickClosesTab", @"Double-click a tab to close it", @NO], @[@"hideStatusBar", @"Hide the status bar", @NO]], 230);
 	choice(files, @"fileStatusMode", @"File change detection", @[@"Disabled", @"Active document", @"All open documents"], 1, 63);
 	choice(files, @"newDocumentEOL", @"New document line ending", @[@"Windows (CRLF)", @"Classic Mac (CR)", @"Unix (LF)"], 0, 35);
 	choice(files, @"newDocumentEncoding", @"New document encoding", @[@"Windows-1252", @"UTF-8 with BOM",

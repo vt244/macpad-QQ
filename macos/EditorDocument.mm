@@ -1122,6 +1122,8 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 {
 	if (item.action == @selector(reopenClosedTab:))
 		return self.canReopenClosedTab;
+	if (item.action == @selector(saveAllDocuments:))
+		return self.canSaveAllDocuments;
 	if (item.action == @selector(setAllDocumentsReadOnly:))
 		return [self canSetAllDocumentsReadOnly:item.tag == 42102];
 	return [super validateUserInterfaceItem:item];
@@ -1132,6 +1134,34 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	for (EditorDocument *document in self.documents)
 		[document.chrome refreshTabs];
 	[self refreshDocumentList];
+}
+
+- (BOOL)canSaveAllDocuments
+{
+	return !self.launchOptions.savingForbidden && self.hasEditedDocuments;
+}
+
+- (IBAction)saveAllDocuments:(id)sender
+{
+	if (!self.canSaveAllDocuments)
+		return;
+	EditorResources *resources = EditorResources.shared;
+	if ([[resources setting:@"saveAllConfirm" fallback:@YES] boolValue])
+	{
+		NSAlert *alert = [NSAlert new];
+		alert.messageText = [resources label:@"DoSaveAll:title" fallback:@"Save All Confirmation"];
+		alert.informativeText = [resources label:@"DoSaveAll:1766" fallback:@"Are you sure you want to save all modified documents?"];
+		[alert addButtonWithTitle:[resources label:@"DoSaveAll:6" fallback:@"Yes"]];
+		NSButton *cancel = [alert addButtonWithTitle:[resources label:@"DoSaveAll:7" fallback:@"No"]];
+		cancel.keyEquivalent = @"\033";
+		[alert addButtonWithTitle:[resources label:@"DoSaveAll:4" fallback:@"Always yes"]];
+		NSModalResponse response = [alert runModal];
+		if (response == NSAlertThirdButtonReturn)
+			[resources setSetting:@NO forName:@"saveAllConfirm"];
+		else if (response != NSAlertFirstButtonReturn)
+			return;
+	}
+	[super saveAllDocuments:sender];
 }
 
 - (BOOL)canSetAllDocumentsReadOnly:(BOOL)readOnly
@@ -2528,7 +2558,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	if (command.action == @selector(saveDocument:))
 		return self.isDocumentEdited;
 	if (command.action == @selector(saveAllDocuments:))
-		return [NSDocumentController.sharedDocumentController hasEditedDocuments];
+		return [(EditorDocumentController *)NSDocumentController.sharedDocumentController canSaveAllDocuments];
 	if (command.action == @selector(monitorFile:))
 		return self.fileURL && !self.isDocumentEdited;
 	if (command.action == @selector(startRecordingMacro:))
