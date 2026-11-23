@@ -327,9 +327,9 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		if (LoadXML(_english, [NSBundle.mainBundle URLForResource:@"english" withExtension:@"xml" subdirectory:@"localization"]))
 			CollectLabels(TranslationRoot(_english).child("Menu").child("Main"), englishLabels);
 		_englishLabels = [englishLabels copy];
-		[self loadUserLanguages];
 		NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfURL:[_profile URLByAppendingPathComponent:@"native-settings.plist"]];
 		_settings = [preferences mutableCopy] ?: [NSMutableDictionary dictionary];
+		[self loadUserLanguages];
 		NSURL *theme = [preferences[@"theme"] isKindOfClass:NSString.class] ? self.themes[preferences[@"theme"]] : nil;
 		NSURL *translation = [preferences[@"translation"] isKindOfClass:NSString.class] ? self.translations[preferences[@"translation"]] : nil;
 		[self loadTheme:theme];
@@ -374,8 +374,14 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	auto root = _userLanguages.append_child("NotepadPlus");
 	NSMutableArray<NSURL *> *files = [NSMutableArray arrayWithObject:[_profile URLByAppendingPathComponent:@"userDefineLang.xml"]];
 	NSDictionary *catalog = [self catalog:@"userDefineLangs"];
-	for (NSString *file in [catalog.allKeys sortedArrayUsingSelector:@selector(compare:)])
-		[files addObject:catalog[file]];
+	NSArray *filenames = [catalog.allKeys sortedArrayUsingSelector:@selector(compare:)];
+	for (NSString *file in filenames)
+		if ([catalog[file] isKindOfClass:NSURL.class] && [self isProfileLanguageFile:catalog[file]])
+			[files addObject:catalog[file]];
+	for (NSString *file in filenames)
+		if (![self isProfileLanguageFile:catalog[file]])
+			[files addObject:catalog[file]];
+	NSArray *hidden = [self setting:@"hiddenUserLanguages" fallback:@[]];
 	for (NSURL *url in files)
 	{
 		pugi::xml_document definitions;
@@ -385,7 +391,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		{
 			auto name = entry.attribute("name");
 			std::string_view version = entry.attribute("udlVersion").value();
-			if (name && *name.value() && (version == "2.1" || version == "2.0") &&
+			if (name && *name.value() && (version == "2.1" || version == "2.0") && ![hidden containsObject:String(name.value())] &&
 				!root.find_child_by_attribute("UserLang", "name", name.value()))
 			{
 				root.append_copy(entry);
@@ -393,6 +399,15 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 			}
 		}
 	}
+}
+
+- (BOOL)isProfileLanguageFile:(NSURL *)url
+{
+	if (!url.isFileURL)
+		return NO;
+	NSString *profile = _profile.URLByResolvingSymlinksInPath.URLByStandardizingPath.path;
+	NSString *file = url.URLByResolvingSymlinksInPath.URLByStandardizingPath.path;
+	return [file hasPrefix:[profile stringByAppendingString:@"/"]];
 }
 
 - (NSString *)userLanguageXML:(NSString *)name
@@ -426,6 +441,9 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		return NO;
 	}
 	NSURL *destination = previousName ? _userLanguageFiles[previousName] : nil;
+	const BOOL overridesBundled = destination && ![self isProfileLanguageFile:destination];
+	if (overridesBundled)
+		destination = nil;
 	pugi::xml_document output;
 	if (destination)
 	{
@@ -455,6 +473,41 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	const auto result = stream.str();
 	if (![[NSData dataWithBytes:result.data() length:result.size()] writeToURL:destination options:NSDataWritingAtomic error:error])
 		return NO;
+	NSMutableArray *hidden = [[self setting:@"hiddenUserLanguages" fallback:@[]] mutableCopy];
+	[hidden removeObject:name];
+	if (overridesBundled && ![previousName isEqualToString:name])
+		[hidden addObject:previousName];
+	[self setSetting:hidden forName:@"hiddenUserLanguages"];
+	[self loadUserLanguages];
+	return YES;
+}
+
+- (BOOL)removeUserLanguage:(NSString *)name error:(NSError **)error
+{
+	NSURL *file = name.length ? _userLanguageFiles[name] : nil;
+	if (!file)
+		return NO;
+	if ([self isProfileLanguageFile:file])
+	{
+		pugi::xml_document document;
+		if (!LoadXML(document, file))
+		{
+			if (error)
+				*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError userInfo:@{NSURLErrorKey: file}];
+			return NO;
+		}
+		auto root = document.child("NotepadPlus");
+		if (!root.remove_child(root.find_child_by_attribute("UserLang", "name", name.UTF8String)))
+			return NO;
+		std::ostringstream stream;
+		document.save(stream);
+		const auto bytes = stream.str();
+		if (![[NSData dataWithBytes:bytes.data() length:bytes.size()] writeToURL:file options:NSDataWritingAtomic error:error])
+			return NO;
+	}
+	NSMutableArray *hidden = [[self setting:@"hiddenUserLanguages" fallback:@[]] mutableCopy];
+	[hidden addObject:name];
+	[self setSetting:hidden forName:@"hiddenUserLanguages"];
 	[self loadUserLanguages];
 	return YES;
 }
@@ -489,9 +542,15 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	if (![fm createDirectoryAtURL:directory withIntermediateDirectories:YES attributes:nil error:error])
 		return NO;
 	NSURL *destination = [directory URLByAppendingPathComponent:url.lastPathComponent];
+	if (![url.URLByStandardizingPath isEqual:destination.URLByStandardizingPath] && [fm fileExistsAtPath:destination.path])
+		destination = [directory URLByAppendingPathComponent:[NSUUID.UUID.UUIDString stringByAppendingPathExtension:@"xml"]];
 	if (![url.URLByStandardizingPath isEqual:destination.URLByStandardizingPath] &&
 		![fm copyItemAtURL:url toURL:destination error:error])
 		return NO;
+	NSMutableArray *hidden = [[self setting:@"hiddenUserLanguages" fallback:@[]] mutableCopy];
+	for (auto language : definitions.child("NotepadPlus").children("UserLang"))
+		[hidden removeObject:String(language.attribute("name").value())];
+	[self setSetting:hidden forName:@"hiddenUserLanguages"];
 	[self loadUserLanguages];
 	return YES;
 }

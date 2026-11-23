@@ -49,6 +49,7 @@ app and bundles it with matching source and SHA-256 checksums.
 - Reopen legacy text with its original encoding from **Encoding → Character Set**.
 - Follow log files with **View → Monitoring (tail -f)**. Configure detection of external changes in **Settings → Preferences**.
 - Record and replay editing, search and replace actions from the **Macro** menu. **Import Macros…** reads compatible actions from `shortcuts.xml`. Assign keys to macros and named **Run** commands in **Settings → Shortcut Mapper**.
+- Open **Language → Toggle User Language Panel** to edit, copy or remove definitions in a dockable panel.
 - Generate checksums from **Tools**, run macOS commands and save or open XML sessions.
 - Reopen the working session, including unsaved drafts, after quitting or restarting.
 - Import existing XML themes, translations and user-defined languages.
@@ -70,7 +71,7 @@ The profile folder is `~/Library/Application Support/macpad++/profile/`.
 | --- | --- | --- |
 | XML theme | `themes/` | **View → Theme** selects a theme. **Settings → Style Configurator** edits colors and fonts. Enable individual attributes from the theme’s **Global override** style in **Preferences → Global style override**. |
 | XML translation | `localization/` | **Settings → Interface Language**. **Import XML…** copies the file into the profile. The default option also reads `nativeLang.xml` at the profile root. |
-| User Defined Language XML | `userDefineLangs/` or `userDefineLang.xml` | Create, edit, import and export definitions from **Language**. Apply a definition from the menu or by file extension. |
+| User Defined Language XML | `userDefineLangs/` or `userDefineLang.xml` | Create and edit definitions through the **Language** menu. The same menu imports, exports and applies UDL XML. |
 | Function and completion rules | `functionList/` and `autoCompletion/` | Override the supplied XML rules for **Function List** and **Auto-Completion**. |
 | Context menus | `contextMenu.xml` and `tabContextMenu.xml` | Edit the editor and tab menus from **Settings**. |
 | Toolbar | `toolbarButtonsConf.xml` and `toolbarIcons/` | Set built-in button visibility and supply icon overrides. Relaunch to apply changes. |

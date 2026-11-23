@@ -3,6 +3,13 @@
 #import "EditorDocument.h"
 #import "EditorMacros.h"
 #import "EditorResources.h"
+#include "Scintilla.h"
+#include "pugiconfig.hpp"
+#undef PUGIXML_CHARCONV_FLOAT
+#include "pugixml.hpp"
+#include <cstring>
+#include <sstream>
+#include <vector>
 
 static void Place(NSView *view, NSView *item, CGFloat x, CGFloat y, CGFloat width, CGFloat height = 24)
 {
@@ -518,46 +525,440 @@ static NSString *ChooseLanguage(NSString *title, BOOL creating)
 	return creating && languages.indexOfSelectedItem == 0 ? @"" : languages.titleOfSelectedItem;
 }
 
+static NSString *UDLString(const char *value)
+{
+	return [NSString stringWithUTF8String:value] ?: @"";
+}
+
+static pugi::xml_node UDLChild(pugi::xml_node node, const char *name)
+{
+	auto child = node.child(name);
+	return child ? child : node.append_child(name);
+}
+
+static pugi::xml_attribute UDLAttribute(pugi::xml_node node, const char *name)
+{
+	auto attribute = node.attribute(name);
+	return attribute ? attribute : node.append_attribute(name);
+}
+
+static NSArray<NSString *> *UDLTokens(NSString *value)
+{
+	static NSRegularExpression *pattern = [NSRegularExpression regularExpressionWithPattern:@"(?:\\(\\([\\s\\S]*?\\)\\)|[^ \\t\\r\\n])+" options:0 error:nullptr];
+	NSMutableArray *tokens = [NSMutableArray array];
+	for (NSTextCheckingResult *match in [pattern matchesInString:value options:0 range:NSMakeRange(0, value.length)])
+		[tokens addObject:[value substringWithRange:match.range]];
+	return tokens;
+}
+
+static NSArray<NSString *> *UDLTokenGroups(NSString *value, NSUInteger count)
+{
+	NSMutableArray<NSMutableArray<NSString *> *> *groups = [NSMutableArray arrayWithCapacity:count];
+	for (NSUInteger i = 0; i < count; ++i)
+		[groups addObject:[NSMutableArray array]];
+	for (NSString *token in UDLTokens(value))
+	{
+		if (token.length < 3)
+			continue;
+		NSString *code = [token substringToIndex:2];
+		NSUInteger index = code.integerValue;
+		if (index < count && [code isEqualToString:[NSString stringWithFormat:@"%02lu", index]])
+			[groups[index] addObject:[token substringFromIndex:2]];
+	}
+	NSMutableArray *result = [NSMutableArray array];
+	for (NSArray *group in groups)
+		[result addObject:[group componentsJoinedByString:@" "]];
+	return result;
+}
+
+@interface EditorUDLForm : NSObject
+@property(nonatomic, readonly) NSTabView *view;
+- (instancetype)initWithLanguage:(NSString *)name;
+- (NSString *)saveCopy:(BOOL)copy asName:(NSString *)name error:(NSError **)error;
+@end
+
+@implementation EditorUDLForm
+{
+	pugi::xml_document _xml;
+	NSString *_original;
+	std::vector<std::pair<pugi::xml_attribute, NSTextField *>> _attributes;
+	std::vector<std::pair<pugi::xml_attribute, NSButton *>> _toggles;
+	std::vector<std::pair<pugi::xml_node, NSTextField *>> _values;
+	std::vector<std::pair<pugi::xml_node, NSMutableArray<NSTextField *> *>> _tokenGroups;
+}
+
+- (instancetype)initWithLanguage:(NSString *)name
+{
+	self = [super init];
+	if (!self)
+		return nil;
+	_original = [name copy];
+	NSString *old = [EditorResources.shared userLanguageXML:name];
+	if (old.length && !_xml.load_string(old.UTF8String))
+		return nil;
+	auto language = UDLChild(UDLChild(_xml, "NotepadPlus"), "UserLang");
+	if (!language.attribute("udlVersion"))
+		language.append_attribute("udlVersion") = "2.1";
+	auto settings = UDLChild(language, "Settings");
+	auto global = UDLChild(settings, "Global");
+	auto prefix = UDLChild(settings, "Prefix");
+	auto lists = UDLChild(language, "KeywordLists");
+	auto styles = UDLChild(language, "Styles");
+	auto &attributes = _attributes;
+	auto &toggles = _toggles;
+	auto &values = _values;
+	auto &tokenGroups = _tokenGroups;
+	NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(0, 0, 570, 333)];
+	auto tab = ^NSView *(NSString *title) {
+		NSTabViewItem *item = [[NSTabViewItem alloc] initWithIdentifier:title];
+		item.label = SettingsLabel(title);
+		item.view = [[NSView alloc] initWithFrame:tabs.contentRect];
+		[tabs addTabViewItem:item];
+		return item.view;
+	};
+	auto field = [](NSView *parent, NSString *title, NSString *text, CGFloat y) {
+		NSTextField *input = [NSTextField textFieldWithString:text ?: @""];
+		[input setAccessibilityLabel:SettingsLabel(title)];
+		Label(parent, title, y);
+		Place(parent, input, 159, y, 370);
+		return input;
+	};
+	auto bind = [&](NSView *parent, NSString *title, pugi::xml_node node, const char *key, CGFloat y) {
+		auto value = UDLAttribute(node, key);
+		attributes.emplace_back(value, field(parent, title, UDLString(value.value()), y));
+	};
+	auto toggle = [&](NSView *parent, NSString *title, pugi::xml_node node, const char *key, CGFloat x, CGFloat y) {
+		auto value = UDLAttribute(node, key);
+		NSButton *box = [NSButton checkboxWithTitle:SettingsLabel(title) target:nil action:nullptr];
+		box.state = strcmp(value.value(), "yes") == 0;
+		Place(parent, box, x, y, 160);
+		toggles.emplace_back(value, box);
+	};
+	auto keywordNode = [&](const char *key) {
+		auto entry = lists.find_child_by_attribute("Keywords", "name", key);
+		if (!entry)
+		{
+			entry = lists.append_child("Keywords");
+			entry.append_attribute("name") = key;
+		}
+		return entry;
+	};
+	auto keyword = [&](NSView *parent, NSString *title, const char *key, CGFloat y) {
+		auto entry = keywordNode(key);
+		NSTextField *input = field(parent, title, UDLString(entry.child_value()), y);
+		values.emplace_back(entry, input);
+		return input;
+	};
+	auto groups = [&](const char *key, NSUInteger count) {
+		auto node = keywordNode(key);
+		NSMutableArray<NSTextField *> *fields = [NSMutableArray arrayWithCapacity:count];
+		tokenGroups.emplace_back(node, fields);
+		return UDLTokenGroups(UDLString(node.child_value()), count);
+	};
+	NSView *general = tab(@"General");
+	bind(general, @"Name", language, "name", 263);
+	bind(general, @"File extensions", language, "ext", 231);
+	toggle(general, @"Ignore case", global, "caseIgnored", 0, 199);
+	toggle(general, @"Fold comments", global, "allowFoldOfComments", 0, 167);
+	toggle(general, @"Compact folding", global, "foldCompact", 0, 135);
+	bind(general, @"Line comment position", global, "forcePureLC", 98);
+	bind(general, @"Decimal separator", global, "decimalSeparator", 66);
+	NSView *keywords = tab(@"Keywords");
+	for (int index = 1; index <= 8; ++index)
+	{
+		NSString *key = [NSString stringWithFormat:@"Keywords%d", index];
+		const CGFloat y = 275 - (index - 1) * 34;
+		NSTextField *input = keyword(keywords, [NSString stringWithFormat:SettingsLabel(@"Keyword group %d"), index], key.UTF8String, y);
+		input.frame = NSMakeRect(159, y, 255, 24);
+		toggle(keywords, @"Prefix", prefix, key.UTF8String, 422, y);
+	}
+	NSView *comments = tab(@"Comments");
+	NSArray *commentFields = @[@"Line start", @"Line continuation", @"Line end", @"Block start", @"Block end"];
+	NSArray *commentValues = groups("Comments", commentFields.count);
+	for (NSUInteger i = 0; i < commentFields.count; ++i)
+		[tokenGroups.back().second addObject:field(comments, commentFields[i], commentValues[i], 275 - i * 35)];
+	NSView *numbers = tab(@"Numbers");
+	NSArray *numberFields = @[@"prefix1", @"prefix2", @"extras1", @"extras2", @"suffix1", @"suffix2", @"range"];
+	const char *legacy[] = {nullptr, "Numbers, prefixes", nullptr, "Numbers, extras with prefixes", nullptr,
+		"Numbers, suffixes", "Numbers, additional"};
+	for (NSUInteger index = 0; index < numberFields.count; ++index)
+	{
+		NSString *key = [@"Numbers, " stringByAppendingString:numberFields[index]];
+		NSTextField *input = keyword(numbers, key, key.UTF8String, 275 - index * 34);
+		if (!input.stringValue.length && legacy[index])
+			input.stringValue = UDLString(lists.find_child_by_attribute("Keywords", "name", legacy[index]).child_value());
+	}
+	NSView *operators = tab(@"Operators");
+	keyword(operators, @"Operators 1", "Operators1", 273);
+	keyword(operators, @"Operators 2", "Operators2", 235);
+	NSView *delimiters = tab(@"Delimiters");
+	NSArray *delimValues = groups("Delimiters", 24);
+	NSArray *delimTitles = @[@"Start", @"Escape", @"End"];
+	for (NSUInteger column = 0; column < delimTitles.count; ++column)
+		Place(delimiters, [NSTextField labelWithString:SettingsLabel(delimTitles[column])], 34 + column * 165, 272, 155);
+	for (NSUInteger delimiter = 0; delimiter < 8; ++delimiter)
+	{
+		CGFloat y = 240 - delimiter * 30;
+		Place(delimiters, [NSTextField labelWithString:[@(delimiter + 1) stringValue]], 0, y, 30);
+		for (NSUInteger column = 0; column < delimTitles.count; ++column)
+		{
+			NSTextField *input = [NSTextField textFieldWithString:delimValues[delimiter * 3 + column]];
+			[input setAccessibilityLabel:[NSString stringWithFormat:@"%lu %@", delimiter + 1, SettingsLabel(delimTitles[column])]];
+			Place(delimiters, input, 34 + column * 165, y, 155);
+			[tokenGroups.back().second addObject:input];
+		}
+	}
+	NSView *folding = tab(@"Folding");
+	NSUInteger row = 0;
+	for (NSString *group in @[@"Folders in code1", @"Folders in code2", @"Folders in comment"])
+		for (NSString *side in @[@"open", @"middle", @"close"])
+		{
+			NSString *key = [NSString stringWithFormat:@"%@, %@", group, side];
+			keyword(folding, key, key.UTF8String, 276 - row++ * 29);
+		}
+	NSView *styling = tab(@"Styles");
+	NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 546, 300)];
+	scroll.hasVerticalScroller = YES;
+	NSArray *styleNames = @[@"DEFAULT", @"COMMENTS", @"LINE COMMENTS", @"NUMBERS", @"KEYWORDS1", @"KEYWORDS2",
+		@"KEYWORDS3", @"KEYWORDS4", @"KEYWORDS5", @"KEYWORDS6", @"KEYWORDS7", @"KEYWORDS8", @"OPERATORS",
+		@"FOLDER IN CODE1", @"FOLDER IN CODE2", @"FOLDER IN COMMENT", @"DELIMITERS1", @"DELIMITERS2", @"DELIMITERS3",
+		@"DELIMITERS4", @"DELIMITERS5", @"DELIMITERS6", @"DELIMITERS7", @"DELIMITERS8"];
+	NSView *styleRows = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 520, styleNames.count * 31 + 42)];
+	scroll.documentView = styleRows;
+	[styling addSubview:scroll];
+	NSArray *styleKeys = @[@"fgColor", @"bgColor", @"fontName", @"fontSize", @"fontStyle", @"nesting"];
+	NSArray *styleTitles = @[@"Foreground", @"Background", @"Font", @"Size", @"Flags", @"Nesting"];
+	CGFloat widths[] = {65, 65, 86, 42, 42, 63};
+	CGFloat headerX = 135;
+	for (NSUInteger column = 0; column < styleKeys.count; ++column)
+	{
+		Place(styleRows, [NSTextField labelWithString:SettingsLabel(styleTitles[column])], headerX, NSHeight(styleRows.frame) - 30, widths[column]);
+		headerX += widths[column] + 3;
+	}
+	for (NSUInteger index = 0; index < styleNames.count; ++index)
+	{
+		NSString *style = styleNames[index];
+		auto node = styles.find_child_by_attribute("WordsStyle", "name", style.UTF8String);
+		if (!node)
+		{
+			node = styles.append_child("WordsStyle");
+			node.append_attribute("name") = style.UTF8String;
+			node.append_attribute("styleID") = static_cast<unsigned>(index);
+		}
+		CGFloat y = NSHeight(styleRows.frame) - 61 - index * 31;
+		Place(styleRows, [NSTextField labelWithString:style], 0, y, 134);
+		CGFloat x = 135;
+		for (NSUInteger column = 0; column < styleKeys.count; ++column)
+		{
+			auto value = UDLAttribute(node, [styleKeys[column] UTF8String]);
+			NSTextField *input = [NSTextField textFieldWithString:UDLString(value.value())];
+			[input setAccessibilityLabel:[NSString stringWithFormat:@"%@ %@", style, SettingsLabel(styleTitles[column])]];
+			Place(styleRows, input, x, y, widths[column]);
+			x += widths[column] + 3;
+			attributes.emplace_back(value, input);
+		}
+	}
+	[scroll.contentView scrollToPoint:NSMakePoint(0, NSHeight(styleRows.frame) - NSHeight(scroll.contentView.bounds))];
+	[scroll reflectScrolledClipView:scroll.contentView];
+	_view = tabs;
+	return self;
+}
+
+- (NSString *)saveCopy:(BOOL)copy asName:(NSString *)name error:(NSError **)error
+{
+	auto &attributes = _attributes;
+	auto &toggles = _toggles;
+	auto &values = _values;
+	auto &tokenGroups = _tokenGroups;
+	for (auto &[attribute, input] : attributes)
+		attribute = input.stringValue.UTF8String;
+	for (auto &[attribute, box] : toggles)
+		attribute = box.state == NSControlStateValueOn ? "yes" : "no";
+	for (auto &[node, input] : values)
+		node.text().set(input.stringValue.UTF8String);
+	for (auto &[node, fields] : tokenGroups)
+	{
+		NSArray *previous = UDLTokenGroups(UDLString(node.child_value()), fields.count);
+		if ([previous isEqualToArray:[fields valueForKey:@"stringValue"]])
+			continue;
+		NSMutableArray *packed = [NSMutableArray array];
+		for (NSUInteger i = 0; i < fields.count; ++i)
+		{
+			NSArray *tokens = UDLTokens(fields[i].stringValue);
+			for (NSString *token in tokens.count ? tokens : @[@""])
+				[packed addObject:[NSString stringWithFormat:@"%02lu%@", i, token]];
+		}
+		node.text().set([packed componentsJoinedByString:@" "].UTF8String);
+	}
+	auto nameAttribute = _xml.child("NotepadPlus").child("UserLang").attribute("name");
+	NSString *result = name ?: [UDLString(nameAttribute.value()) stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+	nameAttribute = result.UTF8String;
+	std::ostringstream output;
+	_xml.save(output);
+	if (![EditorResources.shared saveUserLanguageXML:UDLString(output.str().c_str()) replacing:copy || !_original.length ? nil : _original error:error])
+		return nil;
+	_original = result;
+	return result;
+}
+@end
+
+static NSString *NewUDLName(void)
+{
+	NSAlert *prompt = [NSAlert new];
+	prompt.messageText = EditorUIString(@"Save User Defined Language As");
+	[prompt addButtonWithTitle:EditorUIString(@"Save")];
+	[prompt addButtonWithTitle:EditorUIString(@"Cancel")];
+	NSTextField *input = [NSTextField textFieldWithString:@""];
+	input.frame = NSMakeRect(0, 0, 320, 24);
+	prompt.accessoryView = input;
+	prompt.window.initialFirstResponder = input;
+	if ([prompt runModal] != NSAlertFirstButtonReturn)
+		return nil;
+	return [input.stringValue stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+}
+
 BOOL EditorShowUserLanguageEditor(void)
 {
 	NSString *name = ChooseLanguage(SettingsLabel(@"User Defined Language"), YES);
 	if (!name)
 		return NO;
-	NSString *initial = name.length ? [EditorResources.shared userLanguageXML:name] :
-		@"<NotepadPlus>\n\t<UserLang name=\"My language\" ext=\"\" udlVersion=\"2.1\">\n"
-		"\t\t<Settings><Global caseIgnored=\"no\" allowFoldOfComments=\"no\" foldCompact=\"no\"/></Settings>\n"
-		"\t\t<KeywordLists>\n\t\t\t<Keywords name=\"Comments\">00# 01 02 03 04</Keywords>\n"
-		"\t\t\t<Keywords name=\"Keywords1\"></Keywords>\n\t\t</KeywordLists>\n"
-		"\t\t<Styles><WordsStyle name=\"KEYWORDS1\" styleID=\"4\" fgColor=\"000080\" fontStyle=\"1\"/></Styles>\n"
-		"\t</UserLang>\n</NotepadPlus>\n";
+	EditorUDLForm *form = [[EditorUDLForm alloc] initWithLanguage:name];
+	if (!form)
+		return NO;
 	NSAlert *dialog = [NSAlert new];
-	dialog.messageText = name.length ? name : SettingsLabel(@"New User Defined Language");
-	dialog.informativeText = SettingsLabel(@"Edit the language name, extensions, keywords, comments and styles in the UDL XML definition.");
+	dialog.messageText = SettingsLabel(@"User Defined Language");
+	dialog.informativeText = SettingsLabel(@"Edit the language definition. Changes are saved in the profile.");
 	[dialog addButtonWithTitle:SettingsLabel(@"Save")];
 	[dialog addButtonWithTitle:SettingsLabel(@"Cancel")];
-	NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 560, 360)];
-	scroll.hasVerticalScroller = YES;
-	scroll.borderType = NSBezelBorder;
-	NSTextView *text = [[NSTextView alloc] initWithFrame:scroll.bounds];
-	text.font = [NSFont monospacedSystemFontOfSize:11 weight:NSFontWeightRegular];
-	text.richText = NO;
-	text.automaticQuoteSubstitutionEnabled = NO;
-	text.automaticDashSubstitutionEnabled = NO;
-	text.string = initial ?: @"";
-	text.verticallyResizable = YES;
-	text.autoresizingMask = NSViewWidthSizable;
-	scroll.documentView = text;
-	dialog.accessoryView = scroll;
-	dialog.window.initialFirstResponder = text;
-	while ([dialog runModal] == NSAlertFirstButtonReturn)
+	[dialog addButtonWithTitle:EditorUIString(@"Save As…")];
+	dialog.accessoryView = form.view;
+	for (;;)
 	{
+		NSModalResponse response = [dialog runModal];
+		if (response == NSAlertSecondButtonReturn)
+			return NO;
+		BOOL copy = response == NSAlertThirdButtonReturn;
+		NSString *destination = copy ? NewUDLName() : nil;
+		if (copy && !destination)
+			continue;
 		NSError *error = nil;
-		if ([EditorResources.shared saveUserLanguageXML:text.string replacing:name.length ? name : nil error:&error])
+		if ([form saveCopy:copy asName:destination error:&error])
 			return YES;
 		dialog.informativeText = error.localizedDescription ?: SettingsLabel(@"The language could not be saved.");
 	}
-	return NO;
 }
+
+static BOOL RemoveUDL(NSString *name)
+{
+	if (!name.length)
+		return NO;
+	NSAlert *confirmation = [NSAlert new];
+	confirmation.messageText = [NSString stringWithFormat:EditorUIString(@"Remove the language “%@”?"), name];
+	[confirmation addButtonWithTitle:EditorUIString(@"Cancel")];
+	[confirmation addButtonWithTitle:EditorUIString(@"Remove")];
+	if ([confirmation runModal] != NSAlertSecondButtonReturn)
+		return NO;
+	NSError *error = nil;
+	BOOL removed = [EditorResources.shared removeUserLanguage:name error:&error];
+	if (error)
+		[NSApp presentError:error];
+	return removed;
+}
+
+BOOL EditorRemoveUserLanguage(void)
+{
+	return RemoveUDL(ChooseLanguage(EditorUIString(@"Remove User Defined Language"), NO));
+}
+
+@interface EditorUDLPanel : NSScrollView
+- (instancetype)initWithChanges:(void (^)(void))changes;
+@end
+
+@implementation EditorUDLPanel
+{
+	NSPopUpButton *_languages;
+	EditorUDLForm *_form;
+	void (^_changes)(void);
+}
+
+- (void)refreshSelection:(NSString *)selection
+{
+	[_languages removeAllItems];
+	[_languages addItemWithTitle:EditorUIString(@"Create New Language…")];
+	_languages.lastItem.representedObject = @"";
+	for (NSString *name in EditorResources.shared.userLanguages)
+	{
+		[_languages addItemWithTitle:name];
+		_languages.lastItem.representedObject = name;
+		if ([name isEqualToString:selection])
+			[_languages selectItem:_languages.lastItem];
+	}
+}
+
+- (void)selectLanguage:(id)sender
+{
+	[_form.view removeFromSuperview];
+	_form = [[EditorUDLForm alloc] initWithLanguage:_languages.selectedItem.representedObject];
+	if (_form)
+		Place(self.documentView, _form.view, 8, 4, 570, 333);
+}
+
+- (instancetype)initWithChanges:(void (^)(void))changes
+{
+	self = [super initWithFrame:NSZeroRect];
+	if (!self)
+		return nil;
+	_changes = [changes copy];
+	self.hasHorizontalScroller = YES;
+	self.hasVerticalScroller = YES;
+	self.documentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 590, 377)];
+	_languages = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+	_languages.target = self;
+	_languages.action = @selector(selectLanguage:);
+	Place(self.documentView, _languages, 8, 344, 239);
+	NSArray *titles = @[@"Save", @"Save As…", @"Remove"];
+	for (NSUInteger i = 0; i < titles.count; ++i)
+	{
+		NSButton *button = [NSButton buttonWithTitle:EditorUIString(titles[i]) target:self action:@selector(edit:)];
+		button.tag = i;
+		Place(self.documentView, button, 251 + i * 109, 344, 106);
+	}
+	[self refreshSelection:nil];
+	[self selectLanguage:nil];
+	return self;
+}
+
+- (void)edit:(NSButton *)button
+{
+	if (button.tag == 2)
+	{
+		if (!RemoveUDL(_languages.selectedItem.representedObject))
+			return;
+		[self refreshSelection:nil];
+	}
+	else
+	{
+		BOOL copy = button.tag == 1;
+		NSString *name = copy ? NewUDLName() : nil;
+		if (copy && !name)
+			return;
+		NSError *error = nil;
+		NSString *saved = [_form saveCopy:copy asName:name error:&error];
+		if (!saved)
+		{
+			if (error)
+				[NSApp presentError:error];
+			return;
+		}
+		[self refreshSelection:saved];
+	}
+	[self selectLanguage:nil];
+	if (_changes)
+		_changes();
+}
+@end
+
+NSView *EditorCreateUDLPanel(void (^changes)(void)) { return [[EditorUDLPanel alloc] initWithChanges:changes]; }
 
 void EditorExportUserLanguage(void)
 {

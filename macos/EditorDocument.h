@@ -80,6 +80,7 @@
 - (IBAction)toggleWrap:(id)sender;
 - (IBAction)toggleLineNumbers:(id)sender;
 - (IBAction)toggleDocumentReadOnly:(id)sender;
+- (IBAction)toggleUDLPanel:(id)sender;
 @end
 
 @interface EditorDocumentController : NSDocumentController

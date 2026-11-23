@@ -656,6 +656,8 @@ static void AddCharacterSets(NSMenu *menu)
 		AddItem(language, name, @selector(selectLanguage:), @"").representedObject = [@"udl:" stringByAppendingString:name];
 	AddItem(language, Label(@"native-importUDL", @"Import User Defined Language…"), @selector(importUserLanguage:), @"", self);
 	AddItem(language, Label(@"native-editUDL", @"Define or Edit User Language…"), @selector(editUserLanguage:), @"", self);
+	AddItem(language, EditorUIString(@"Toggle User Language Panel"), @selector(toggleUDLPanel:), @"");
+	AddItem(language, EditorUIString(@"Remove User Defined Language…"), @selector(removeUserLanguage:), @"", self);
 	AddItem(language, Label(@"native-exportUDL", @"Export User Defined Language…"), @selector(exportUserLanguage:), @"", self);
 
 	NSMenu *settings = AddMenu(main, Label(@"settings", @"Settings"));
@@ -741,8 +743,17 @@ static void AddCharacterSets(NSMenu *menu)
 - (void)showShortcutMapper:(id)sender { if (EditorShowShortcutMapper(NSApp.mainMenu)) [self buildMenu]; }
 - (void)editUserLanguage:(id)sender
 {
-	if (!EditorShowUserLanguageEditor())
+	if (EditorShowUserLanguageEditor())
+		[self updateUserLanguages:nil];
 		return;
+}
+- (void)removeUserLanguage:(id)sender
+{
+	if (EditorRemoveUserLanguage())
+		[self updateUserLanguages:nil];
+}
+- (void)updateUserLanguages:(id)sender
+{
 	for (EditorDocument *document in NSDocumentController.sharedDocumentController.documents)
 		[document applyTheme];
 	[self buildMenu];

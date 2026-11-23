@@ -39,6 +39,7 @@ NSString *EditorUIString(NSString *english);
 - (BOOL)importUserLanguages:(NSURL *)url error:(NSError **)error;
 - (NSString *)userLanguageXML:(NSString *)name;
 - (BOOL)saveUserLanguageXML:(NSString *)xml replacing:(NSString *)previousName error:(NSError **)error;
+- (BOOL)removeUserLanguage:(NSString *)name error:(NSError **)error;
 - (NSColor *)widgetColor:(NSString *)name background:(BOOL)background;
 - (void)styleSearchResults:(ScintillaView *)view;
 @end

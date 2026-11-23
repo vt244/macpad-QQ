@@ -9,3 +9,5 @@ NSString *EditorShortcutIdentifier(NSMenuItem *item);
 BOOL EditorShowUserLanguageEditor(void);
 void EditorExportUserLanguage(void);
 void EditorShowTabManager(void);
+BOOL EditorRemoveUserLanguage(void);
+NSView *EditorCreateUDLPanel(void (^changes)(void));

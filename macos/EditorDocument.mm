@@ -16,6 +16,7 @@
 #import "EditorProjectPanel.h"
 #import "EditorPlugins.h"
 #import "EditorResources.h"
+#import "EditorSettings.h"
 #import "EditorText.h"
 #import "EditorWorkspace.h"
 #import "ScintillaView.h"
@@ -1603,6 +1604,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	EditorDocumentList *_documentList;
 	EditorDockPane *_documentListPane;
 	__weak EditorDockArea *_dockArea;
+	EditorDockPane *_udlPane;
 	EditorDockPane *_resultsPane;
 	EditorDockPane *_folderPane;
 	EditorFolderPanel *_folderWorkspace;
@@ -3806,6 +3808,30 @@ static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end)
 		return;
 	[self.editor message:SCI_SETREADONLY wParam:![self.editor message:SCI_GETREADONLY]];
 	[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
+}
+
+- (IBAction)toggleUDLPanel:(id)sender
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	EditorDocument *owner = [controller windowOwnerForDocument:self];
+	if (owner && owner != self)
+	{
+		[owner toggleUDLPanel:sender];
+		return;
+	}
+	if (!_udlPane && _dockArea)
+	{
+		NSView *view = EditorCreateUDLPanel(^{
+			[NSApp sendAction:@selector(updateUserLanguages:) to:NSApp.delegate from:nil];
+		});
+		EditorDockPlacement *placement = [[EditorDockPlacement alloc] initWithEdge:EditorDockRight];
+		[placement restore:@{@"width": @500}];
+		__weak EditorDocument *weakSelf = self;
+		_udlPane = [_dockArea addPanel:view title:EditorUIString(@"User Defined Language") placement:placement dismiss:^{
+			[weakSelf toggleUDLPanel:nil];
+		}];
+	}
+	_udlPane.shown = !_udlPane.shown;
 }
 
 - (IBAction)beginOrEndSelection:(NSMenuItem *)sender
