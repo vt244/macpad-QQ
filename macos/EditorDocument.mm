@@ -3139,10 +3139,18 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			}
 			if (!step.message && IsMacroMenuCommand(step.wParam))
 			{
-				if (step.wParam == 41006)
-					[self saveDocument:nil];
-				else
-					[self applyWhitespaceCommand:step.wParam];
+				NSMenuItem *item = [NSMenuItem new];
+				item.tag = step.wParam;
+				switch (MacroMenuActionForCommand(step.wParam))
+				{
+					case MacroMenuAction::Save: [self saveDocument:nil]; break;
+					case MacroMenuAction::Whitespace: [self runWhitespaceCommand:item]; break;
+					case MacroMenuAction::Comment: [self commentSelection:item]; break;
+					case MacroMenuAction::Reorder: [self reorderLines:item]; break;
+					case MacroMenuAction::Case: [self transformSelectionCase:item]; break;
+					case MacroMenuAction::Bookmarks: [self operateOnBookmarkedLines:item]; break;
+					case MacroMenuAction::Unsupported: break;
+				}
 				continue;
 			}
 			const auto parameter = step.text ? reinterpret_cast<sptr_t>(step.text->c_str()) :
@@ -3932,6 +3940,7 @@ static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end)
 
 - (IBAction)commentSelection:(NSMenuItem *)sender
 {
+	[self recordMenuCommand:sender.tag];
 	NSArray<NSString *> *symbols = [EditorResources.shared commentSymbolsForLanguage:_languageIdentifier];
 	EditorCommentSelection(self.editor, sender.tag, symbols[0], symbols[1], symbols[2]);
 }
@@ -3943,8 +3952,17 @@ static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end)
 	[_completion completeIn:self.editor language:_languageIdentifier directory:self.fileURL.URLByDeletingLastPathComponent command:sender.tag];
 }
 
-- (IBAction)reorderLines:(NSMenuItem *)sender { EditorReorderLines(self.editor, sender.tag); }
-- (IBAction)operateOnBookmarkedLines:(NSMenuItem *)sender { EditorBookmarkLines(self.editor, sender.tag, Bookmark); }
+- (IBAction)reorderLines:(NSMenuItem *)sender
+{
+	[self recordMenuCommand:sender.tag];
+	EditorReorderLines(self.editor, sender.tag);
+}
+
+- (IBAction)operateOnBookmarkedLines:(NSMenuItem *)sender
+{
+	[self recordMenuCommand:sender.tag];
+	EditorBookmarkLines(self.editor, sender.tag, Bookmark);
+}
 - (IBAction)navigateChanges:(NSMenuItem *)sender { EditorNavigateChanges(self.editor, sender.tag); }
 
 - (IBAction)toggleDocumentReadOnly:(id)sender
@@ -4060,6 +4078,7 @@ static NSString *TransformCase(NSString *original, NSInteger mode)
 	ScintillaView *editor = self.editor;
 	if ([editor message:SCI_GETREADONLY] || [editor message:SCI_GETSELECTIONEMPTY])
 		return;
+	[self recordMenuCommand:sender.tag];
 	std::vector<std::pair<sptr_t, sptr_t>> ranges;
 	for (sptr_t i = 0; i < [editor message:SCI_GETSELECTIONS]; ++i)
 		ranges.emplace_back([editor message:SCI_GETSELECTIONNSTART wParam:i], [editor message:SCI_GETSELECTIONNEND wParam:i]);
@@ -4205,16 +4224,21 @@ static sptr_t DeleteWhitespace(ScintillaView *editor, NSString *pattern, sptr_t 
 	[editor message:SCI_SETFIRSTVISIBLELINE wParam:firstVisible];
 }
 
+- (void)recordMenuCommand:(NSInteger)command
+{
+	if (_recording && IsMacroMenuCommand(command))
+		_macro.push_back({0, static_cast<uptr_t>(command), 0, std::nullopt});
+}
+
 - (IBAction)runWhitespaceCommand:(id)sender
 {
 	const auto command = [sender tag];
+	[self recordMenuCommand:command];
 	if (command == 42046 || command == 42053 || command == 42054)
 	{
 		ConvertIndentation(self.editor, command);
 		return;
 	}
-	if (_recording && IsMacroMenuCommand(command))
-		_macro.push_back({0, static_cast<uptr_t>(command), 0, std::nullopt});
 	[self applyWhitespaceCommand:command];
 }
 

@@ -15,6 +15,8 @@ struct MacroStep
 };
 
 bool IsMacroMenuCommand(uptr_t command);
+enum class MacroMenuAction { Unsupported, Save, Whitespace, Comment, Reorder, Case, Bookmarks };
+MacroMenuAction MacroMenuActionForCommand(uptr_t command);
 bool IsMacroSearchStep(unsigned int message);
 extern NSNotificationName const EditorMacroLibraryDidChange;
 

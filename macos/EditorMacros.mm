@@ -10,18 +10,28 @@
 enum class Parameter { Unsupported, Scalar, String, Bytes };
 NSNotificationName const EditorMacroLibraryDidChange = @"EditorMacroLibraryDidChange";
 
-bool IsMacroMenuCommand(uptr_t command)
+MacroMenuAction MacroMenuActionForCommand(uptr_t command)
 {
 	switch (command)
 	{
-	case 41006:
+	case 41006: return MacroMenuAction::Save;
 	case 42012: case 42013: case 42024: case 42042: case 42043: case 42044:
-	case 42045: case 42055: case 42056:
-		return true;
-	default:
-		return false;
+	case 42045: case 42046: case 42053: case 42054: case 42055: case 42056:
+		return MacroMenuAction::Whitespace;
+	case 42022: case 42023: case 42035: case 42036: case 42047:
+		return MacroMenuAction::Comment;
+	case 42059: case 42060: case 42061: case 42062: case 42063: case 42064: case 42065: case 42066:
+	case 42077: case 42078: case 42079: case 42080: case 42081: case 42083: case 42100: case 42101: case 42104: case 42105:
+		return MacroMenuAction::Reorder;
+	case 42067: case 42068: case 42069: case 42070: case 42071: case 42072:
+		return MacroMenuAction::Case;
+	case 43018: case 43019: case 43020: case 43021: case 43050: case 43051:
+		return MacroMenuAction::Bookmarks;
+	default: return MacroMenuAction::Unsupported;
 	}
 }
+
+bool IsMacroMenuCommand(uptr_t command) { return MacroMenuActionForCommand(command) != MacroMenuAction::Unsupported; }
 
 bool IsMacroSearchStep(unsigned int message)
 {
