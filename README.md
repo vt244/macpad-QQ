@@ -40,6 +40,7 @@ app and bundles it with matching source and SHA-256 checksums.
 ## What you can do
 
 - Edit in two tabbed views, move tabs by dragging, and rotate the split from the divider's context menu. Use **View → Move/Clone Current Document** to open a second view.
+- Use **Window → Manage Open Tabs** to sort tabs by name, path or modification date, apply the order, and save or close a selection.
 - Move, resize or float panels such as **Document List**, **Folder as Workspace**, **Project Panels**, **Function List** and **Document Map**.
 - Find, replace, count and mark matches using literal, extended or regular expression search. Search within a selection, across open documents, in folders or in projects.
 - Refine previous searches from the results panel and navigate between hits with **Search → Next Search Result** and **Previous Search Result**.

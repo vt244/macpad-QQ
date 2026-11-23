@@ -171,6 +171,8 @@ static NSColor *ReadableTabText(NSColor *foreground, NSColor *background)
 		}
 		if (hypot(next.locationInWindow.x - start.x, next.locationInWindow.y - start.y) < 4)
 			continue;
+		if ([[EditorResources.shared setting:@"lockTabs" fallback:@NO] boolValue])
+			continue;
 		NSPasteboardItem *reference = [NSPasteboardItem new];
 		[reference setString:@"document" forType:TabPasteboardType];
 		NSDraggingItem *item = [[NSDraggingItem alloc] initWithPasteboardWriter:reference];

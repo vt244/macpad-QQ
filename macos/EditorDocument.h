@@ -92,6 +92,7 @@
 - (void)activateTab:(EditorDocument *)document otherView:(BOOL)other;
 - (void)dropTab:(EditorDocument *)document before:(EditorDocument *)anchor otherView:(BOOL)other;
 - (void)moveTab:(EditorDocument *)document toEnd:(BOOL)toEnd;
+- (void)reorderTabs:(NSArray<EditorDocument *> *)documents;
 - (BOOL)cycleRecentTabsBackwards:(BOOL)backwards;
 - (BOOL)finishRecentTabSwitch:(BOOL)accept;
 - (void)applyImportedDockLayout;

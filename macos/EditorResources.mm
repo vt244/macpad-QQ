@@ -724,6 +724,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		{"TabSetting", "replaceBySpace", @"insertSpaces"}, {"TabSetting", "backspaceUnindent", @"backspaceUnindent"},
 		{"TabBar", "hide", @"hideTabBar"}, {"TabBar", "closeButton", @"tabCloseButtons"},
 		{"TabBar", "doubleClick2Close", @"doubleClickClosesTab"},
+		{"TabBar", "dragAndDrop", @"dragTabs"},
 		{"TabBar", "vertical", @"verticalTabs"}, {"TabBar", "multiLine", @"multilineTabs"},
 		{"MISC", "docPeekOnTab", @"tabPreview"},
 		{"largeFileRestriction", "isEnabled", @"limitLargeFiles"},
@@ -758,6 +759,11 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		for (unsigned i = 0; i < std::size(attributes); ++i)
 			if (auto value = overrideStyle.attribute(attributes[i]))
 				settings[GlobalOverrideSettings[i]] = @(std::string_view(value.value()) == "yes");
+	}
+	if (settings[@"dragTabs"])
+	{
+		settings[@"lockTabs"] = @(![settings[@"dragTabs"] boolValue]);
+		[settings removeObjectForKey:@"dragTabs"];
 	}
 	if (auto caret = config("Caret"))
 	{

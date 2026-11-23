@@ -722,6 +722,7 @@ static void AddCharacterSets(NSMenu *menu)
 	NSMenu *window = AddMenu(main, Label(@"native-window", @"Window"));
 	AddItem(window, Label(@"native-minimize", @"Minimize"), @selector(performMiniaturize:), @"m");
 	AddItem(window, Label(@"native-zoomWindow", @"Zoom"), @selector(performZoom:), @"");
+	AddItem(window, Label(@"native-openTabs", @"Manage Open Tabs…"), @selector(showTabManager:), @"", self);
 	NSMenu *help = AddMenu(main, @"?");
 	AddItem(help, Label(@"app-about", @"About macpad++"), @selector(showAbout:), @"", self);
 	AddItem(help, Label(@"app-license", @"License…"), @selector(showLicense:), @"", self);
@@ -734,6 +735,7 @@ static void AddCharacterSets(NSMenu *menu)
 		[document refreshChromeMenus];
 }
 
+- (void)showTabManager:(id)sender { EditorShowTabManager(); }
 - (void)showPreferences:(id)sender { EditorShowPreferences(); }
 - (void)showStyleConfigurator:(id)sender { if (EditorShowStyleConfigurator()) [self buildMenu]; }
 - (void)showShortcutMapper:(id)sender { if (EditorShowShortcutMapper(NSApp.mainMenu)) [self buildMenu]; }

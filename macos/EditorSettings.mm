@@ -125,7 +125,7 @@ void EditorShowPreferences(void)
 	NSView *tabOptions = tab(@"pref-tabs", @"Tabs");
 	checks(tabOptions, @[@[@"mruTabSwitcher", @"Switch recent documents with Control-Tab", @YES],
 		@[@"tabPreview", @"Preview an inactive tab on hover", @NO], @[@"verticalTabs", @"Show tabs on the left", @NO],
-		@[@"multilineTabs", @"Wrap tabs to multiple rows", @NO]], 220);
+		@[@"multilineTabs", @"Wrap tabs to multiple rows", @NO], @[@"lockTabs", @"Prevent dragging tabs", @NO]], 220);
 	field(tabOptions, @"caretWidth", @"Caret width", @"1", 78);
 	field(tabOptions, @"caretBlink", @"Caret blink period (ms)", @"500", 44);
 

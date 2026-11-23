@@ -685,6 +685,22 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	[self workspaceChanged];
 }
 
+- (void)reorderTabs:(NSArray<EditorDocument *> *)documents
+{
+	(void)self.tabDocuments;
+	NSArray *sorted = [[NSOrderedSet orderedSetWithArray:documents].array filteredArrayUsingPredicate:
+		[NSPredicate predicateWithBlock:^BOOL(EditorDocument *document, NSDictionary *bindings) {
+			return [_tabOrder containsObject:document];
+		}]];
+	NSSet *requested = [NSSet setWithArray:sorted];
+	NSIndexSet *positions = [_tabOrder indexesOfObjectsPassingTest:^BOOL(EditorDocument *document, NSUInteger index, BOOL *stop) {
+		return [requested containsObject:document];
+	}];
+	[_tabOrder replaceObjectsAtIndexes:positions withObjects:sorted];
+	[self refreshDocumentTabs];
+	[self workspaceChanged];
+}
+
 - (void)noteFocusedTab:(EditorDocument *)document
 {
 	if (!document || ![self.documents containsObject:document])
