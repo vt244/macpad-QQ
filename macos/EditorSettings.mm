@@ -27,14 +27,82 @@ static void Label(NSView *view, NSString *name, CGFloat y)
 	Place(view, [NSTextField labelWithString:SettingsLabel(name)], 0, y, 154);
 }
 
-@interface PreferenceSectionPicker : NSObject
-@property(nonatomic, weak) NSTabView *tabs;
+@interface PreferencePage : NSView
+- (void)addPreferenceRow:(NSView *)control label:(NSString *)label;
+@end
+
+@implementation PreferencePage
+- (BOOL)isFlipped { return YES; }
+
+- (void)addPreferenceRow:(NSView *)control label:(NSString *)label
+{
+	const CGFloat inset = 8, labelWidth = 240, gap = 14;
+	CGFloat y = NSHeight(self.frame) ? NSHeight(self.frame) : inset;
+	CGFloat width = NSWidth(self.bounds) - 2 * inset;
+	NSTextField *caption = label ? [NSTextField wrappingLabelWithString:label] : nil;
+	CGFloat captionHeight = label ? ceil([caption.cell cellSizeForBounds:NSMakeRect(0, 0, labelWidth, 1000)].height) : 0;
+	CGFloat height = MAX(24, captionHeight);
+	if ([control isKindOfClass:NSTextField.class] && ![(NSTextField *)control isEditable])
+		height = MAX(height, ceil([[(NSTextField *)control cell] cellSizeForBounds:NSMakeRect(0, 0, width, 1000)].height));
+	[self setFrameSize:NSMakeSize(NSWidth(self.frame), y + height + 8)];
+	if (caption)
+	{
+		Place(self, caption, inset, y + floor((height - captionHeight) / 2), labelWidth, captionHeight);
+		Place(self, control, inset + labelWidth + gap, y + floor((height - 24) / 2), width - labelWidth - gap);
+	}
+	else
+		Place(self, control, inset, y, width, height);
+}
+@end
+
+@interface PreferenceSectionPicker : NSObject <NSTableViewDataSource, NSTableViewDelegate, NSWindowDelegate>
+@property(nonatomic, strong) NSTabView *tabs;
+@property(nonatomic, strong) NSTextField *heading;
+- (void)apply:(id)sender;
+- (void)cancel:(id)sender;
 @end
 
 @implementation PreferenceSectionPicker
-- (void)select:(NSPopUpButton *)sender
+- (NSInteger)numberOfRowsInTableView:(NSTableView *)table { return self.tabs.numberOfTabViewItems; }
+
+- (NSView *)tableView:(NSTableView *)table viewForTableColumn:(NSTableColumn *)column row:(NSInteger)row
 {
-	[self.tabs selectTabViewItemAtIndex:sender.indexOfSelectedItem];
+	NSTableCellView *cell = [table makeViewWithIdentifier:@"category" owner:nil];
+	if (!cell)
+	{
+		cell = [[NSTableCellView alloc] initWithFrame:NSMakeRect(0, 0, column.width, 26)];
+		cell.identifier = @"category";
+		cell.textField = [NSTextField labelWithString:@""];
+		cell.textField.lineBreakMode = NSLineBreakByTruncatingTail;
+		cell.textField.autoresizingMask = NSViewWidthSizable;
+		Place(cell, cell.textField, 6, 4, column.width - 12, 18);
+	}
+	cell.textField.stringValue = [self.tabs tabViewItemAtIndex:row].label;
+	cell.textField.toolTip = cell.textField.stringValue;
+	return cell;
+}
+
+- (void)tableViewSelectionDidChange:(NSNotification *)notification
+{
+	NSTableView *table = notification.object;
+	if (table.selectedRow < 0)
+		return;
+	[self.tabs selectTabViewItemAtIndex:table.selectedRow];
+	self.heading.stringValue = self.tabs.selectedTabViewItem.label;
+	[self.tabs.window recalculateKeyViewLoop];
+}
+
+- (void)apply:(id)sender
+{
+	if ([self.tabs.window makeFirstResponder:nil])
+		[NSApp stopModalWithCode:NSModalResponseOK];
+}
+
+- (void)cancel:(id)sender { [NSApp stopModalWithCode:NSModalResponseCancel]; }
+- (BOOL)windowShouldClose:(NSWindow *)window
+{
+	[self cancel:nil];
+	return NO;
 }
 @end
 
@@ -42,164 +110,209 @@ void EditorShowPreferences(void)
 {
 	EditorResources *resources = EditorResources.shared;
 	auto localized = ^NSString *(NSString *key, NSString *fallback) { return [resources label:key fallback:fallback]; };
-	NSAlert *window = [NSAlert new];
-	window.messageText = localized(@"Preference:title", @"Preferences");
-	window.window.appearance = [NSAppearance appearanceNamed:resources.usesDarkColors ? NSAppearanceNameDarkAqua : NSAppearanceNameAqua];
-	[window addButtonWithTitle:localized(@"native-apply", @"Apply")];
-	[window addButtonWithTitle:localized(@"native-cancel", @"Cancel")];
-	NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(0, 0, 520, 306)];
+	NSPanel *window = [[NSPanel alloc] initWithContentRect:NSMakeRect(0, 0, 760, 472)
+		styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable backing:NSBackingStoreBuffered defer:NO];
+	window.title = localized(@"Preference:title", @"Preferences");
+	window.releasedWhenClosed = NO;
+	window.appearance = [NSAppearance appearanceNamed:resources.usesDarkColors ? NSAppearanceNameDarkAqua : NSAppearanceNameAqua];
+	NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(222, 60, 522, 363)];
 	tabs.tabViewType = NSNoTabsNoBorder;
 	NSMutableDictionary<NSString *, NSControl *> *controls = [NSMutableDictionary dictionary];
-	auto tab = ^NSView *(NSString *key, NSString *title) {
+	auto tab = ^PreferencePage *(NSString *key, NSString *title) {
 		NSTabViewItem *item = [[NSTabViewItem alloc] initWithIdentifier:key];
 		item.label = localized(key, title);
-		item.view = [[NSView alloc] initWithFrame:tabs.contentRect];
+		NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:tabs.contentRect];
+		scroll.hasVerticalScroller = YES;
+		scroll.drawsBackground = NO;
+		PreferencePage *page = [[PreferencePage alloc] initWithFrame:NSMakeRect(0, 0, NSWidth(tabs.contentRect) - 18, 0)];
+		scroll.documentView = page;
+		item.view = scroll;
 		[tabs addTabViewItem:item];
-		return item.view;
+		return page;
 	};
-	auto checks = ^(NSView *view, NSArray<NSArray *> *rows, CGFloat y) {
+	auto checks = ^(PreferencePage *view, NSArray<NSArray *> *rows) {
 		for (NSArray *row in rows)
 		{
 			NSString *name = row[0];
 			NSButton *check = [NSButton checkboxWithTitle:localized([@"pref-" stringByAppendingString:name], row[1]) target:nil action:nil];
 			check.state = [[resources setting:name fallback:row[2]] boolValue];
-			Place(view, check, 12, y, 480);
+			check.toolTip = check.title;
+			[view addPreferenceRow:check label:nil];
 			controls[name] = check;
-			y -= 24;
 		}
 	};
-	auto labeled = ^(NSView *view, NSString *name, NSString *title, NSControl *control, CGFloat y) {
+	auto labeled = ^(PreferencePage *view, NSString *name, NSString *title, NSControl *control) {
 		NSString *label = localized([@"pref-" stringByAppendingString:name], title);
-		const BOOL searchLimit = [name isEqual:@"inSelectionAutocheckThreshold"] || [name isEqual:@"fillFindWhatThreshold"];
-		NSTextField *caption = searchLimit ? [NSTextField wrappingLabelWithString:label] : [NSTextField labelWithString:label];
-		Place(view, caption, 12, searchLimit ? y - 10 : y, 220, searchLimit ? 44 : 24);
 		[control setAccessibilityLabel:label];
-		Place(view, control, 232, y, 252);
+		[view addPreferenceRow:control label:label];
 		controls[name] = control;
 	};
-	auto choice = ^(NSView *view, NSString *name, NSString *title, NSArray<NSString *> *options, NSInteger fallback, CGFloat y) {
+	auto choice = ^(PreferencePage *view, NSString *name, NSString *title, NSArray<NSString *> *options, NSInteger fallback) {
 		NSPopUpButton *control = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
 		for (NSUInteger index = 0; index < options.count; ++index)
 			[control addItemWithTitle:localized([NSString stringWithFormat:@"pref-%@-%lu", name, index], options[index])];
 		NSInteger selected = [[resources setting:name fallback:@(fallback)] integerValue];
 		[control selectItemAtIndex:MAX(0, MIN(selected, (NSInteger)options.count - 1))];
-		labeled(view, name, title, control, y);
+		labeled(view, name, title, control);
 	};
-	auto field = ^(NSView *view, NSString *name, NSString *title, NSString *fallback, CGFloat y) {
+	auto field = ^(PreferencePage *view, NSString *name, NSString *title, NSString *fallback) {
 		NSTextField *control = [NSTextField textFieldWithString:[[resources setting:name fallback:fallback] description]];
-		labeled(view, name, title, control, y);
+		labeled(view, name, title, control);
 	};
-	NSView *editor = tab(@"pref-editor", @"Editing");
+	PreferencePage *editor = tab(@"pref-editor", @"Editing");
 	checks(editor, @[@[@"insertSpaces", @"Insert spaces for indentation", @NO], @[@"backspaceUnindent", @"Backspace unindents", @NO],
 		@[@"virtualSpace", @"Allow the caret beyond the end of a line", @NO], @[@"multipleSelections", @"Enable multiple selections", @YES],
-		@[@"autocomplete", @"Offer completions while typing", @YES], @[@"autoPairs", @"Insert matching delimiters and closing tags", @YES]], 220);
-	field(editor, @"dateTimeFormat", @"Custom date and time format", @"yyyy-MM-dd HH:mm:ss", 82);
-	field(editor, @"tabWidth", @"Tab width", @"4", 52);
-	field(editor, @"autocompleteMinimum", @"Characters before completion", @"2", 22);
+		@[@"autocomplete", @"Offer completions while typing", @YES], @[@"autoPairs", @"Insert matching delimiters and closing tags", @YES]]);
+	field(editor, @"dateTimeFormat", @"Custom date and time format", @"yyyy-MM-dd HH:mm:ss");
+	field(editor, @"tabWidth", @"Tab width", @"4");
+	field(editor, @"autocompleteMinimum", @"Characters before completion", @"2");
+	field(editor, @"caretWidth", @"Caret width", @"1");
+	field(editor, @"caretBlink", @"Caret blink period (ms)", @"500");
 
-	NSView *display = tab(@"pref-display", @"Display");
+	PreferencePage *display = tab(@"pref-display", @"Display");
 	checks(display, @[@[@"wordWrap", @"Wrap long lines", @NO], @[@"lineNumbers", @"Show line numbers", @YES],
 		@[@"bookmarkMargin", @"Show bookmark margin", @YES], @[@"indentGuide", @"Show indentation guides", @NO],
 		@[@"whitespace", @"Show spaces and tabs", @NO], @[@"showEOL", @"Show end-of-line characters", @NO],
-		@[@"showWrapSymbol", @"Show wrap symbols", @NO], @[@"scrollBeyondLastLine", @"Scroll beyond the last line", @NO]], 220);
-	choice(display, @"toolbarStyle", @"Toolbar icons", @[@"Regular (small)", @"Regular (large)", @"Filled (small)", @"Filled (large)", @"Classic"], 0, 18);
-	checks(display, @[@[@"selectedTextForeground", @"Use the theme’s selected text color", @NO]], 50);
-	NSView *guides = tab(@"pref-guides", @"Editor guides");
-	choice(guides, @"currentLineMode", @"Current line", @[@"Off", @"Highlight", @"Outline"], 0, 232);
-	field(guides, @"currentLineFrameWidth", @"Outline width", @"1", 194);
-	choice(guides, @"wrapIndent", @"Wrapped line indent", @[@"Default", @"Aligned", @"Indented"], 0, 156);
-	field(guides, @"edgeColumns", @"Vertical ruler columns", @"", 118);
-	checks(guides, @[@[@"edgeBackground", @"Shade beyond a single ruler", @NO]], 78);
+		@[@"showWrapSymbol", @"Show wrap symbols", @NO], @[@"scrollBeyondLastLine", @"Scroll beyond the last line", @NO]]);
+	choice(display, @"toolbarStyle", @"Toolbar icons", @[@"Regular (small)", @"Regular (large)", @"Filled (small)", @"Filled (large)", @"Classic"], 0);
+	checks(display, @[@[@"selectedTextForeground", @"Use the theme’s selected text color", @NO]]);
+	PreferencePage *guides = tab(@"pref-guides", @"Editor guides");
+	choice(guides, @"currentLineMode", @"Current line", @[@"Off", @"Highlight", @"Outline"], 0);
+	field(guides, @"currentLineFrameWidth", @"Outline width", @"1");
+	choice(guides, @"wrapIndent", @"Wrapped line indent", @[@"Default", @"Aligned", @"Indented"], 0);
+	field(guides, @"edgeColumns", @"Vertical ruler columns", @"");
+	checks(guides, @[@[@"edgeBackground", @"Shade beyond a single ruler", @NO]]);
 	choice(guides, @"eolRepresentation", @"End-of-line markers", @[@"Plain text", @"Boxed", @"Plain text with theme color",
-		@"Boxed with theme color"], 1, 39);
-	NSView *styleOverride = tab(@"pref-styleOverride", @"Global style override");
+		@"Boxed with theme color"], 1);
+	PreferencePage *styleOverride = tab(@"pref-styleOverride", @"Global style override");
 	checks(styleOverride, @[@[@"styleOverrideForeground", @"Force foreground color for all styles", @NO],
 		@[@"styleOverrideBackground", @"Force background color for all styles", @NO],
 		@[@"styleOverrideFont", @"Force font choice for all styles", @NO],
 		@[@"styleOverrideSize", @"Force font size choice for all styles", @NO],
 		@[@"styleOverrideBold", @"Force bold choice for all styles", @NO],
 		@[@"styleOverrideItalic", @"Force italic choice for all styles", @NO],
-		@[@"styleOverrideUnderline", @"Force underline choice for all styles", @NO]], 248);
+		@[@"styleOverrideUnderline", @"Force underline choice for all styles", @NO]]);
 
-	NSView *files = tab(@"pref-files", @"Files and tabs");
+	PreferencePage *files = tab(@"pref-files", @"Files and tabs");
 	checks(files, @[@[@"saveAllConfirm", @"Confirm Save All", @YES],
-		@[@"detectEncoding", @"Automatically detect legacy encodings", @YES]], 278);
+		@[@"detectEncoding", @"Automatically detect legacy encodings", @YES]]);
 	checks(files, @[@[@"autoReload", @"Reload unchanged buffers automatically", @NO],
 		@[@"reloadToEnd", @"Go to the end after reloading", @NO], @[@"hideToolbar", @"Hide the toolbar", @NO],
 		@[@"hideTabBar", @"Hide the tab bar", @NO], @[@"tabCloseButtons", @"Show close buttons on tabs", @YES],
-		@[@"doubleClickClosesTab", @"Double-click a tab to close it", @NO], @[@"hideStatusBar", @"Hide the status bar", @NO]], 230);
-	choice(files, @"fileStatusMode", @"File change detection", @[@"Disabled", @"Active document", @"All open documents"], 1, 63);
-	choice(files, @"newDocumentEOL", @"New document line ending", @[@"Windows (CRLF)", @"Classic Mac (CR)", @"Unix (LF)"], 0, 35);
+		@[@"doubleClickClosesTab", @"Double-click a tab to close it", @NO], @[@"hideStatusBar", @"Hide the status bar", @NO]]);
+	choice(files, @"fileStatusMode", @"File change detection", @[@"Disabled", @"Active document", @"All open documents"], 1);
+	choice(files, @"newDocumentEOL", @"New document line ending", @[@"Windows (CRLF)", @"Classic Mac (CR)", @"Unix (LF)"], 0);
 	choice(files, @"newDocumentEncoding", @"New document encoding", @[@"Windows-1252", @"UTF-8 with BOM",
-		@"UTF-16 BE with BOM", @"UTF-16 LE with BOM", @"UTF-8", @"ASCII", @"UTF-16 BE", @"UTF-16 LE"], 4, 7);
+		@"UTF-16 BE with BOM", @"UTF-16 LE with BOM", @"UTF-8", @"ASCII", @"UTF-16 BE", @"UTF-16 LE"], 4);
 
-	NSView *tabOptions = tab(@"pref-tabs", @"Tabs");
+	PreferencePage *tabOptions = tab(@"pref-tabs", @"Tabs");
 	checks(tabOptions, @[@[@"mruTabSwitcher", @"Switch recent documents with Control-Tab", @YES],
 		@[@"tabPreview", @"Preview an inactive tab on hover", @NO], @[@"verticalTabs", @"Show tabs on the left", @NO],
-		@[@"multilineTabs", @"Wrap tabs to multiple rows", @NO], @[@"lockTabs", @"Prevent dragging tabs", @NO]], 220);
-	field(tabOptions, @"caretWidth", @"Caret width", @"1", 78);
-	field(tabOptions, @"caretBlink", @"Caret blink period (ms)", @"500", 44);
+		@[@"multilineTabs", @"Wrap tabs to multiple rows", @NO], @[@"lockTabs", @"Prevent dragging tabs", @NO]]);
 
-	NSView *large = tab(@"pref-largeFiles", @"Large files");
+	PreferencePage *large = tab(@"pref-largeFiles", @"Large files");
 	checks(large, @[@[@"limitLargeFiles", @"Skip syntax highlighting for large files", @NO],
 		@[@"largeFileCompletion", @"Allow automatic completion", @NO],
 		@[@"largeFileBraceMatch", @"Allow matching brace commands", @NO],
-		@[@"largeFileDisableWrap", @"Disable word wrap for large files", @NO]], 220);
-	field(large, @"largeFileMegabytes", @"Large file threshold (MiB)", @"200", 107);
+		@[@"largeFileDisableWrap", @"Disable word wrap for large files", @NO]]);
+	field(large, @"largeFileMegabytes", @"Large file threshold (MiB)", @"200");
 
-	NSView *search = tab(@"pref-search", @"Searching");
+	PreferencePage *search = tab(@"pref-search", @"Searching");
 	checks(search, @[@[@"fillFindSelection", @"Use selected text when opening Find", @YES],
 		@[@"fillFindWord", @"Use the word under the caret if there is no selection", @NO],
 		@[@"findFilesOnDisk", @"Search files on disk even if a buffer has unsaved edits", @NO],
-		@[@"monospacedFontFindDlg", @"Use a monospaced font in Find", @NO]], 248);
-	field(search, @"inSelectionAutocheckThreshold", @"Auto-select search scope from (chars)", @"1024", 132);
-	field(search, @"fillFindWhatThreshold", @"Max characters to fill Find", @"1024", 83);
+		@[@"monospacedFontFindDlg", @"Use a monospaced font in Find", @NO]]);
+	field(search, @"inSelectionAutocheckThreshold", @"Auto-select search scope from (chars)", @"1024");
+	field(search, @"fillFindWhatThreshold", @"Max characters to fill Find", @"1024");
 	NSTextField *selectionHint = [NSTextField wrappingLabelWithString:localized(@"pref-inSelectionHint",
 		@"Set the selection threshold to 0 to keep manual control of “In selection”.")];
-	Place(search, selectionHint, 12, 24, 472, 40);
+	selectionHint.textColor = NSColor.secondaryLabelColor;
+	[search addPreferenceRow:selectionHint label:nil];
 
-	NSView *backup = tab(@"pref-backup", @"Backup and sessions");
+	PreferencePage *backup = tab(@"pref-backup", @"Backup and sessions");
 	checks(backup, @[@[@"rememberSession", @"Restore the last session on startup", @YES],
-		@[@"checkpointDrafts", @"Periodically save unsaved edits for recovery", @YES]], 220);
-	choice(backup, @"instanceMode", @"Open files in", @[@"Current instance", @"New instance for sessions", @"New instance for every file"], 0, 159);
-	choice(backup, @"backupMode", @"Keep a backup of saved files", @[@"None", @"One .bak copy", @"Keep dated copies"], 0, 123);
-	field(backup, @"backupDirectory", @"Backup folder (optional)", @"", 87);
-	field(backup, @"checkpointMilliseconds", @"Recovery interval (ms)", @"1000", 51);
+		@[@"checkpointDrafts", @"Periodically save unsaved edits for recovery", @YES]]);
+	choice(backup, @"instanceMode", @"Open files in", @[@"Current instance", @"New instance for sessions", @"New instance for every file"], 0);
+	choice(backup, @"backupMode", @"Keep a backup of saved files", @[@"None", @"One .bak copy", @"Keep dated copies"], 0);
+	field(backup, @"backupDirectory", @"Backup folder (optional)", @"");
+	field(backup, @"checkpointMilliseconds", @"Recovery interval (ms)", @"1000");
 
-	NSView *printing = tab(@"pref-print", @"Printing");
-	choice(printing, @"printColorMode", @"Color mode", @[@"Editor colors", @"Invert colors", @"Black on white", @"Colors without background"], SC_PRINT_BLACKONWHITE, 242);
-	checks(printing, @[@[@"printLineNumbers", @"Print line numbers", @NO]], 216);
+	PreferencePage *printing = tab(@"pref-print", @"Printing");
+	choice(printing, @"printColorMode", @"Color mode", @[@"Editor colors", @"Invert colors", @"Black on white", @"Colors without background"], SC_PRINT_BLACKONWHITE);
+	checks(printing, @[@[@"printLineNumbers", @"Print line numbers", @NO]]);
 	NSArray *directions = @[@"Left", @"Middle", @"Right"];
 	NSArray *headerTitles = @[@"Left header", @"Center header", @"Right header"];
 	NSArray *footerTitles = @[@"Left footer", @"Center footer", @"Right footer"];
 	for (NSUInteger i = 0; i < directions.count; ++i)
-	{
-		field(printing, [@"printHeader" stringByAppendingString:directions[i]], headerTitles[i], @"", 190 - i * 24);
-		field(printing, [@"printFooter" stringByAppendingString:directions[i]], footerTitles[i], @"", 118 - i * 24);
-	}
+		field(printing, [@"printHeader" stringByAppendingString:directions[i]], headerTitles[i], @"");
+	for (NSUInteger i = 0; i < directions.count; ++i)
+		field(printing, [@"printFooter" stringByAppendingString:directions[i]], footerTitles[i], @"");
 	field(printing, @"printMargins", @"Margins in mm (left, top, right, bottom)",
 		[NSString stringWithFormat:@"%@, %@, %@, %@", [resources setting:@"printMarginLeft" fallback:@18],
 			[resources setting:@"printMarginTop" fallback:@18], [resources setting:@"printMarginRight" fallback:@18],
-			[resources setting:@"printMarginBottom" fallback:@18]], 22);
-	NSView *printLayout = tab(@"pref-print-layout", @"Print layout");
-	checks(printLayout, @[@[@"printFormFeedBreak", @"Print form feed as a page break", @NO]], 236);
-	field(printLayout, @"printHeaderFontName", @"Header font", @"", 194);
-	field(printLayout, @"printHeaderFontSize", @"Header font size", @"9", 162);
-	field(printLayout, @"printFooterFontName", @"Footer font", @"", 114);
-	field(printLayout, @"printFooterFontSize", @"Footer font size", @"9", 82);
+			[resources setting:@"printMarginBottom" fallback:@18]]);
+	PreferencePage *printLayout = tab(@"pref-print-layout", @"Print layout");
+	checks(printLayout, @[@[@"printFormFeedBreak", @"Print form feed as a page break", @NO]]);
+	field(printLayout, @"printHeaderFontName", @"Header font", @"");
+	field(printLayout, @"printHeaderFontSize", @"Header font size", @"9");
+	field(printLayout, @"printFooterFontName", @"Footer font", @"");
+	field(printLayout, @"printFooterFontSize", @"Footer font size", @"9");
 
-	NSView *accessory = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 520, 350)];
-	[accessory addSubview:tabs];
-	NSPopUpButton *sections = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
-	[sections addItemsWithTitles:[tabs.tabViewItems valueForKey:@"label"]];
+	CGFloat sidebarWidth = 188;
+	NSDictionary *categoryFont = @{NSFontAttributeName: [NSFont systemFontOfSize:NSFont.systemFontSize]};
+	for (NSTabViewItem *item in tabs.tabViewItems)
+		sidebarWidth = MAX(sidebarWidth, ceil([item.label sizeWithAttributes:categoryFont].width) + 72);
+	sidebarWidth = MIN(sidebarWidth, 330);
+	CGFloat extraWidth = sidebarWidth - 188;
+	[window setContentSize:NSMakeSize(760 + extraWidth, 472)];
+	NSView *content = window.contentView;
+	tabs.frame = NSOffsetRect(tabs.frame, extraWidth, 0);
+	[content addSubview:tabs];
+	NSScrollView *sidebar = [[NSScrollView alloc] initWithFrame:NSMakeRect(14, 59, sidebarWidth, 393)];
+	sidebar.hasVerticalScroller = YES;
+	sidebar.drawsBackground = NO;
+	NSTableView *sections = [[NSTableView alloc] initWithFrame:sidebar.contentView.bounds];
+	sections.headerView = nil;
+	sections.style = NSTableViewStyleSourceList;
+	sections.rowHeight = 26;
+	sections.allowsEmptySelection = NO;
+	sections.accessibilityIdentifier = @"preferences-categories";
 	[sections setAccessibilityLabel:localized(@"pref-category", @"Preferences category")];
+	NSTableColumn *category = [[NSTableColumn alloc] initWithIdentifier:@"category"];
+	category.width = NSWidth(sidebar.contentView.bounds) - 20;
+	[sections addTableColumn:category];
+	sidebar.documentView = sections;
+	[content addSubview:sidebar];
+	NSBox *divider = [NSBox new];
+	divider.boxType = NSBoxSeparator;
+	Place(content, divider, 211 + extraWidth, 54, 1, 401);
+	NSTextField *heading = [NSTextField labelWithString:@""];
+	heading.font = [NSFont systemFontOfSize:18 weight:NSFontWeightSemibold];
+	Place(content, heading, 230 + extraWidth, 430, 510, 29);
+	NSBox *footer = [NSBox new];
+	footer.boxType = NSBoxSeparator;
+	Place(content, footer, 14, 52, 732 + extraWidth, 1);
 	__attribute__((objc_precise_lifetime)) PreferenceSectionPicker *picker = [PreferenceSectionPicker new];
 	picker.tabs = tabs;
-	sections.target = picker;
-	sections.action = @selector(select:);
-	Place(accessory, sections, 12, 316, 290, 26);
-	window.accessoryView = accessory;
-	if ([window runModal] != NSAlertFirstButtonReturn)
+	picker.heading = heading;
+	window.delegate = picker;
+	sections.dataSource = picker;
+	sections.delegate = picker;
+	[sections reloadData];
+	[sections selectRowIndexes:[NSIndexSet indexSetWithIndex:0] byExtendingSelection:NO];
+	NSButton *apply = [NSButton buttonWithTitle:localized(@"native-apply", @"Apply") target:picker action:@selector(apply:)];
+	NSButton *cancel = [NSButton buttonWithTitle:localized(@"native-cancel", @"Cancel") target:picker action:@selector(cancel:)];
+	apply.keyEquivalent = @"\r";
+	cancel.keyEquivalent = @"\033";
+	CGFloat applyWidth = MAX(94, ceil(apply.cell.cellSize.width) + 12);
+	CGFloat cancelWidth = MAX(94, ceil(cancel.cell.cellSize.width) + 12);
+	Place(content, apply, 744 + extraWidth - applyWidth, 13, applyWidth, 28);
+	Place(content, cancel, 736 + extraWidth - applyWidth - cancelWidth, 13, cancelWidth, 28);
+	window.initialFirstResponder = sections;
+	[window center];
+	NSModalResponse response = [NSApp runModalForWindow:window];
+	[window orderOut:nil];
+	if (response != NSModalResponseOK)
 		return;
 	NSMutableDictionary *settings = [NSMutableDictionary dictionary];
 	NSDictionary<NSString *, NSArray<NSNumber *> *> *ranges =

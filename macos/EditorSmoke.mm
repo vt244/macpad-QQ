@@ -54,6 +54,59 @@ static NSView *ViewWithIdentifier(NSWindow *window, NSString *identifier)
 	});
 }
 
+static bool CheckControlFrames(NSView *form, const char *description)
+{
+	if (!Check(form != nil, description))
+		return false;
+	[form layoutSubtreeIfNeeded];
+	NSMutableArray<NSView *> *controls = [NSMutableArray array];
+	for (NSView *view in form.subviews)
+	{
+		if (view.hidden || ![view isKindOfClass:NSControl.class])
+			continue;
+		if (NSIsEmptyRect(view.frame) || !NSContainsRect(NSInsetRect(form.bounds, -1, -1), view.frame))
+		{
+			fprintf(stderr, "%s outside %s\n", NSStringFromRect(view.frame).UTF8String, NSStringFromRect(form.bounds).UTF8String);
+			return Check(false, description);
+		}
+		for (NSView *previous in controls)
+			if (NSIntersectsRect(NSInsetRect(previous.frame, 0.5, 0.5), NSInsetRect(view.frame, 0.5, 0.5)))
+			{
+				fprintf(stderr, "Overlapping controls at %s and %s\n", NSStringFromRect(previous.frame).UTF8String,
+					NSStringFromRect(view.frame).UTF8String);
+				return Check(false, description);
+			}
+		[controls addObject:view];
+	}
+	return Check(controls.count > 0, description);
+}
+
+static bool CheckPreferencesLayout(void)
+{
+	__block bool passed = false;
+	NSTimer *inspect = [NSTimer timerWithTimeInterval:0.05 repeats:NO block:^(NSTimer *timer) {
+		NSWindow *window = NSApp.modalWindow;
+		NSTableView *categories = (NSTableView *)ViewWithIdentifier(window, @"preferences-categories");
+		NSTabView *tabs = (NSTabView *)ViewMatching(window.contentView, ^BOOL(NSView *view) {
+			return [view isKindOfClass:NSTabView.class];
+		});
+		passed = Check(categories.numberOfRows == 11 && categories.numberOfRows == tabs.numberOfTabViewItems,
+			"show all preference categories in the sidebar");
+		for (NSInteger row = 0; row < categories.numberOfRows && passed; ++row)
+		{
+			[categories selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+			NSScrollView *section = (NSScrollView *)tabs.selectedTabViewItem.view;
+			passed = Check([tabs indexOfTabViewItem:tabs.selectedTabViewItem] == row, "switch preference sections from the sidebar") &&
+				CheckControlFrames(section.documentView, "fit controls and labels on each preference page");
+		}
+		[NSApp stopModalWithCode:NSModalResponseCancel];
+	}];
+	[NSRunLoop.currentRunLoop addTimer:inspect forMode:NSModalPanelRunLoopMode];
+	EditorShowPreferences();
+	[inspect invalidate];
+	return passed;
+}
+
 static bool CheckTabWindowHandoff(EditorDocumentController *controller, EditorDocument *document)
 {
 	NSWindow *original = document.windowControllers.firstObject.window;
@@ -1179,7 +1232,7 @@ int RunSmokeTest(void)
 		"show file and search commands and honor toolbarButtonsConf.xml"))
 		return 1;
 	[document showWindows];
-	if (!CheckTabWindowHandoff(controller, document))
+	if (!CheckTabWindowHandoff(controller, document) || !CheckPreferencesLayout())
 		return 1;
 	EditorDocument *second = [controller makeUntitledDocumentOfType:controller.defaultType error:&error];
 	if (!Check(second != nil, "create a second document tab"))
