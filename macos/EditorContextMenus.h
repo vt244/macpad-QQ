@@ -9,6 +9,7 @@ void EditorRunTabCommand(EditorDocument *document, NSInteger command);
 BOOL EditorCanRunTabCommand(EditorDocument *document, NSInteger command);
 NSColor *EditorTabColor(NSInteger index);
 void EditorCopyText(NSString *text);
+NSMenuItem *EditorFindMenuCommandByID(NSMenu *menu, NSString *identifier);
 
 @interface EditorContextView : ScintillaView
 @property(nonatomic, weak) EditorDocument *document;

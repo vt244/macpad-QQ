@@ -38,6 +38,16 @@ void RunWorkspaceLifecycleTest(BOOL restore);
 		return;
 	if (event.type == NSEventTypeFlagsChanged && !(event.modifierFlags & NSEventModifierFlagControl))
 		[documents finishRecentTabSwitch:YES];
+	if (event.type == NSEventTypeKeyDown && !self.modalWindow && !event.window.attachedSheet)
+	{
+		ScintillaView *editor = documents.focusedDocument.editor;
+		if (editor && event.window.firstResponder == editor.content)
+			if (unsigned int command = EditorScintillaCommandForEvent(event))
+			{
+				[editor message:command];
+				return;
+			}
+	}
 	[super sendEvent:event];
 }
 
@@ -674,6 +684,7 @@ static void AddCharacterSets(NSMenu *menu)
 	AddItem(settings, Label(@"48011", @"Preferences…"), @selector(showPreferences:), @"", self);
 	AddItem(settings, Label(@"46001", @"Style Configurator…"), @selector(showStyleConfigurator:), @"", self);
 	AddItem(settings, Label(@"48009", @"Shortcut Mapper…"), @selector(showShortcutMapper:), @"", self);
+	AddItem(settings, Label(@"native-importShortcuts", @"Import Shortcuts and Run Commands…"), @selector(importShortcutConfiguration:), @"", self);
 	AddItem(settings, Label(@"native-importConfig", @"Import Notepad++ Configuration…"), @selector(importWindowsConfiguration:), @"", self);
 	AddItem(settings, Label(@"native-editEditorMenu", @"Edit Editor Context Menu…"), @selector(editContextMenu:), @"", self);
 	AddItem(settings, Label(@"native-editTabMenu", @"Edit Tab Context Menu…"), @selector(editContextMenu:), @"", self).tag = 1;
@@ -751,11 +762,36 @@ static void AddCharacterSets(NSMenu *menu)
 - (void)showPreferences:(id)sender { EditorShowPreferences(); }
 - (void)showStyleConfigurator:(id)sender { if (EditorShowStyleConfigurator()) [self buildMenu]; }
 - (void)showShortcutMapper:(id)sender { if (EditorShowShortcutMapper(NSApp.mainMenu)) [self buildMenu]; }
+
+- (void)importShortcutConfiguration:(id)sender
+{
+	NSOpenPanel *panel = NSOpenPanel.openPanel;
+	panel.allowedContentTypes = @[UTTypeXML];
+	panel.message = Label(@"native-importShortcutsInfo", @"Import compatible shortcuts and saved commands. Commands are saved for manual use.");
+	if ([panel runModal] != NSModalResponseOK)
+		return;
+	NSError *error = nil;
+	NSUInteger skipped = 0;
+	if (!EditorImportShortcutConfiguration(panel.URL, NSApp.mainMenu, &skipped, &error))
+	{
+		if (error)
+			[NSApp presentError:error];
+		return;
+	}
+	[self buildMenu];
+	if (skipped)
+	{
+		NSAlert *report = [NSAlert new];
+		report.messageText = Label(@"native-shortcutsImported", @"Shortcuts Imported");
+		report.informativeText = [NSString localizedStringWithFormat:Label(@"native-shortcutsSkipped",
+			@"%lu duplicate or unsupported entries were skipped."), skipped];
+		[report runModal];
+	}
+}
 - (void)editUserLanguage:(id)sender
 {
 	if (EditorShowUserLanguageEditor())
 		[self updateUserLanguages:nil];
-		return;
 }
 - (void)removeUserLanguage:(id)sender
 {

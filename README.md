@@ -50,7 +50,7 @@ app and bundles it with matching source and SHA-256 checksums.
 - Set or clear read-only mode for all open documents from **Edit**. **Save All** asks for confirmation by default. Change that setting under **Settings → Preferences → Files and Tabs**.
 - Reopen legacy text with its original encoding from **Encoding → Character Set**.
 - Follow log files with **View → Monitoring (tail -f)**. Configure detection of external changes in **Settings → Preferences**.
-- Record and replay editing, search and replace actions from the **Macro** menu. **Import Macros…** reads compatible actions from `shortcuts.xml`. Assign keys to macros and named **Run** commands in **Settings → Shortcut Mapper**.
+- Record and replay editing, search and replace actions from the **Macro** menu. **Settings → Import Shortcuts and Run Commands…** reads compatible shortcuts, macros and commands from `shortcuts.xml`. Use **Shortcut Mapper** to assign shortcuts to menu actions or manage several bindings for one Scintilla command.
 - Set print colors, line numbers, margins and header or footer text under **Settings → Preferences → Printing**.
 - Use **Print Layout** in Preferences for header and footer fonts and form-feed page breaks. **File → Print Now** uses the selected printer.
 - Open **Language → Toggle User Language Panel** to edit, copy or remove definitions in a dockable panel.

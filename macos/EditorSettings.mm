@@ -380,6 +380,10 @@ BOOL EditorShowStyleConfigurator(void) { return [[StyleForm new] edit]; }
 NSString *EditorShortcutIdentifier(NSMenuItem *item)
 {
 	NSString *action = item.action ? NSStringFromSelector(item.action) : @"";
+	if ([action isEqualToString:@"assignScintillaShortcut:"])
+		return [NSString stringWithFormat:@"scintilla/%ld", item.tag];
+	if ([action isEqualToString:@"runPlugin:"] && [item.representedObject isKindOfClass:NSString.class])
+		return item.representedObject;
 	if ([action isEqualToString:@"selectLanguage:"] && [item.representedObject isKindOfClass:NSString.class])
 		return [action stringByAppendingString:item.representedObject];
 	if ([item.representedObject isKindOfClass:EditorMacro.class])
@@ -404,15 +408,12 @@ static void CollectCommands(NSMenu *menu, NSString *path, NSMutableDictionary<NS
 	}
 }
 
-void EditorApplyShortcuts(NSMenu *menu)
+static void ApplyShortcutsToMenu(NSMenu *menu, NSDictionary *shortcuts)
 {
-	NSDictionary *shortcuts = [EditorResources.shared setting:@"shortcuts" fallback:@{}];
-	if (!shortcuts.count)
-		return;
 	for (NSMenuItem *item in menu.itemArray)
 	{
 		if (item.submenu)
-			EditorApplyShortcuts(item.submenu);
+			ApplyShortcutsToMenu(item.submenu, shortcuts);
 		else if (item.action)
 		{
 			NSDictionary *binding = shortcuts[EditorShortcutIdentifier(item)];
@@ -425,6 +426,14 @@ void EditorApplyShortcuts(NSMenu *menu)
 	}
 }
 
+void EditorApplyShortcuts(NSMenu *menu)
+{
+	EditorResolvePendingPluginShortcuts(menu);
+	NSDictionary *shortcuts = [EditorResources.shared setting:@"shortcuts" fallback:@{}];
+	if (shortcuts.count)
+		ApplyShortcutsToMenu(menu, shortcuts);
+}
+
 static NSString *DisplayKey(NSString *value)
 {
 	if (value.length == 1)
@@ -432,6 +441,13 @@ static NSString *DisplayKey(NSString *value)
 		unichar key = [value characterAtIndex:0];
 		if (key >= NSF1FunctionKey && key <= NSF20FunctionKey)
 			return [NSString stringWithFormat:@"F%d", key - NSF1FunctionKey + 1];
+		NSDictionary *special = @{@(NSLeftArrowFunctionKey): @"Left", @(NSRightArrowFunctionKey): @"Right",
+			@(NSUpArrowFunctionKey): @"Up", @(NSDownArrowFunctionKey): @"Down", @(NSHomeFunctionKey): @"Home",
+			@(NSEndFunctionKey): @"End", @(NSPageUpFunctionKey): @"Page Up", @(NSPageDownFunctionKey): @"Page Down",
+			@(NSDeleteFunctionKey): @"Delete", @(NSInsertFunctionKey): @"Insert", @127: @"Backspace",
+			@9: @"Tab", @13: @"Return", @27: @"Escape", @32: @"Space"};
+		if (NSString *label = special[@(key)])
+			return label;
 	}
 	return value;
 }
@@ -442,8 +458,18 @@ static NSString *ReadKey(NSString *value)
 		return @"";
 	if (value.length == 1)
 		return value.lowercaseString;
-	const NSInteger function = [[value substringFromIndex:1] integerValue];
-	if ([value.uppercaseString hasPrefix:@"F"] && function >= 1 && function <= 20)
+	const unichar special[] = {NSLeftArrowFunctionKey, NSRightArrowFunctionKey, NSUpArrowFunctionKey, NSDownArrowFunctionKey,
+		NSHomeFunctionKey, NSEndFunctionKey, NSPageUpFunctionKey, NSPageDownFunctionKey,
+		NSDeleteFunctionKey, NSInsertFunctionKey, 127, 9, 13, 27, 32};
+	for (const unichar &character : special)
+	{
+		NSString *key = [NSString stringWithCharacters:&character length:1];
+		if ([DisplayKey(key) caseInsensitiveCompare:value] == NSOrderedSame)
+			return key;
+	}
+	NSScanner *scanner = [NSScanner scannerWithString:[value substringFromIndex:1]];
+	NSInteger function = 0;
+	if ([value.uppercaseString hasPrefix:@"F"] && [scanner scanInteger:&function] && scanner.isAtEnd && function >= 1 && function <= 20)
 		return [NSString stringWithFormat:@"%C", (unichar)(NSF1FunctionKey + function - 1)];
 	return nil;
 }
@@ -458,41 +484,198 @@ static NSString *ReadKey(NSString *value)
 	NSPopUpButton *_choice;
 	NSTextField *_key;
 	NSArray<NSButton *> *_modifiers;
+	NSPopUpButton *_bindingPicker;
+	NSButton *_addBinding;
+	NSButton *_removeBinding;
+	NSMutableArray<NSDictionary *> *_bindings;
+	NSDictionary *_assigned;
+	NSUInteger _bindingIndex;
 }
 
 static const NSEventModifierFlags ModifierFlags[] = {
 	NSEventModifierFlagCommand, NSEventModifierFlagShift, NSEventModifierFlagOption, NSEventModifierFlagControl,
 };
 
+static NSArray<NSDictionary *> *ShortcutBindings(NSMenuItem *item, NSDictionary *assigned)
+{
+	NSMutableArray *bindings = [NSMutableArray array];
+	if (item.keyEquivalent.length)
+		[bindings addObject:@{@"key": item.keyEquivalent, @"modifiers": @(item.keyEquivalentModifierMask)}];
+	if (item.action == @selector(assignScintillaShortcut:))
+	{
+		NSDictionary *record = assigned[EditorShortcutIdentifier(item)];
+		NSArray *alternatives = [record isKindOfClass:NSDictionary.class] ? record[@"alternatives"] : nil;
+		if ([alternatives isKindOfClass:NSArray.class])
+			for (NSDictionary *alternative in alternatives)
+				if ([alternative isKindOfClass:NSDictionary.class] && [alternative[@"key"] isKindOfClass:NSString.class] &&
+					[alternative[@"key"] length] && [alternative[@"modifiers"] isKindOfClass:NSNumber.class] &&
+					![bindings containsObject:alternative])
+					[bindings addObject:alternative];
+	}
+	return bindings;
+}
+
+- (void)loadBinding
+{
+	[_bindingPicker removeAllItems];
+	for (NSDictionary *binding in _bindings)
+	{
+		NSUInteger modifiers = [binding[@"modifiers"] unsignedIntegerValue];
+		NSMutableString *label = [NSMutableString string];
+		if (modifiers & NSEventModifierFlagControl) [label appendString:@"⌃"];
+		if (modifiers & NSEventModifierFlagOption) [label appendString:@"⌥"];
+		if (modifiers & NSEventModifierFlagShift) [label appendString:@"⇧"];
+		if (modifiers & NSEventModifierFlagCommand) [label appendString:@"⌘"];
+		NSString *key = binding[@"key"];
+		[label appendString:key.length ? DisplayKey(key) : EditorUIString(@"Unassigned")];
+		NSString *title = label;
+		NSUInteger duplicate = 1;
+		while ([_bindingPicker itemWithTitle:title])
+			title = [NSString stringWithFormat:@"%@ (%lu)", label, ++duplicate];
+		[_bindingPicker addItemWithTitle:title];
+	}
+	[_bindingPicker selectItemAtIndex:_bindingIndex];
+	NSDictionary *binding = _bindings[_bindingIndex];
+	_key.stringValue = DisplayKey(binding[@"key"]);
+	for (NSUInteger i = 0; i < _modifiers.count; ++i)
+		_modifiers[i].state = ([binding[@"modifiers"] unsignedIntegerValue] & ModifierFlags[i]) != 0;
+}
+
+- (BOOL)storeBinding
+{
+	NSString *key = ReadKey(_key.stringValue);
+	if (!key)
+		return NO;
+	NSEventModifierFlags modifiers = 0;
+	for (NSUInteger i = 0; i < _modifiers.count; ++i)
+		if (_modifiers[i].state == NSControlStateValueOn)
+			modifiers |= ModifierFlags[i];
+	_bindings[_bindingIndex] = @{@"key": key, @"modifiers": @(modifiers)};
+	return YES;
+}
+
+- (void)pickBinding:(NSPopUpButton *)sender
+{
+	if (![self storeBinding])
+	{
+		[sender selectItemAtIndex:_bindingIndex];
+		NSBeep();
+		return;
+	}
+	_bindingIndex = sender.indexOfSelectedItem;
+	[self loadBinding];
+}
+
+- (void)addBinding:(id)sender
+{
+	if (![self storeBinding])
+	{
+		NSBeep();
+		return;
+	}
+	[_bindings addObject:@{@"key": @"", @"modifiers": @0}];
+	_bindingIndex = _bindings.count - 1;
+	[self loadBinding];
+	[_key.window makeFirstResponder:_key];
+}
+
+- (void)removeBinding:(id)sender
+{
+	[_bindings removeObjectAtIndex:_bindingIndex];
+	if (!_bindings.count)
+		[_bindings addObject:@{@"key": @"", @"modifiers": @0}];
+	_bindingIndex = MIN(_bindingIndex, _bindings.count - 1);
+	[self loadBinding];
+}
+
 - (void)choose:(id)sender
 {
-	NSMenuItem *item = _commands[_choice.titleOfSelectedItem];
-	_key.stringValue = DisplayKey(item.keyEquivalent);
-	for (NSUInteger i = 0; i < _modifiers.count; ++i)
-		_modifiers[i].state = (item.keyEquivalentModifierMask & ModifierFlags[i]) != 0;
+	NSMenuItem *item = _commands[_choice.titleOfSelectedItem ?: @""];
+	_bindings = [ShortcutBindings(item, _assigned) mutableCopy];
+	if (!_bindings.count)
+		[_bindings addObject:@{@"key": @"", @"modifiers": @0}];
+	_bindingIndex = 0;
+	_bindingPicker.hidden = _addBinding.hidden = _removeBinding.hidden = item.action != @selector(assignScintillaShortcut:);
+	[self loadBinding];
+}
+
+- (void)filter:(NSSearchField *)sender
+{
+	NSString *query = sender.stringValue;
+	NSArray *names = [_commands.allKeys sortedArrayUsingSelector:@selector(localizedStandardCompare:)];
+	if (query.length)
+		names = [names filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(NSString *name, NSDictionary *bindings) {
+			if ([name localizedCaseInsensitiveContainsString:query])
+				return YES;
+			for (NSDictionary *binding in ShortcutBindings(_commands[name], _assigned))
+				if ([DisplayKey(binding[@"key"]) localizedCaseInsensitiveContainsString:query])
+					return YES;
+			return NO;
+		}]];
+	[_choice removeAllItems];
+	[_choice addItemsWithTitles:names];
+	[self choose:nil];
 }
 
 - (BOOL)edit:(NSMenu *)menu
 {
 	NSMutableDictionary *commands = [NSMutableDictionary dictionary];
 	CollectCommands(menu, @"", commands);
+	_assigned = [EditorResources.shared setting:@"shortcuts" fallback:@{}];
+	NSDictionary *scintilla = EditorScintillaCommandNames();
+	for (NSNumber *command in scintilla)
+	{
+		NSString *title = [NSString stringWithFormat:@"%@ › %@", SettingsLabel(@"Scintilla commands"), SettingsLabel(scintilla[command])];
+		NSMenuItem *item = [[NSMenuItem alloc] initWithTitle:title action:@selector(assignScintillaShortcut:) keyEquivalent:@""];
+		item.tag = command.integerValue;
+		NSDictionary *binding = _assigned[EditorShortcutIdentifier(item)];
+		if ([binding isKindOfClass:NSDictionary.class])
+		{
+			if ([binding[@"key"] isKindOfClass:NSString.class])
+				item.keyEquivalent = binding[@"key"];
+			item.keyEquivalentModifierMask = [binding[@"modifiers"] unsignedIntegerValue];
+		}
+		commands[title] = item;
+	}
 	_commands = commands;
 	if (!_commands.count)
 		return NO;
 	NSAlert *dialog = [NSAlert new];
 	dialog.messageText = [EditorResources.shared label:@"ShortcutMapper:title" fallback:@"Shortcut Mapper"];
-	dialog.informativeText = SettingsLabel(@"Enter a key or F1–F20. Leave the key empty to remove the shortcut.");
+	dialog.informativeText = SettingsLabel(@"Enter a key, a key name such as Left, or F1–F20. Leave it empty to remove the shortcut.");
 	[dialog addButtonWithTitle:SettingsLabel(@"Apply")];
 	[dialog addButtonWithTitle:SettingsLabel(@"Cancel")];
 	[dialog addButtonWithTitle:SettingsLabel(@"Restore Default")];
-	NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 443, 115)];
+	NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 443, 186)];
+	NSSearchField *filter = [[NSSearchField alloc] initWithFrame:NSZeroRect];
+	filter.placeholderString = SettingsLabel(@"Filter commands");
+	filter.sendsSearchStringImmediately = YES;
+	filter.target = self;
+	filter.action = @selector(filter:);
+	Place(form, filter, 0, 156, 440);
 	_choice = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+	_choice.accessibilityIdentifier = @"shortcut-command";
 	[_choice addItemsWithTitles:[_commands.allKeys sortedArrayUsingSelector:@selector(localizedStandardCompare:)]];
 	_choice.target = self;
 	_choice.action = @selector(choose:);
-	Place(form, _choice, 0, 88, 440);
+	Place(form, _choice, 0, 122, 440);
+	_bindingPicker = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+	_bindingPicker.accessibilityIdentifier = @"shortcut-binding";
+	_bindingPicker.target = self;
+	_bindingPicker.action = @selector(pickBinding:);
+	[_bindingPicker setAccessibilityLabel:EditorUIString(@"Assigned shortcuts")];
+	Place(form, _bindingPicker, 0, 88, 210);
+	EditorResources *resources = EditorResources.shared;
+	_addBinding = [NSButton buttonWithTitle:[resources label:@"ShortcutMapperSubDialg:5008" fallback:@"Add"]
+		target:self action:@selector(addBinding:)];
+	_addBinding.accessibilityIdentifier = @"shortcut-add";
+	_removeBinding = [NSButton buttonWithTitle:[resources label:@"ShortcutMapperSubDialg:5009" fallback:@"Remove"]
+		target:self action:@selector(removeBinding:)];
+	Place(form, _addBinding, 218, 88, 106);
+	Place(form, _removeBinding, 332, 88, 108);
 	Label(form, @"Shortcut key", 54);
 	_key = [NSTextField textFieldWithString:@""];
+	_key.accessibilityIdentifier = @"shortcut-key";
 	Place(form, _key, 150, 54, 100);
 	NSMutableArray *modifiers = [NSMutableArray array];
 	for (NSString *name in @[@"Command", @"Shift", @"Option", @"Control"])
@@ -510,9 +693,13 @@ static const NSEventModifierFlags ModifierFlags[] = {
 		NSModalResponse response = [dialog runModal];
 		if (response == NSAlertSecondButtonReturn)
 			return NO;
-		EditorResources *resources = EditorResources.shared;
 		NSMutableDictionary *shortcuts = [[resources setting:@"shortcuts" fallback:@{}] mutableCopy];
-		NSMenuItem *item = _commands[_choice.titleOfSelectedItem];
+		NSMenuItem *item = _commands[_choice.titleOfSelectedItem ?: @""];
+		if (!item)
+		{
+			NSBeep();
+			continue;
+		}
 		NSString *identifier = EditorShortcutIdentifier(item);
 		if (response == NSAlertThirdButtonReturn)
 		{
@@ -520,34 +707,39 @@ static const NSEventModifierFlags ModifierFlags[] = {
 			[resources setSetting:shortcuts forName:@"shortcuts"];
 			return YES;
 		}
-		NSString *key = ReadKey(_key.stringValue);
-		if (!key)
+		if (![self storeBinding])
 		{
-			dialog.informativeText = @"Enter a single character or a function key from F1 to F20.";
+			dialog.informativeText = EditorUIString(@"Enter a single character or a function key from F1 to F20.");
 			continue;
 		}
-		NSEventModifierFlags modifiers = 0;
-		for (NSUInteger i = 0; i < _modifiers.count; ++i)
-			if (_modifiers[i].state == NSControlStateValueOn)
-				modifiers |= ModifierFlags[i];
+		NSMutableOrderedSet<NSDictionary *> *active = [NSMutableOrderedSet orderedSet];
+		for (NSDictionary *binding in _bindings)
+			if ([binding[@"key"] length])
+				[active addObject:binding];
 		NSString *conflict = nil;
-		if (key.length)
-			for (NSString *name in _commands)
+		for (NSString *name in _commands)
+		{
+			NSMenuItem *other = _commands[name];
+			if ([EditorShortcutIdentifier(other) isEqual:identifier])
+				continue;
+			for (NSDictionary *binding in ShortcutBindings(other, shortcuts))
 			{
-				NSMenuItem *other = _commands[name];
-				if (![EditorShortcutIdentifier(other) isEqual:identifier] &&
-					[other.keyEquivalent.lowercaseString isEqualToString:key] && other.keyEquivalentModifierMask == modifiers)
-				{
+				NSDictionary *normalized = @{@"key": [binding[@"key"] lowercaseString], @"modifiers": binding[@"modifiers"]};
+				if ([active containsObject:normalized])
 					conflict = name;
-					break;
-				}
 			}
+			if (conflict)
+				break;
+		}
 		if (conflict)
 		{
-			dialog.informativeText = [NSString stringWithFormat:@"That shortcut is assigned to %@.", conflict];
+			dialog.informativeText = [NSString stringWithFormat:EditorUIString(@"That shortcut is assigned to %@."), conflict];
 			continue;
 		}
-		shortcuts[identifier] = @{@"key": key, @"modifiers": @(modifiers)};
+		NSMutableDictionary *record = [active.firstObject mutableCopy] ?: [@{@"key": @"", @"modifiers": @0} mutableCopy];
+		if (active.count > 1)
+			record[@"alternatives"] = [active.array subarrayWithRange:NSMakeRange(1, active.count - 1)];
+		shortcuts[identifier] = record;
 		[resources setSetting:shortcuts forName:@"shortcuts"];
 		return YES;
 	}

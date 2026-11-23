@@ -68,6 +68,18 @@ static NSMenuItem *FindMenuCommand(NSMenu *menu, NSArray<NSString *> *titles, NS
 	return nil;
 }
 
+NSMenuItem *EditorFindMenuCommandByID(NSMenu *menu, NSString *identifier)
+{
+	EditorResources *resources = EditorResources.shared;
+	NSString *english = [resources englishMenuLabel:identifier];
+	NSString *local = [resources label:identifier fallback:english];
+	NSMutableArray *titles = [NSMutableArray array];
+	for (NSString *title in @[english ?: @"", local ?: @""])
+		if (title.length)
+			[titles addObject:NormalizeMenuName(title)];
+	return FindMenuCommand(menu, titles, identifier.integerValue);
+}
+
 @interface ContextCommand : NSObject
 @property(nonatomic, strong) NSMenuItem *item;
 @property(nonatomic, weak) EditorDocument *document;
