@@ -1,4 +1,4 @@
-macpadqq 0.2.0
+macpadqq 0.2-beta
 
  - Added a native macOS editor using AppKit and Scintilla Cocoa.
  - Added native XML theme and translation import and a macOS plugin API.

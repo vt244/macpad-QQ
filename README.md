@@ -11,7 +11,7 @@ and Lexilla for syntax highlighting. [Upstream project](https://github.com/notep
 
 ## Install on macOS
 
-The current version is `0.1-beta`.
+The current version is `0.2-beta`.
 
 macpadqq runs natively on Apple silicon and Intel Macs with macOS 13 or later.
 It reads existing XML themes, translations and user-defined languages.
@@ -62,7 +62,8 @@ app and bundles it with matching source and SHA-256 checksums.
 - Use **Print Layout** in Preferences for header and footer fonts and form-feed page breaks. **File → Print Now** uses the selected printer.
 - Open **Language → Toggle User Language Panel** to edit, copy or remove definitions in a dockable panel.
 - Generate checksums from **Tools**, run macOS commands and save or open XML sessions.
-- Reopen the working session, including unsaved drafts, after quitting or restarting.
+- Double-click the empty space to the right of the tabs to open a new document.
+- Close the editor window with the red button and click the Dock icon to bring back the same tabs. The working session, including unsaved edits and drafts, is also restored on the next launch when session recovery is enabled.
 - Import existing XML themes, translations and user-defined languages.
 
 Open files from **File → Open** or from Finder with **Open With → macpadqq**.

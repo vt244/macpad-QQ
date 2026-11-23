@@ -193,12 +193,28 @@ static bool CheckTabWindowHandoff(EditorDocumentController *controller, EditorDo
 {
 	NSWindow *original = document.windowControllers.firstObject.window;
 	NSRect frame = original.frame;
-	EditorDocument *added = [controller makeUntitledDocumentOfType:controller.defaultType error:nullptr];
-	if (!Check(added != nil, "create a tab for window handoff"))
+	[original.contentView layoutSubtreeIfNeeded];
+	NSScrollView *strip = (NSScrollView *)document.chrome.primaryTabs;
+	NSView *content = strip.documentView;
+	NSView *lastTab = content.subviews.lastObject;
+	NSPoint blank = NSMakePoint(NSMaxX(lastTab.frame) + 12, NSMidY(lastTab.frame));
+	NSPoint point = [content convertPoint:blank toView:nil];
+	NSView *hit = [original.contentView hitTest:[original.contentView convertPoint:point fromView:nil]];
+	if (!Check(hit == content && lastTab, "hit the empty tab strip to the right of the tabs"))
 		return false;
-	[controller addDocument:added];
-	[added makeWindowControllers];
-	[added showWindows];
+	auto click = ^(NSInteger count) {
+		[hit mouseDown:[NSEvent mouseEventWithType:NSEventTypeLeftMouseDown location:point modifierFlags:0
+			timestamp:0 windowNumber:original.windowNumber context:nil eventNumber:0 clickCount:count pressure:1]];
+	};
+	NSUInteger count = controller.documents.count;
+	click(1);
+	if (!Check(controller.documents.count == count, "leave the tabs alone on a single background click"))
+		return false;
+	click(2);
+	EditorDocument *added = controller.focusedDocument;
+	if (!Check(controller.documents.count == count + 1 && added != document && !added.fileURL && added.editor.string.length == 0,
+		"create and select a blank tab on a double-click"))
+		return false;
 	NSWindow *incoming = added.windowControllers.firstObject.window;
 	BOOL opened = incoming.visible && !original.visible && NSEqualRects(incoming.frame, frame);
 	__block BOOL restoredBeforeClose = NO;
@@ -662,6 +678,45 @@ static bool CheckSearchAndConfigurationParity(EditorDocumentController *controll
 	[document findMatchingBrace:action];
 	if (!Check([editor.selectedString isEqualToString:@"(bar)"], "select a matching bracket pair"))
 		return false;
+	[editor message:SCI_SETINDENTATIONGUIDES wParam:SC_IV_REAL];
+	auto paint = [&] {
+		NSView *content = editor.content;
+		[content displayRectIgnoringOpacity:content.bounds];
+	};
+	[editor message:SCI_GOTOPOS wParam:4];
+	paint();
+	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 4, "highlight the bracket pair beside the caret"))
+		return false;
+	editor.string = @"  \"a\\\"b\"  'x'\nповтор фразы\nповтор фразы\nПовтор фразы";
+	[editor message:SCI_GOTOPOS wParam:8];
+	paint();
+	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 2, "match the closing double quote across an escaped quote"))
+		return false;
+	[editor message:SCI_GOTOPOS wParam:11];
+	paint();
+	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 10, "match the opening single quote"))
+		return false;
+	const auto first = [editor message:SCI_POSITIONFROMLINE wParam:1];
+	const auto second = [editor message:SCI_POSITIONFROMLINE wParam:2];
+	const auto third = [editor message:SCI_POSITIONFROMLINE wParam:3];
+	[editor message:SCI_SETTARGETRANGE wParam:1 lParam:2];
+	[editor message:SCI_SETSEARCHFLAGS wParam:SCFIND_WHOLEWORD];
+	[editor message:SCI_SETSEL wParam:second - 1 lParam:first];
+	paint();
+	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 0 &&
+		[editor message:SCI_INDICATORALLONFOR wParam:second] &&
+		[editor message:SCI_INDICATORALLONFOR wParam:third - 2] &&
+		![editor message:SCI_INDICATORALLONFOR wParam:third] &&
+		[editor message:SCI_GETTARGETSTART] == 1 && [editor message:SCI_GETTARGETEND] == 2 &&
+		[editor message:SCI_GETSEARCHFLAGS] == SCFIND_WHOLEWORD,
+		"highlight an exact repeated UTF-8 phrase and preserve the search target"))
+		return false;
+	[editor message:SCI_GOTOPOS wParam:first];
+	paint();
+	if (!Check(![editor message:SCI_INDICATORALLONFOR wParam:second], "clear occurrence highlighting when the selection is removed"))
+		return false;
+	[editor message:SCI_SETINDENTATIONGUIDES wParam:SC_IV_NONE];
+	editor.string = @"foo (bar) foo\nFOO";
 	[editor message:SCI_SETSEL wParam:0 lParam:3];
 	action.tag = 43022;
 	[document useMarkStyle:action];
@@ -1157,13 +1212,21 @@ void RunWorkspaceLifecycleTest(BOOL restore)
 		});
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	NSString *draft = @"Recover this unsaved draft after quitting.";
+	NSString *saved = @"Original text on disk";
+	NSString *edited = @"Edited text in the session";
+	NSURL *file = [EditorResources.shared.profile URLByAppendingPathComponent:@"lifecycle.txt"];
 	if (restore)
 	{
 		EditorDocument *document = (EditorDocument *)controller.documents.firstObject;
-		if (!Check(controller.documents.count == 1 && document.isDocumentEdited && [document.editor.string isEqualToString:draft] &&
-			[document.editor message:SCI_GETSELECTIONEND] == 7, "restore the unsaved draft and clone selection on a fresh AppKit launch"))
+		EditorDocument *modified = (EditorDocument *)[controller documentForURL:file];
+		if (!Check(controller.documents.count == 2 && document.isDocumentEdited && [document.editor.string isEqualToString:draft] &&
+			controller.focusedDocument == document && [document.editor message:SCI_GETSELECTIONEND] == 7,
+			"restore the unsaved draft and clone selection on a fresh AppKit launch") ||
+			!Check(modified.isDocumentEdited && [modified.editor.string isEqualToString:edited] &&
+				[[NSString stringWithContentsOfURL:file encoding:NSUTF8StringEncoding error:nullptr] isEqualToString:saved],
+				"restore unsaved edits to the file and preserve its disk contents"))
 			std::exit(1);
-		puts("Passed: recovery through AppKit quit and relaunch.");
+		puts("Passed: recovery through window close, reopen, AppKit quit and relaunch.");
 	}
 	else
 	{
@@ -1176,6 +1239,40 @@ void RunWorkspaceLifecycleTest(BOOL restore)
 			std::exit(1);
 		[document cloneToOtherView:nil];
 		[document.editor message:SCI_SETSEL wParam:0 lParam:7];
+		if (!Check([saved writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:nullptr], "write a file for window recovery"))
+			std::exit(1);
+		EditorDocument *modified = [controller makeDocumentWithContentsOfURL:file ofType:controller.defaultType error:nullptr];
+		if (!Check(modified != nil, "open the saved file for window recovery"))
+			std::exit(1);
+		[controller addDocument:modified];
+		[modified makeWindowControllers];
+		[modified showWindows];
+		[modified.editor message:SCI_SELECTALL];
+		[modified.editor setStringProperty:SCI_REPLACESEL parameter:0 value:edited];
+		[document showWindows];
+
+		NSWindow *window = document.windowControllers.firstObject.window;
+		NSButton *close = [window standardWindowButton:NSWindowCloseButton];
+		[close performClick:nil];
+		NSURL *checkpoint = [EditorResources.shared.profile URLByAppendingPathComponent:@"recovery/workspace.plist"];
+		NSData *data = [NSData dataWithContentsOfURL:checkpoint];
+		NSDictionary *snapshot = data ? [NSPropertyListSerialization propertyListWithData:data options:0 format:nullptr error:nullptr] : nil;
+		NSArray *tabs = snapshot[@"documents"];
+		if (!Check(!window.visible && controller.documents.count == 2 && tabs.count == 2 &&
+			[tabs[0][@"unsavedUTF8"] isEqual:[draft dataUsingEncoding:NSUTF8StringEncoding]] &&
+			[tabs[1][@"unsavedUTF8"] isEqual:[edited dataUsingEncoding:NSUTF8StringEncoding]],
+			"close the workspace via the title bar and immediately checkpoint both tabs"))
+		{
+			NSLog(@"close action=%@ target=%@ visible=%d tab count=%lu checkpoint tabs=%@",
+				NSStringFromSelector(close.action), close.target, window.visible, controller.documents.count, tabs);
+			std::exit(1);
+		}
+
+		[NSApp.delegate applicationShouldHandleReopen:NSApp hasVisibleWindows:NO];
+		if (!Check(window.visible && controller.focusedDocument == document && controller.documents.count == 2 &&
+			[document.editor message:SCI_GETSELECTIONEND] == 7, "reopen the same tabs and selection from the Dock"))
+			std::exit(1);
+		[close performClick:nil];
 	}
 	[NSApp terminate:nil];
 }

@@ -203,6 +203,14 @@ static NSColor *ReadableTabText(NSColor *foreground, NSColor *background)
 @end
 @implementation TabContent
 - (BOOL)isFlipped { return YES; }
+
+- (void)mouseDown:(NSEvent *)event
+{
+	if (event.clickCount == 2)
+		[NSDocumentController.sharedDocumentController newDocument:nil];
+	else
+		[super mouseDown:event];
+}
 @end
 
 @interface EditorTabStrip ()
