@@ -2359,17 +2359,25 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		{@"docList", @"44070", @"Document List", @"sidebar.left", @selector(toggleDocumentList:), self},
 		{@"funcList", @"44084", @"Function List", @"list.bullet", @selector(toggleFunctionList:), NSDocumentController.sharedDocumentController},
 		{@"fileBrowser", @"44085", @"Folder as Workspace", @"folder", @selector(toggleFolderWorkspace:), NSDocumentController.sharedDocumentController},
+		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
 		{@"monitoring", @"44097", @"Monitoring (tail -f)", @"waveform.path", @selector(monitorFile:), self},
 		{NSToolbarSpaceItemIdentifier, nil, nil, nil, nullptr, nil},
 		{@"startrecord", @"42018", @"Start Recording", @"record.circle", @selector(startRecordingMacro:), self},
 		{@"stoprecord", @"42019", @"Stop Recording", @"stop.circle", @selector(stopRecordingMacro:), self},
 		{@"playrecord", @"42021", @"Playback", @"play.circle", @selector(playRecordedMacro:), self},
-		{@"saverecord", @"42025", @"Save Current Recorded Macro…", @"square.and.arrow.down", @selector(saveRecordedMacro:), self},
 		{@"playrecord_m", @"42032", @"Run a Macro Multiple Times…", @"repeat.circle", @selector(repeatRecordedMacro:), self},
+		{@"saverecord", @"42025", @"Save Current Recorded Macro…", @"square.and.arrow.down", @selector(saveRecordedMacro:), self},
 	};
 	NSMutableArray<NSToolbarItem *> *items = [NSMutableArray array];
-	for (const auto &command : commands)
+	NSDictionary *alternateIDs = @{@"zoomIn": @"44023", @"zoomOut": @"44024", @"udl": @"46250"};
+	for (NSUInteger index = 0; index < std::size(commands); ++index)
 	{
+		const auto &command = commands[index];
+		NSString *identifier = alternateIDs[command.identifier] ?: command.translation ?: @"0";
+		if ([EditorResources.shared toolbarHidesCommand:identifier atIndex:index])
+			continue;
+		if (!command.action && (!items.count || [items.lastObject.itemIdentifier isEqualToString:NSToolbarSpaceItemIdentifier]))
+			continue;
 		NSToolbarItem *item = [[NSToolbarItem alloc] initWithItemIdentifier:command.identifier];
 		[items addObject:item];
 		if (!command.action)
@@ -2381,6 +2389,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		item.target = command.target;
 		item.action = command.action;
 	}
+	if ([items.lastObject.itemIdentifier isEqualToString:NSToolbarSpaceItemIdentifier])
+		[items removeLastObject];
 	return items;
 }
 

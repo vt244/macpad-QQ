@@ -396,7 +396,8 @@ static EditorTabStrip *TabStrip(BOOL other)
 			NSView *separator = ColoredView();
 			[separator.heightAnchor constraintEqualToConstant:16].active = YES;
 			[separator.widthAnchor constraintEqualToConstant:1].active = YES;
-			[_buttons setCustomSpacing:3 afterView:_buttons.arrangedSubviews.lastObject];
+			if (_buttons.arrangedSubviews.count)
+				[_buttons setCustomSpacing:3 afterView:_buttons.arrangedSubviews.lastObject];
 			[_buttons addArrangedSubview:separator];
 			[_buttons setCustomSpacing:3 afterView:separator];
 			[_separators addObject:separator];
@@ -572,7 +573,7 @@ static EditorTabStrip *TabStrip(BOOL other)
 {
 	EditorResources *resources = EditorResources.shared;
 	[self setTabsHidden:[[resources setting:@"hideTabBar" fallback:@NO] boolValue]];
-	_buttons.hidden = _toolbarDivider.hidden = [[resources setting:@"hideToolbar" fallback:@NO] boolValue];
+	_buttons.hidden = _toolbarDivider.hidden = !self.toolbarButtons.count || [[resources setting:@"hideToolbar" fallback:@NO] boolValue];
 	BOOL hideStatus = [[resources setting:@"hideStatusBar" fallback:@NO] boolValue];
 	_statusBar.hidden = hideStatus;
 	_statusHeight.constant = hideStatus ? 0 : 21;
@@ -704,8 +705,14 @@ static EditorTabStrip *TabStrip(BOOL other)
 	button.iconState = state;
 	NSString *directory = [NSString stringWithFormat:@"toolbar/%@/%@", dark ? @"dark" : @"light", style >= 2 ? @"filled" : @"regular"];
 	NSString *base = button.command.itemIdentifier;
-	NSURL *url = nil;
-	if (style == 4)
+	NSDictionary *customNames = @{@"saveall": @"save-all", @"closeall": @"close-all", @"findrep": @"replace",
+		@"zoomIn": @"zoom-in", @"zoomOut": @"zoom-out", @"syncV": @"sync-vertical", @"syncH": @"sync-horizontal",
+		@"wrap": @"word-wrap", @"allChars": @"all-chars", @"indentGuide": @"indent-guide", @"udl": @"udl-dlg",
+		@"docMap": @"doc-map", @"docList": @"doc-list", @"funcList": @"function-list", @"fileBrowser": @"folder-as-workspace",
+		@"startrecord": @"record", @"stoprecord": @"stop-record", @"playrecord": @"playback", @"saverecord": @"save-macro",
+		@"playrecord_m": @"playback-multiple"};
+	NSURL *url = [resources toolbarIconNamed:customNames[base] ?: base disabled:!button.enabled];
+	if (!url && style == 4)
 	{
 		NSDictionary *classicNames = @{@"new": @"newFile", @"open": @"openFile", @"save": @"saveFile", @"saveall": @"saveAll",
 			@"close": @"closeFile", @"closeall": @"closeAll", @"findrep": @"findReplace", @"startrecord": @"startRecord",

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <charconv>
+#include <climits>
 #include <optional>
 #include <sstream>
 #include <string_view>
@@ -252,6 +253,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	pugi::xml_document _languages;
 	pugi::xml_document _theme;
 	pugi::xml_document _userLanguages;
+	pugi::xml_document _toolbar;
 	NSMutableDictionary<NSString *, NSURL *> *_userLanguageFiles;
 }
 
@@ -271,6 +273,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 		NSURL *support = [fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
 		_profile = override.isAbsolutePath ? [NSURL fileURLWithPath:override isDirectory:YES] :
 			[support URLByAppendingPathComponent:@"macpad++/profile" isDirectory:YES];
+		LoadXML(_toolbar, [_profile URLByAppendingPathComponent:@"toolbarButtonsConf.xml"]);
 		LoadXML(_languages, [NSBundle.mainBundle URLForResource:@"langs.model" withExtension:@"xml"]);
 		NSMutableDictionary *englishLabels = [NSMutableDictionary dictionary];
 		if (LoadXML(_english, [NSBundle.mainBundle URLForResource:@"english" withExtension:@"xml" subdirectory:@"localization"]))
@@ -897,6 +900,52 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 }
 
 - (NSString *)englishMenuLabel:(NSString *)identifier { return _englishLabels[identifier]; }
+
+- (BOOL)toolbarHidesCommand:(NSString *)identifier atIndex:(NSUInteger)index
+{
+	auto section = _toolbar.child("NotepadPlus").child("ToolbarButtons").child("Standard");
+	if (std::string_view(section.attribute("hideAll").value()) == "yes")
+		return YES;
+	for (auto button : section.children("Button"))
+		if (button.attribute("index").as_ullong(ULLONG_MAX) == index &&
+			std::string_view(button.attribute("id").value()) == identifier.UTF8String)
+			return std::string_view(button.attribute("hide").value()) == "yes";
+	return NO;
+}
+
+- (BOOL)toolbarHidesPluginAtIndex:(NSUInteger)index
+{
+	auto section = _toolbar.child("NotepadPlus").child("ToolbarButtons").child("Plugin");
+	if (std::string_view(section.attribute("hideAll").value()) == "yes")
+		return YES;
+	for (auto button : section.children("Button"))
+		if (!index--)
+			return std::string_view(button.attribute("hide").value()) == "yes";
+	return NO;
+}
+
+- (NSURL *)toolbarIconNamed:(NSString *)name disabled:(BOOL)disabled
+{
+	auto icons = _toolbar.child("NotepadPlus").child("ToolBarIcons");
+	if (!icons || !name.length)
+		return nil;
+	NSString *folder = String(icons.attribute("icoFolderName").value());
+	if (!folder.length)
+		folder = @"default";
+	if (![folder isEqualToString:folder.lastPathComponent] || [folder isEqualToString:@"."] || [folder isEqualToString:@".."] ||
+		[folder containsString:@"\\"])
+		return nil;
+	NSURL *directory = [[_profile URLByAppendingPathComponent:@"toolbarIcons" isDirectory:YES]
+		URLByAppendingPathComponent:folder isDirectory:YES];
+	if (disabled)
+	{
+		NSURL *icon = [directory URLByAppendingPathComponent:[name stringByAppendingString:@"_disabled.ico"]];
+		if ([icon checkResourceIsReachableAndReturnError:nullptr])
+			return icon;
+	}
+	NSURL *icon = [directory URLByAppendingPathComponent:[name stringByAppendingPathExtension:@"ico"]];
+	return [icon checkResourceIsReachableAndReturnError:nullptr] ? icon : nil;
+}
 
 - (NSArray<NSString *> *)commandIDsWithEnglishTitle:(NSString *)title
 {
