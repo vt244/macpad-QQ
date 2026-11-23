@@ -767,9 +767,17 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			return _nativeLangSpeaker.getLangEncoding();
 		}
 
-		case NPPM_INTERNAL_DOCORDERCHANGED :
+		case NPPM_INTERNAL_REFRESHDOCLISTORDER:
 		{
 			if (_pDocumentListPanel)
+				_pDocumentListPanel->updateTabOrder();
+			return TRUE;
+		}
+
+		case NPPM_INTERNAL_DOCORDERCHANGED :
+		{
+			const bool deferListRefresh = wParam != 0;
+			if (!deferListRefresh && _pDocumentListPanel)
 			{
 				_pDocumentListPanel->updateTabOrder();
 			}

@@ -18,6 +18,7 @@
 #include "TabBar.h"
 
 #include <windows.h>
+#include <windowsx.h>
 
 #include <cassert>
 #include <cstdint>
@@ -498,6 +499,8 @@ void TabBarPlus::tabToStart(int index)
 			break;
 		}
 	}
+	if (i != index)
+		::SendMessage(_hParent, NPPM_INTERNAL_REFRESHDOCLISTORDER, 0, 0);
 	setActiveTab(i);
 }
 
@@ -514,6 +517,8 @@ void TabBarPlus::tabToEnd(int index)
 		if (!exchangeTabItemData(i, j, false))
 			break;
 	}
+	if (i != index)
+		::SendMessage(_hParent, NPPM_INTERNAL_REFRESHDOCLISTORDER, 0, 0);
 	setActiveTab(i);
 }
 
@@ -830,8 +835,8 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 		case WM_LBUTTONDOWN :
 		{
-			int xPos = LOWORD(lParam);
-			int yPos = HIWORD(lParam);
+			const int xPos = GET_X_LPARAM(lParam);
+			const int yPos = GET_Y_LPARAM(lParam);
 
 			int nTab = getTabIndexAt(xPos, yPos);
 			if (::GetWindowLongPtr(_hSelf, GWL_STYLE) & TCS_BUTTONS)
@@ -896,7 +901,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			// TCS_BUTTONS doesn't select the tab
 			if (::GetWindowLongPtr(_hSelf, GWL_STYLE) & TCS_BUTTONS)
 			{
-				int nTab = getTabIndexAt(LOWORD(lParam), HIWORD(lParam));
+				const int nTab = getTabIndexAt(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
 				if (nTab != -1 && nTab != static_cast<int32_t>(::SendMessage(_hSelf, TCM_GETCURSEL, 0, 0)))
 				{
 					setActiveTab(nTab);
@@ -937,8 +942,8 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			}
 
 			POINT p{};
-			p.x = LOWORD(lParam);
-			p.y = HIWORD(lParam);
+			p.x = GET_X_LPARAM(lParam);
+			p.y = GET_Y_LPARAM(lParam);
 
 			if (_isDragging)
 			{
@@ -1101,8 +1106,8 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			_mightBeDragging = false;
 			_dragCount = 0;
 
-			int xPos = LOWORD(lParam);
-			int yPos = HIWORD(lParam);
+			const int xPos = GET_X_LPARAM(lParam);
+			const int yPos = GET_Y_LPARAM(lParam);
 			int currentTabOn = getTabIndexAt(xPos, yPos);
 			if (_isDragging)
 			{
@@ -1113,6 +1118,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				else
 				{
 					_isDragging = false;
+					::SendMessage(_hParent, NPPM_INTERNAL_REFRESHDOCLISTORDER, 0, 0);
 				}
 
 				notify(_isDraggingInside?TCN_TABDROPPED:TCN_TABDROPPEDOUTSIDE, currentTabOn);
@@ -1184,6 +1190,7 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			if (_isDragging)
 			{
 				_isDragging = false;
+				::SendMessage(_hParent, NPPM_INTERNAL_REFRESHDOCLISTORDER, 0, 0);
 				return 0;
 			}
 			break;
@@ -1204,8 +1211,8 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 		case WM_MBUTTONUP:
 		{
-			int xPos = LOWORD(lParam);
-			int yPos = HIWORD(lParam);
+			const int xPos = GET_X_LPARAM(lParam);
+			const int yPos = GET_Y_LPARAM(lParam);
 			int currentTabOn = getTabIndexAt(xPos, yPos);
 			if (currentTabOn != -1)
 				notify(TCN_TABDELETE, currentTabOn);
@@ -1220,8 +1227,8 @@ LRESULT TabBarPlus::runProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			bool isVertical = nppGUI._tabStatus & TAB_VERTICAL;
 			bool isDbClk2Close = nppGUI._tabStatus & TAB_DBCLK2CLOSE;
 
-			int xPos = LOWORD(lParam);
-			int yPos = HIWORD(lParam);
+			const int xPos = GET_X_LPARAM(lParam);
+			const int yPos = GET_Y_LPARAM(lParam);
 			int currentTabOn = getTabIndexAt(xPos, yPos);
 
 			if (currentTabOn != -1)
@@ -1934,8 +1941,9 @@ bool TabBarPlus::exchangeTabItemData(int oldTab, int newTab, bool setToActive/* 
 
 	::SendMessage(_hSelf, TCM_SETITEM, newTab, reinterpret_cast<LPARAM>(&itemData_nDraggedTab));
 
-	// Tell Notepad_plus to notifiy plugins that a D&D operation was done (so doc index has been changed)
-	::SendMessage(_hParent, NPPM_INTERNAL_DOCORDERCHANGED, 0, oldTab);
+	// Notify plugins immediately, but defer the list refresh during a drag or a move to either end.
+	const bool deferListRefresh = _isDragging || !setToActive;
+	::SendMessage(_hParent, NPPM_INTERNAL_DOCORDERCHANGED, deferListRefresh, oldTab);
 
 	//2. set to focus
 	if (setToActive)
