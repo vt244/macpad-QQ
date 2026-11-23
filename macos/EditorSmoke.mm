@@ -54,6 +54,163 @@ static NSView *ViewWithIdentifier(NSWindow *window, NSString *identifier)
 	});
 }
 
+static bool CheckControlFrames(NSView *form, const char *description)
+{
+	if (!Check(form != nil, description))
+		return false;
+	[form layoutSubtreeIfNeeded];
+	NSMutableArray<NSView *> *controls = [NSMutableArray array];
+	for (NSView *view in form.subviews)
+	{
+		if (view.hidden || ![view isKindOfClass:NSControl.class])
+			continue;
+		if (NSIsEmptyRect(view.frame) || !NSContainsRect(NSInsetRect(form.bounds, -1, -1), view.frame))
+		{
+			fprintf(stderr, "%s outside %s\n", NSStringFromRect(view.frame).UTF8String, NSStringFromRect(form.bounds).UTF8String);
+			return Check(false, description);
+		}
+		for (NSView *previous in controls)
+			if (NSIntersectsRect(NSInsetRect(previous.frame, 0.5, 0.5), NSInsetRect(view.frame, 0.5, 0.5)))
+			{
+				fprintf(stderr, "Overlapping controls at %s and %s\n", NSStringFromRect(previous.frame).UTF8String,
+					NSStringFromRect(view.frame).UTF8String);
+				return Check(false, description);
+			}
+		[controls addObject:view];
+	}
+	return Check(controls.count > 0, description);
+}
+
+@interface EditorDocument (LayoutSmoke)
+- (void)showSearchMode:(NSInteger)mode;
+@end
+
+static bool CheckFindLayouts(EditorDocument *document)
+{
+	EditorResources *resources = EditorResources.shared;
+	NSURL *original = resources.selectedTranslation;
+	bool passed = true;
+	for (NSString *locale in @[@"english", @"russian", @"french", @"german", @"japanese"])
+	{
+		NSURL *url = [NSBundle.mainBundle URLForResource:locale withExtension:@"xml" subdirectory:@"localization"];
+		[resources chooseTranslation:url];
+		[document refreshLocalization];
+		for (NSInteger mode = 0; mode < 5; ++mode)
+		{
+			[document showSearchMode:mode];
+			NSWindow *panel = document.windowForSheet.childWindows.lastObject;
+			passed &= CheckControlFrames(panel.contentView, "fit visible controls without overlaps in every Find mode");
+			if (!passed)
+				fprintf(stderr, "Search layout: %s mode %ld\n", locale.UTF8String, (long)mode);
+		}
+		[document.windowForSheet.childWindows.lastObject close];
+	}
+	[resources chooseTranslation:original];
+	[document refreshLocalization];
+	return passed;
+}
+
+static bool CheckPreferencesLayout(void)
+{
+	__block bool passed = false;
+	NSTimer *inspect = [NSTimer timerWithTimeInterval:0.05 repeats:NO block:^(NSTimer *timer) {
+		NSWindow *window = NSApp.modalWindow;
+		NSTableView *categories = (NSTableView *)ViewWithIdentifier(window, @"preferences-categories");
+		NSTabView *tabs = (NSTabView *)ViewMatching(window.contentView, ^BOOL(NSView *view) {
+			return [view isKindOfClass:NSTabView.class];
+		});
+		passed = Check(categories.numberOfRows == 11 && categories.numberOfRows == tabs.numberOfTabViewItems,
+			"show all preference categories in the sidebar");
+		for (NSInteger row = 0; row < categories.numberOfRows && passed; ++row)
+		{
+			[categories selectRowIndexes:[NSIndexSet indexSetWithIndex:row] byExtendingSelection:NO];
+			NSScrollView *section = (NSScrollView *)tabs.selectedTabViewItem.view;
+			passed = Check([tabs indexOfTabViewItem:tabs.selectedTabViewItem] == row, "switch preference sections from the sidebar") &&
+				CheckControlFrames(section.documentView, "fit controls and labels on each preference page");
+		}
+		[NSApp stopModalWithCode:NSModalResponseCancel];
+	}];
+	[NSRunLoop.currentRunLoop addTimer:inspect forMode:NSModalPanelRunLoopMode];
+	EditorShowPreferences();
+	[inspect invalidate];
+	return passed;
+}
+
+static bool CheckEditingDialogs(EditorDocument *document)
+{
+	NSMenuItem *changeEngine = [NSMenuItem new];
+	changeEngine.tag = 42076;
+	const struct { const char *name; dispatch_block_t show; } dialogs[] = {
+		{"Style Configurator", ^{ EditorShowStyleConfigurator(); }},
+		{"Shortcut Mapper", ^{ EditorShowShortcutMapper(NSApp.mainMenu); }},
+		{"Column Editor", ^{ EditorShowColumnDialog(document.editor); }},
+		{"Find Characters in Range", ^{ [NSApp sendAction:NSSelectorFromString(@"showCharacterRangeSearch:") to:document from:nil]; }},
+		{"Change Search Engine", ^{ [NSApp sendAction:NSSelectorFromString(@"actOnSelection:") to:NSApp.delegate from:changeEngine]; }},
+	};
+	bool passed = true;
+	for (const auto &dialog : dialogs)
+	{
+		const char *name = dialog.name;
+		__block bool fits = false;
+		NSTimer *inspect = [NSTimer timerWithTimeInterval:0.05 repeats:NO block:^(NSTimer *timer) {
+			NSWindow *window = NSApp.modalWindow;
+			NSView *control = ViewMatching(window.contentView, ^BOOL(NSView *view) {
+				return [view isKindOfClass:NSTextField.class] && [(NSTextField *)view isEditable];
+			});
+			fits = CheckControlFrames(control.superview, name);
+			[NSApp stopModalWithCode:NSAlertSecondButtonReturn];
+		}];
+		[NSRunLoop.currentRunLoop addTimer:inspect forMode:NSModalPanelRunLoopMode];
+		dialog.show();
+		[inspect invalidate];
+		passed &= fits;
+	}
+	return passed;
+}
+
+static bool CheckUserLanguageLayout(void)
+{
+	NSScrollView *panel = (NSScrollView *)EditorCreateUDLPanel(nil);
+	NSTabView *tabs = (NSTabView *)ViewMatching(panel.documentView, ^BOOL(NSView *view) {
+		return [view isKindOfClass:NSTabView.class];
+	});
+	if (!Check(tabs.numberOfTabViewItems == 8, "show all user language tabs"))
+		return false;
+	for (NSTabViewItem *item in tabs.tabViewItems)
+	{
+		[tabs selectTabViewItem:item];
+		NSView *form = item.view;
+		for (NSView *view in form.subviews)
+			if ([view isKindOfClass:NSScrollView.class])
+				form = ((NSScrollView *)view).documentView;
+		if (!CheckControlFrames(form, item.label.UTF8String))
+			return false;
+	}
+	return true;
+}
+
+static bool CheckTabWindowHandoff(EditorDocumentController *controller, EditorDocument *document)
+{
+	NSWindow *original = document.windowControllers.firstObject.window;
+	NSRect frame = original.frame;
+	EditorDocument *added = [controller makeUntitledDocumentOfType:controller.defaultType error:nullptr];
+	if (!Check(added != nil, "create a tab for window handoff"))
+		return false;
+	[controller addDocument:added];
+	[added makeWindowControllers];
+	[added showWindows];
+	NSWindow *incoming = added.windowControllers.firstObject.window;
+	BOOL opened = incoming.visible && !original.visible && NSEqualRects(incoming.frame, frame);
+	__block BOOL restoredBeforeClose = NO;
+	NSNotificationCenter *notifications = NSNotificationCenter.defaultCenter;
+	id willClose = [notifications addObserverForName:NSWindowWillCloseNotification object:incoming queue:nil
+		usingBlock:^(NSNotification *notification) { restoredBeforeClose = original.visible; }];
+	[added closeEditorTab:nil];
+	[notifications removeObserver:willClose];
+	return Check(opened && restoredBeforeClose && original.visible && !incoming.visible && NSEqualRects(original.frame, frame),
+		"retain a visible window and its frame when adding and closing a tab");
+}
+
 static bool CheckLiveLabelsAndContrast(EditorDocument *document, EditorDocument *other)
 {
 	EditorResources *resources = EditorResources.shared;
@@ -1157,6 +1314,9 @@ int RunSmokeTest(void)
 		"show file and search commands and honor toolbarButtonsConf.xml"))
 		return 1;
 	[document showWindows];
+	if (!CheckTabWindowHandoff(controller, document) || !CheckFindLayouts(document) || !CheckPreferencesLayout() ||
+		!CheckEditingDialogs(document) || !CheckUserLanguageLayout())
+		return 1;
 	EditorDocument *second = [controller makeUntitledDocumentOfType:controller.defaultType error:&error];
 	if (!Check(second != nil, "create a second document tab"))
 		return 1;

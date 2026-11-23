@@ -65,14 +65,14 @@ void EditorInsertColumnText(ScintillaView *editor, NSString *text)
 	ApplyColumn(editor, columns, values);
 }
 
-static NSTextField *ColumnField(NSView *controls, NSString *name, NSString *value, CGFloat y)
+static NSTextField *ColumnField(NSView *controls, NSString *name, NSString *value, CGFloat y, CGFloat labelWidth)
 {
 	NSTextField *label = [NSTextField labelWithString:name];
-	label.frame = NSMakeRect(0, y + 2, 140, 21);
+	label.frame = NSMakeRect(0, y + 2, labelWidth, 21);
 	[controls addSubview:label];
 	NSTextField *field = [NSTextField textFieldWithString:value];
 	[field setAccessibilityLabel:name];
-	field.frame = NSMakeRect(145, y, 180, 24);
+	field.frame = NSMakeRect(labelWidth + 10, y, NSWidth(controls.bounds) - labelWidth - 10, 24);
 	[controls addSubview:field];
 	return field;
 }
@@ -96,22 +96,28 @@ void EditorShowColumnDialog(ScintillaView *editor)
 	alert.messageText = label(@"title", @"Column Editor");
 	[alert addButtonWithTitle:EditorUIString(@"Insert")];
 	[alert addButtonWithTitle:EditorUIString(@"Cancel")];
-	NSView *controls = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 330, 194)];
+	NSArray<NSString *> *labels = @[label(@"2023", @"Text to insert"), label(@"2030", @"Initial number"),
+		label(@"2031", @"Increase by"), label(@"2036", @"Repeat each")];
+	CGFloat labelWidth = 140;
+	for (NSString *title in labels)
+		labelWidth = MAX(labelWidth, ceil([NSTextField labelWithString:title].fittingSize.width));
+	NSButton *zeros = [NSButton checkboxWithTitle:EditorUIString(@"Leading zeros") target:nil action:nullptr];
+	CGFloat width = MAX(labelWidth + 200, ceil(zeros.fittingSize.width) + 182);
+	NSView *controls = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, width, 194)];
 	NSSegmentedControl *mode = [NSSegmentedControl segmentedControlWithLabels:@[label(@"2023", @"Text"), label(@"2033", @"Numbers")]
 		trackingMode:NSSegmentSwitchTrackingSelectOne target:nil action:nullptr];
 	mode.selectedSegment = 0;
-	mode.frame = NSMakeRect(0, 166, 330, 24);
+	mode.frame = NSMakeRect(0, 166, width, 24);
 	[controls addSubview:mode];
-	NSTextField *text = ColumnField(controls, label(@"2023", @"Text to insert"), @"", 134);
-	NSTextField *initial = ColumnField(controls, label(@"2030", @"Initial number"), @"1", 102);
-	NSTextField *step = ColumnField(controls, label(@"2031", @"Increase by"), @"1", 72);
-	NSTextField *repeat = ColumnField(controls, label(@"2036", @"Repeat each"), @"1", 42);
+	NSTextField *text = ColumnField(controls, labels[0], @"", 134, labelWidth);
+	NSTextField *initial = ColumnField(controls, labels[1], @"1", 102, labelWidth);
+	NSTextField *step = ColumnField(controls, labels[2], @"1", 72, labelWidth);
+	NSTextField *repeat = ColumnField(controls, labels[3], @"1", 42, labelWidth);
 	NSPopUpButton *format = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 8, 160, 25) pullsDown:NO];
 	[format addItemsWithTitles:@[label(@"2024", @"Decimal"), label(@"2026", @"Hexadecimal"),
 		label(@"2025", @"Octal"), label(@"2027", @"Binary")]];
 	[controls addSubview:format];
-	NSButton *zeros = [NSButton checkboxWithTitle:EditorUIString(@"Leading zeros") target:nil action:nullptr];
-	zeros.frame = NSMakeRect(169, 8, 150, 25);
+	zeros.frame = NSMakeRect(172, 8, width - 172, 25);
 	[controls addSubview:zeros];
 	alert.accessoryView = controls;
 	alert.window.initialFirstResponder = text;

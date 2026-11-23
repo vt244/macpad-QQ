@@ -3,6 +3,7 @@
 #import "EditorChrome.h"
 #import "EditorCompletion.h"
 #import "EditorContextMenus.h"
+#import "EditorDialogLayout.h"
 #import "EditorDocumentList.h"
 #import "EditorDocumentMap.h"
 #import "EditorDock.h"
@@ -49,6 +50,10 @@ static uint64_t NextRuntimeDocumentID = 1;
 
 @interface EditorWindowController : NSWindowController
 @property(nonatomic, copy) NSString *titleSuffix;
+@end
+
+@interface EditorDocumentWindow : NSWindow
+@property(nonatomic, weak) EditorDocument *editorDocument;
 @end
 
 @interface NSObject (EditorPluginToolbarProvider)
@@ -832,10 +837,11 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 		[self activateTab:tabs[target] otherView:other];
 }
 
-- (void)prepareToShowDocument:(EditorDocument *)document
+- (NSWindow *)prepareToShowDocument:(EditorDocument *)document
 {
 	NSWindow *previous = _activeDocument.windowControllers.firstObject.window;
 	NSWindow *next = document.windowControllers.firstObject.window;
+	NSWindow *outgoing = nil;
 	if (_activeDocument != document)
 	{
 		[_activeDocument displayOtherDocument:nil];
@@ -850,7 +856,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 		if (previous.visible)
 		{
 			[next setFrame:previous.frame display:NO];
-			[previous orderOut:nil];
+			outgoing = previous;
 		}
 		[document displayOtherDocument:_otherDocument];
 	}
@@ -872,6 +878,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	}
 	[self workspaceChanged];
 	NotifyPlugins(document, MACPAD_DOCUMENT_ACTIVATED);
+	return outgoing;
 }
 
 - (void)checkOpenFilesOnDisk
@@ -1010,6 +1017,25 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	[self workspaceChanged];
 }
 
+- (EditorDocument *)replacementForClosingDocument:(EditorDocument *)document atIndex:(NSUInteger)index
+{
+	for (BOOL other : {NO, YES})
+	{
+		NSMutableArray<EditorDocument *> *tabs = [[self tabsInOtherView:other] mutableCopy];
+		[tabs removeObjectIdenticalTo:document];
+		if (tabs.count)
+			return tabs[MIN(index, tabs.count - 1)];
+	}
+	return nil;
+}
+
+- (void)promoteClosingTabReplacement:(EditorDocument *)replacement
+{
+	[_secondaryTabs removeObject:replacement];
+	if (replacement == _otherDocument)
+		_otherDocument = [self tabsInOtherView:YES].firstObject;
+}
+
 - (void)prepareToCloseDocument:(EditorDocument *)document
 {
 	[_secondaryTabs removeObject:document];
@@ -1020,7 +1046,19 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 		[(_otherDocument ?: _activeDocument) focusEditor];
 	}
 	else if (document == _activeDocument)
+	{
+		if (!_workspaceSavedForQuit && document.windowControllers.firstObject.window.visible)
+		{
+			NSUInteger index = [self.tabDocuments indexOfObjectIdenticalTo:document];
+			if (EditorDocument *replacement = [self replacementForClosingDocument:document atIndex:index])
+			{
+				[self promoteClosingTabReplacement:replacement];
+				[replacement showWindows];
+				return;
+			}
+		}
 		[document displayOtherDocument:nil];
+	}
 }
 
 - (void)restoreViewsWithPrimary:(EditorDocument *)primary other:(EditorDocument *)other focusOther:(BOOL)focusOther
@@ -1072,15 +1110,11 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	if (wasActive)
 	{
 		_activeDocument = nil;
-		NSArray<EditorDocument *> *remaining = [self tabsInOtherView:NO];
-		if (!remaining.count)
-			remaining = [self tabsInOtherView:YES];
-		if (remaining.count)
+		EditorDocument *replacement = _workspaceSavedForQuit ? nil :
+			[self replacementForClosingDocument:(EditorDocument *)document atIndex:index];
+		if (replacement)
 		{
-			NSDocument *replacement = remaining[MIN(index, remaining.count - 1)];
-			[_secondaryTabs removeObject:(EditorDocument *)replacement];
-			if (replacement == _otherDocument)
-				_otherDocument = [self tabsInOtherView:YES].firstObject;
+			[self promoteClosingTabReplacement:replacement];
 			if (!NSIsEmptyRect(frame))
 				[replacement.windowControllers.firstObject.window setFrame:frame display:NO];
 			[replacement showWindows];
@@ -1619,6 +1653,16 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 }
 @end
 
+@implementation EditorDocumentWindow
+- (void)close
+{
+	// The window's close notification can precede NSDocument's close callback.
+	if (EditorDocument *document = self.editorDocument)
+		[(EditorDocumentController *)NSDocumentController.sharedDocumentController prepareToCloseDocument:document];
+	[super close];
+}
+@end
+
 @implementation EditorDocument
 {
 	ScintillaView *_editor;
@@ -1652,7 +1696,9 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	NSInteger _multiSelectFlags;
 	std::optional<sptr_t> _selectionStart;
 	NSSegmentedControl *_searchMode;
+	NSTextField *_queryLabel;
 	NSTextField *_replaceLabel;
+	NSButton *_closeSearch;
 	NSTextField *_searchFolder;
 	NSTextField *_searchFilters;
 	NSButton *_recursive;
@@ -1668,7 +1714,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	NSButton *_replaceInOpenDocuments;
 	NSArray<NSButton *> *_projectSearchControls;
 	NSArray<NSView *> *_directoryControls;
-	NSArray<NSView *> *_markControls;
+	NSArray<NSButton *> *_markControls;
 	NSButton *_bookmarkMatches;
 	NSButton *_purgeMarks;
 	NSArray<NSView *> *_fileSearchControls;
@@ -1924,10 +1970,12 @@ static void ApplyPreferencesToView(ScintillaView *view)
 
 - (void)makeWindowControllers
 {
-	NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 680)
+	EditorDocumentWindow *window = [[EditorDocumentWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 680)
 		styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable |
 			NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:NO];
+	window.editorDocument = self;
 	window.minSize = NSMakeSize(680, 260);
+	window.animationBehavior = NSWindowAnimationBehaviorNone;
 	window.tabbingMode = NSWindowTabbingModeDisallowed;
 	window.releasedWhenClosed = NO;
 	window.restorable = NO;
@@ -2623,9 +2671,10 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	if ([controller focusOtherViewDocument:self])
 		return;
-	[controller prepareToShowDocument:self];
+	NSWindow *outgoing = [controller prepareToShowDocument:self];
 	[super showWindows];
 	[self focusEditor];
+	[outgoing orderOut:nil];
 }
 
 - (IBAction)closeEditorTab:(id)sender
@@ -3323,13 +3372,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	}
 	[choices selectItemAtIndex:0];
 	NSTextField *count = [NSTextField textFieldWithString:@"1"];
-	NSStackView *form = [NSStackView stackViewWithViews:@[choices, [NSTextField labelWithString:EditorUIString(@"Number of times")], count]];
-	form.orientation = NSUserInterfaceLayoutOrientationVertical;
-	form.alignment = NSLayoutAttributeLeading;
-	form.frame = NSMakeRect(0, 0, 275, 90);
-	[choices.widthAnchor constraintLessThanOrEqualToConstant:275].active = YES;
-	[count.widthAnchor constraintEqualToConstant:100].active = YES;
-	alert.accessoryView = form;
+	NSTextField *countLabel = [NSTextField labelWithString:EditorUIString(@"Number of times")];
+	[count setAccessibilityLabel:countLabel.stringValue];
+	alert.accessoryView = EditorDialogForm(@[choices, countLabel, count], 300);
 	alert.window.initialFirstResponder = count;
 	const auto response = [alert runModal];
 	if (response != NSAlertFirstButtonReturn && response != NSAlertThirdButtonReturn)
@@ -4380,12 +4425,6 @@ static sptr_t DeleteWhitespace(ScintillaView *editor, NSString *pattern, sptr_t 
 	[self showSearchMode:3];
 }
 
-static void PlaceSearchControl(NSView *form, NSView *control, NSRect frame)
-{
-	control.frame = frame;
-	[form addSubview:control];
-}
-
 static void LoadSearchHistory(NSComboBox *control, NSString *key)
 {
 	NSString *text = control.stringValue;
@@ -4414,7 +4453,7 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 
 - (void)makeSearchPanel
 {
-	_searchPanel = [[NSPanel alloc] initWithContentRect:NSMakeRect(0, 0, 618, 304)
+	_searchPanel = [[NSPanel alloc] initWithContentRect:NSMakeRect(0, 0, 690, 336)
 		styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskUtilityWindow
 		backing:NSBackingStoreBuffered defer:NO];
 	_searchPanel.releasedWhenClosed = NO;
@@ -4446,7 +4485,7 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		@[@"titleMark", @"Mark"], @[@"titleFindInProjects", @"Find in Projects"]];
 	for (NSUInteger index = 0; index < modes.count; ++index)
 		localize(modes[index][0], modes[index][1], ^(NSString *text) { [modeControl setLabel:text forSegment:index]; });
-	PlaceSearchControl(form, _searchMode, NSMakeRect(12, 269, 594, 26));
+	[form addSubview:_searchMode];
 
 	_searchInput = [[NSComboBox alloc] initWithFrame:NSZeroRect];
 	_searchInput.accessibilityIdentifier = @"find-text";
@@ -4459,17 +4498,18 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	NSArray *titles = @[@[@"1620", @"Find what:"], @[@"1611", @"Replace with:"]];
 	for (NSUInteger i = 0; i < titles.count; ++i)
 	{
-		CGFloat y = 236 - 31 * i;
 		NSTextField *fieldLabel = [NSTextField labelWithString:@""];
 		if (i == 1)
 			_replaceLabel = fieldLabel;
-		PlaceSearchControl(form, fieldLabel, NSMakeRect(14, y + 2, 126, 21));
+		else
+			_queryLabel = fieldLabel;
+		[form addSubview:fieldLabel];
 		NSTextField *input = i == 0 ? _searchInput : _replaceInput;
 		localize(titles[i][0], titles[i][1], ^(NSString *text) {
 			fieldLabel.stringValue = text;
 			[input setAccessibilityLabel:text];
 		});
-		PlaceSearchControl(form, input, NSMakeRect(143, y, 275, 24));
+		[form addSubview:input];
 	}
 
 	NSString *folder = self.fileURL.URLByDeletingLastPathComponent.path ?: NSHomeDirectory();
@@ -4488,16 +4528,16 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	});
 	NSButton *browse = [NSButton buttonWithTitle:@"…" target:self action:@selector(browseSearchDirectory:)];
 	localize(@"search-selectDirectory", @"Select Search Directory", ^(NSString *text) { [browse setAccessibilityLabel:text]; });
-	PlaceSearchControl(form, filtersLabel, NSMakeRect(14, 173, 126, 21));
-	PlaceSearchControl(form, _searchFilters, NSMakeRect(143, 171, 275, 24));
-	PlaceSearchControl(form, directoryLabel, NSMakeRect(14, 142, 126, 21));
-	PlaceSearchControl(form, _searchFolder, NSMakeRect(143, 140, 243, 24));
-	PlaceSearchControl(form, browse, NSMakeRect(385, 137, 35, 28));
+	[form addSubview:filtersLabel];
+	[form addSubview:_searchFilters];
+	[form addSubview:directoryLabel];
+	[form addSubview:_searchFolder];
+	[form addSubview:browse];
 	_recursive = checkbox(@"1658", @"In all sub-folders", nil, nullptr);
 	_includeHidden = checkbox(@"1659", @"In hidden folders", nil, nullptr);
 	_recursive.state = [[EditorResources.shared setting:@"findRecursive" fallback:@YES] boolValue];
-	PlaceSearchControl(form, _recursive, NSMakeRect(14, 62, 220, 21));
-	PlaceSearchControl(form, _includeHidden, NSMakeRect(14, 38, 220, 21));
+	[form addSubview:_recursive];
+	[form addSubview:_includeHidden];
 	_fileSearchControls = @[filtersLabel, _searchFilters];
 	_directoryControls = @[directoryLabel, _searchFolder, browse, _recursive, _includeHidden];
 	NSMutableArray *projectControls = [NSMutableArray array];
@@ -4506,7 +4546,7 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		NSString *panelName = [NSString stringWithFormat:@"Project Panel %lu", index + 1];
 		NSButton *project = checkbox([@(1662 + index) stringValue], panelName, nil, nullptr);
 		project.state = NSControlStateValueOn;
-		PlaceSearchControl(form, project, NSMakeRect(14 + index * 142, 138, 140, 21));
+		[form addSubview:project];
 		[projectControls addObject:project];
 	}
 	_projectSearchControls = [projectControls copy];
@@ -4525,18 +4565,17 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	_wrapSearch.state = [[EditorResources.shared setting:@"findWrap" fallback:@YES] boolValue];
 	_regularExpression.state = (_searchFlags & SCFIND_REGEXP) != 0;
 	_matchNewline.state = (_searchFlags & SCFIND_REGEXP_DOTMATCHESNL) != 0;
-	NSArray<NSButton *> *options = @[_wholeWord, _matchCase, _wrapSearch];
-	for (NSUInteger i = 0; i < options.count; ++i)
-		PlaceSearchControl(form, options[i], NSMakeRect(14, 110 - 24 * i, 224, 21));
-	PlaceSearchControl(form, _regularExpression, NSMakeRect(240, 110, 180, 21));
-	PlaceSearchControl(form, _matchNewline, NSMakeRect(240, 86, 180, 21));
-	PlaceSearchControl(form, _extendedSearch, NSMakeRect(240, 62, 185, 21));
-	PlaceSearchControl(form, _inSelection, NSMakeRect(14, 143, 220, 21));
+	for (NSButton *option in @[_wholeWord, _matchCase, _wrapSearch])
+		[form addSubview:option];
+	[form addSubview:_regularExpression];
+	[form addSubview:_matchNewline];
+	[form addSubview:_extendedSearch];
+	[form addSubview:_inSelection];
 	_bookmarkMatches = checkbox(@"1616", @"Bookmark line", nil, nullptr);
 	_purgeMarks = checkbox(@"1618", @"Purge for each search", nil, nullptr);
 	_purgeMarks.state = NSControlStateValueOn;
-	PlaceSearchControl(form, _bookmarkMatches, NSMakeRect(14, 62, 220, 21));
-	PlaceSearchControl(form, _purgeMarks, NSMakeRect(14, 38, 220, 21));
+	[form addSubview:_bookmarkMatches];
+	[form addSubview:_purgeMarks];
 
 	NSArray *actions = @[@[@"1", @"Find Next"], @[@"43010", @"Find Previous"], @[@"1608", @"Replace"],
 		@[@"1609", @"Replace All"], @[@"2", @"Close"], @[@"1656", @"Find All"], @[@"1660", @"Replace in Files"],
@@ -4557,7 +4596,10 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		if (i == 3)
 			_replaceAllButton = button;
 		if (i == 4)
+		{
+			_closeSearch = button;
 			button.keyEquivalent = @"\033";
+		}
 		if (i == 5)
 			_findAll = button;
 		if (i == 6)
@@ -4566,8 +4608,7 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 			[markControls addObject:button];
 		if (i == 10)
 			_countMatches = button;
-		NSInteger row = i <= 4 ? i : i <= 6 ? i - 5 : i <= 9 ? i - 7 : 2;
-		PlaceSearchControl(form, button, NSMakeRect(432, 232 - 30 * row, 172, 29));
+		[form addSubview:button];
 	}
 	_markControls = [markControls copy];
 	_findInDocument = [NSButton buttonWithTitle:@"" target:self action:@selector(performSearch:)];
@@ -4579,12 +4620,15 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	_findInDocument.tag = 11;
 	_findInOpenDocuments.tag = 12;
 	_replaceInOpenDocuments.tag = 13;
-	PlaceSearchControl(form, _findInDocument, NSMakeRect(157, 42, 225, 28));
-	PlaceSearchControl(form, _findInOpenDocuments, NSMakeRect(386, 42, 218, 28));
-	PlaceSearchControl(form, _replaceInOpenDocuments, NSMakeRect(354, 42, 250, 28));
-	_searchStatus = [NSTextField labelWithString:@""];
-	PlaceSearchControl(form, _searchStatus, NSMakeRect(14, 12, 408, 22));
+	[form addSubview:_findInDocument];
+	[form addSubview:_findInOpenDocuments];
+	[form addSubview:_replaceInOpenDocuments];
+	_searchStatus = [NSTextField wrappingLabelWithString:@""];
+	_searchStatus.maximumNumberOfLines = 2;
+	[form addSubview:_searchStatus];
 	_searchLabelUpdates = [updates copy];
+	_searchMode.selectedSegment = 0;
+	[self updateSearchMode:nil];
 	[_searchPanel center];
 }
 
@@ -4649,8 +4693,75 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	[super close];
 }
 
+- (void)layoutSearchPanel
+{
+	const CGFloat inset = 16, gutter = 16, height = 336;
+	NSArray<NSControl *> *labels = @[_queryLabel, _replaceLabel, (NSControl *)_fileSearchControls[0], (NSControl *)_directoryControls[0]];
+	NSArray<NSTextField *> *fields = @[_searchInput, _replaceInput, _searchFilters, _searchFolder];
+	NSArray<NSButton *> *scopes = [@[_wholeWord, _matchCase, _wrapSearch, _inSelection, _recursive,
+		_includeHidden, _bookmarkMatches, _purgeMarks] arrayByAddingObjectsFromArray:_projectSearchControls];
+	NSArray<NSButton *> *syntax = @[_extendedSearch, _regularExpression, _matchNewline];
+	NSArray<NSButton *> *actions = @[_findForward, _findBackward, _replaceButton, _replaceAllButton, _countMatches,
+		_findInDocument, _findInOpenDocuments, _replaceInOpenDocuments, _findAll, _replaceFiles,
+		_markControls[2], _markControls[3], _markControls[4], _closeSearch];
+	auto controlWidth = [](NSArray<NSControl *> *controls) {
+		CGFloat width = 0;
+		for (NSControl *control in controls)
+			width = MAX(width, ceil(control.cell.cellSize.width));
+		return width;
+	};
+	CGFloat labelWidth = controlWidth(labels);
+	CGFloat scopeWidth = controlWidth(scopes);
+	CGFloat optionWidth = scopeWidth + gutter + controlWidth(syntax);
+	CGFloat actionWidth = MAX(200, controlWidth(actions) + 12);
+	CGFloat inputWidth = MAX(370, MAX(labelWidth + 245, optionWidth));
+	CGFloat modesWidth = 0;
+	NSDictionary *font = @{NSFontAttributeName: [NSFont systemFontOfSize:NSFont.systemFontSize]};
+	for (NSInteger index = 0; index < _searchMode.segmentCount; ++index)
+	{
+		CGFloat width = ceil([[_searchMode labelForSegment:index] sizeWithAttributes:font].width) + 24;
+		[_searchMode setWidth:width forSegment:index];
+		modesWidth += width;
+	}
+	CGFloat width = MAX(modesWidth + 2 * inset, inputWidth + actionWidth + gutter + 2 * inset);
+	NSView *form = _searchPanel.contentView;
+	if (NSWidth(form.bounds) != width)
+		[_searchPanel setContentSize:NSMakeSize(width, height)];
+	_searchMode.frame = NSMakeRect(inset, height - 40, modesWidth, 26);
+	CGFloat leftWidth = width - actionWidth - gutter - 2 * inset;
+	CGFloat x = inset + labelWidth + 10;
+	CGFloat fieldWidth = leftWidth - labelWidth - 10;
+	CGFloat top = height - 54;
+	NSView *browse = _directoryControls[2];
+	for (NSUInteger index = 0; index < fields.count; ++index)
+	{
+		if (fields[index].hidden)
+			continue;
+		labels[index].frame = NSMakeRect(inset, top - 22, labelWidth, 20);
+		fields[index].frame = NSMakeRect(x, top - 24, fieldWidth - (index == 3 ? 46 : 0), 24);
+		if (index == 3)
+			browse.frame = NSMakeRect(x + fieldWidth - 39, top - 25, 39, 26);
+		top -= 32;
+	}
+	auto placeColumn = [](NSArray<NSButton *> *buttons, CGFloat x, CGFloat top, CGFloat width, CGFloat step, CGFloat h) {
+		for (NSButton *button in buttons)
+			if (!button.hidden)
+			{
+				button.frame = NSMakeRect(x, top - h, width, h);
+				top -= step;
+			}
+	};
+	placeColumn(scopes, inset, top - 8, scopeWidth, 24, 21);
+	placeColumn(syntax, inset + scopeWidth + gutter, top - 8, leftWidth - scopeWidth - gutter, 24, 21);
+	placeColumn(actions, width - inset - actionWidth, height - 54, actionWidth, 31, 27);
+	_searchStatus.frame = NSMakeRect(inset, 10, width - 2 * inset, 33);
+	[form.window recalculateKeyViewLoop];
+}
+
 - (void)updateSearchMode:(id)sender
 {
+	if (!_searchPanel)
+		return;
 	const BOOL replace = _searchMode.selectedSegment == 1;
 	const BOOL fileSearch = _searchMode.selectedSegment == 2;
 	const BOOL mark = _searchMode.selectedSegment == 3;
@@ -4681,9 +4792,10 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		control.hidden = !projectSearch;
 	for (NSView *control in _markControls)
 		control.hidden = !mark;
-	((NSButton *)_markControls[2]).keyEquivalent = mark ? @"\r" : @"";
+	_markControls[2].keyEquivalent = mark ? @"\r" : @"";
 	_wholeWord.enabled = _regularExpression.state != NSControlStateValueOn;
 	_matchNewline.enabled = !_wholeWord.enabled;
+	[self layoutSearchPanel];
 }
 
 - (void)toggleRegex:(id)sender
@@ -4821,12 +4933,8 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	NSButton *linesOnly = [NSButton checkboxWithTitle:label(@"1713", @"Search only in found lines") target:nil action:nil];
 	NSButton *matchCase = [NSButton checkboxWithTitle:label(@"1715", @"Match case") target:nil action:nil];
 	NSButton *regex = [NSButton checkboxWithTitle:label(@"1719", @"Regular expression") target:nil action:nil];
-	NSView *controls = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 330, 92)];
-	PlaceSearchControl(controls, queryField, NSMakeRect(0, 64, 330, 24));
-	PlaceSearchControl(controls, linesOnly, NSMakeRect(0, 40, 330, 21));
-	PlaceSearchControl(controls, matchCase, NSMakeRect(0, 18, 140, 21));
-	PlaceSearchControl(controls, regex, NSMakeRect(142, 18, 185, 21));
-	alert.accessoryView = controls;
+	[queryField setAccessibilityLabel:queryField.placeholderString];
+	alert.accessoryView = EditorDialogForm(@[queryField, linesOnly, matchCase, regex], 330);
 	alert.window.initialFirstResponder = queryField;
 	if ([alert runModal] != NSAlertFirstButtonReturn || !queryField.stringValue.length)
 		return;
@@ -5185,14 +5293,11 @@ static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor)
 	NSButton *backward = [NSButton checkboxWithTitle:[resources label:@"character-range-backward" fallback:@"Search backwards"] target:nil action:nil];
 	NSButton *wrap = [NSButton checkboxWithTitle:[resources label:@"character-range-wrap" fallback:@"Wrap around"] target:nil action:nil];
 	wrap.state = NSControlStateValueOn;
-	NSStackView *form = [NSStackView stackViewWithViews:@[
-		[NSTextField labelWithString:[resources label:@"character-range-first" fallback:@"First Unicode code point"]],
-		first, [NSTextField labelWithString:[resources label:@"character-range-last" fallback:@"Last Unicode code point"]],
-		last, backward, wrap]];
-	form.orientation = NSUserInterfaceLayoutOrientationVertical;
-	form.alignment = NSLayoutAttributeLeading;
-	form.frame = NSMakeRect(0, 0, 270, 160);
-	dialog.accessoryView = form;
+	NSTextField *firstLabel = [NSTextField labelWithString:[resources label:@"character-range-first" fallback:@"First Unicode code point"]];
+	NSTextField *lastLabel = [NSTextField labelWithString:[resources label:@"character-range-last" fallback:@"Last Unicode code point"]];
+	[first setAccessibilityLabel:firstLabel.stringValue];
+	[last setAccessibilityLabel:lastLabel.stringValue];
+	dialog.accessoryView = EditorDialogForm(@[firstLabel, first, lastLabel, last, backward, wrap], 290);
 	dialog.window.initialFirstResponder = first;
 	while ([dialog runModal] == NSAlertFirstButtonReturn)
 	{
