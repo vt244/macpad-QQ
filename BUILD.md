@@ -59,6 +59,20 @@ and restart the app. Plugins run in the editor process with its permissions.
 ABI v2 host callbacks are valid during the synchronous command or event call
 on the main thread. Panel views are retained while open.
 
+Export `macpad_plugin_v3` for ABI v3. Pass the host's `v2.context` to callbacks.
+The v3 host provides selection and UTF-8 byte-range access, document flags and
+language, document activation and additional events for saves, selections,
+path changes and language changes. Use stable UTF-8 plugin and command IDs
+without slashes to preserve native shortcut assignments across renames.
+
+In the optional v3 `onReady` callback, register toolbar buttons and any
+Windows module and command IDs used by the original plugin. Check
+`MacpadEditorV3.structSize` before calling optional host functions. Marker
+and indicator reservation returns the first contiguous ID, or `-1` if the
+range is unavailable. Pass a notification mask to `subscribeToEditor` to
+receive the corresponding snapshots in `onEditorNotification`. The event
+data is valid for the duration of its callback.
+
 **Plugins → Plugin Catalog Source…** accepts a local JSON manifest or an HTTPS
 manifest URL. The manifest contains a `plugins` array with `name`, `version`,
 `file` (a dylib basename), `url` (absolute or relative to the manifest), and

@@ -83,8 +83,8 @@ The profile folder is `~/Library/Application Support/macpad++/profile/`.
 | Windows project and session paths | `windowsPathMappings.plist` | Map drive letters and UNC shares to local directories. See [path mapping examples](SUPPORTED_SYSTEM.md#map-windows-paths). |
 | macOS plugin | `plugins/*.dylib` | Install from a local file or the catalog in **Plugins → Plugins Admin…**, then restart. Disabled files remain in `plugins/Disabled/`. |
 
-The native plugin API supports document access, editor events, AppKit panels
-and multiple menu commands.
+The native plugin API supports document access, selection and byte ranges,
+editor events, AppKit panels and multiple menu commands.
 [Native plugin API](macos/MacpadPlugin.h) · [Plugin build example](BUILD.md#native-plugins)
 
 ## License and contributions

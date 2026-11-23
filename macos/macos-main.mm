@@ -209,6 +209,8 @@ static void AddCharacterSets(NSMenu *menu)
 	NSString *_lastRunCommand;
 }
 
+- (NSArray<NSToolbarItem *> *)pluginToolbarItems { return [_plugins toolbarItems]; }
+
 - (void)applicationWillFinishLaunching:(NSNotification *)notification
 {
 	if (!self.launchOptions.noPlugins && !self.launchOptions.quickPrint)

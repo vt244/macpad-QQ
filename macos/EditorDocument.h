@@ -12,6 +12,7 @@
 @property(nonatomic, readonly, getter=isTabPinned) BOOL tabPinned;
 @property(nonatomic, readonly, getter=isMonitoring) BOOL monitoring;
 @property(nonatomic, readonly) uint64_t runtimeIdentifier;
+@property(nonatomic, readonly) NSString *languageIdentifier;
 @property(nonatomic, readonly) NSInteger tabColorIndex;
 - (void)changeTabPin;
 - (void)changeTabColor:(NSInteger)index;

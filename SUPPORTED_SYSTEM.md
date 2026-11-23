@@ -18,7 +18,7 @@
 | Tools and Run | MD5, SHA‑1, SHA‑256 and SHA‑512. Save named macOS commands with active-document placeholders and assign them shortcuts. |
 | Printing | Set print colors, line numbers, margins, header and footer templates and fonts, and form-feed page breaks. Print Now uses the selected printer. |
 | Terminal | Run the executable with `--help` for options. Quote wildcard paths and add `-r` for recursion. `-fullReadOnly` and `-monitoringMode` also apply to later file opens. `-fullReadOnlySavingForbidden` blocks editor file saves after clearing read-only mode. `-x`, `-y` and `-titleAdd` configure the launch window. |
-| Plugins | Plugins Admin supports local and catalog installation and version updates. ABI v2 adds document access, events, panels and multiple commands. ABI v1 selection plugins remain supported. Windows DLLs require the Windows editor. |
+| Plugins | ABI v3 adds UTF-8 range access, selections, document flags, activation and stable command IDs. The optional extension provides toolbar buttons, marker and indicator reservations, editor event subscriptions and Windows shortcut aliases. Earlier v3 descriptors, ABI v1 and ABI v2 remain supported. Windows DLLs require the Windows editor. |
 
 The macOS port uses native AppKit shortcuts and dialogs. Compatibility varies
 for Windows-specific commands, unsupported XML options and older plugin APIs.

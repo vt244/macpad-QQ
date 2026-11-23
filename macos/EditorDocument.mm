@@ -51,6 +51,10 @@ static uint64_t NextRuntimeDocumentID = 1;
 @property(nonatomic, copy) NSString *titleSuffix;
 @end
 
+@interface NSObject (EditorPluginToolbarProvider)
+- (NSArray<NSToolbarItem *> *)pluginToolbarItems;
+@end
+
 @implementation EditorWindowController
 - (NSString *)windowTitleForDocumentDisplayName:(NSString *)displayName
 {
@@ -59,7 +63,7 @@ static uint64_t NextRuntimeDocumentID = 1;
 }
 @end
 
-static void NotifyPlugins(EditorDocument *document, MacpadDocumentEventV2 event)
+static void NotifyPlugins(EditorDocument *document, NSInteger event)
 {
 	if (document)
 		[NSNotificationCenter.defaultCenter postNotificationName:EditorPluginDocumentDidChange object:document
@@ -1884,7 +1888,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[view message:SCI_SETMARGINTYPEN wParam:0 lParam:SC_MARGIN_NUMBER];
 	[view message:SCI_SETMARGINWIDTHN wParam:0 lParam:32];
 	[view message:SCI_SETMARGINTYPEN wParam:1 lParam:SC_MARGIN_SYMBOL];
-	[view message:SCI_SETMARGINMASKN wParam:1 lParam:1 << Bookmark];
+	[view message:SCI_SETMARGINMASKN wParam:1 lParam:(1 << (Bookmark + 1)) - 1];
 	[view message:SCI_SETMARGINWIDTHN wParam:1 lParam:16];
 	[view message:SCI_SETMARGINSENSITIVEN wParam:1 lParam:1];
 	[view message:SCI_SETCHANGEHISTORY wParam:SC_CHANGE_HISTORY_ENABLED | SC_CHANGE_HISTORY_MARKERS];
@@ -2539,6 +2543,16 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	}
 	if ([items.lastObject.itemIdentifier isEqualToString:NSToolbarSpaceItemIdentifier])
 		[items removeLastObject];
+	if ([NSApp.delegate respondsToSelector:@selector(pluginToolbarItems)])
+	{
+		NSArray *plugins = [(id)NSApp.delegate pluginToolbarItems];
+		if (plugins.count)
+		{
+			if (items.count && ![EditorResources.shared toolbarHidesPluginAtIndex:0])
+				[items addObject:[[NSToolbarItem alloc] initWithItemIdentifier:NSToolbarSpaceItemIdentifier]];
+			[items addObjectsFromArray:plugins];
+		}
+	}
 	return items;
 }
 
@@ -2661,7 +2675,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 
 - (void)setFileURL:(NSURL *)fileURL
 {
-	if (![self.fileURL isEqual:fileURL])
+	NSURL *previous = self.fileURL;
+	BOOL changed = previous != fileURL && ![previous isEqual:fileURL];
+	if (changed)
 	{
 		_diskState = nil;
 		_pendingDiskState = nil;
@@ -2674,6 +2690,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[super setFileURL:fileURL];
 	[self applyTheme];
 	[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
+	if (changed && [NSDocumentController.sharedDocumentController.documents containsObject:self])
+		NotifyPlugins(self, MACPAD_EVENT_PATH_CHANGED);
 }
 
 - (NSDictionary *)currentDiskState
@@ -2891,9 +2909,14 @@ static void ApplyPreferencesToView(ScintillaView *view)
 
 - (IBAction)selectLanguage:(NSMenuItem *)sender
 {
+	NSString *previous = _languageIdentifier;
 	_languageOverride = sender.representedObject;
 	[self applyTheme];
+	if (previous != _languageIdentifier && ![previous isEqualToString:_languageIdentifier])
+		NotifyPlugins(self, MACPAD_EVENT_LANGUAGE_CHANGED);
 }
+
+- (NSString *)languageIdentifier { return _languageIdentifier; }
 
 - (IBAction)setFoldState:(id)sender
 {
@@ -3571,6 +3594,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			self->_encodingChanged = NO;
 			[self.editor message:SCI_SETSAVEPOINT];
 			[(EditorDocumentController *)NSDocumentController.sharedDocumentController workspaceChanged];
+			NotifyPlugins(self, MACPAD_EVENT_SAVED);
 		}
 		completionHandler(error);
 	}];
@@ -3612,6 +3636,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 {
 	if (_loading)
 		return;
+	EditorPublishPluginNotification(self, notification);
 	switch (notification->nmhdr.code)
 	{
 		case SCN_FOCUSIN:
@@ -3678,6 +3703,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 				[(EditorDocumentController *)NSDocumentController.sharedDocumentController syncScrollFromDocument:self changes:notification->updated];
 			if (notification->updated & (SC_UPDATE_V_SCROLL | SC_UPDATE_CONTENT))
 				[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentMap];
+			if (notification->updated & SC_UPDATE_SELECTION)
+				NotifyPlugins(self, MACPAD_EVENT_SELECTION_CHANGED);
 			break;
 		case SCN_MARGINCLICK:
 			if (notification->margin == 1)
