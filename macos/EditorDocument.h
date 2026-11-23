@@ -110,6 +110,8 @@
 - (void)addWorkspaceFolders:(NSArray<NSURL *> *)folders;
 - (void)prepareToShowDocument:(EditorDocument *)document;
 - (void)refreshDocumentTabs;
+- (IBAction)setAllDocumentsReadOnly:(NSMenuItem *)sender;
+- (BOOL)canSetAllDocumentsReadOnly:(BOOL)readOnly;
 - (BOOL)saveSessionToURL:(NSURL *)url error:(NSError **)error;
 - (BOOL)loadSessionFromURL:(NSURL *)url error:(NSError **)error;
 - (void)startWorkspaceRecoveryAtDirectory:(NSURL *)directory;

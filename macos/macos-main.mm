@@ -461,6 +461,8 @@ static void AddCharacterSets(NSMenu *menu)
 	AddItem(copyPath, Label(@"42087", @"Copy All Filenames"), @selector(copyDocumentPath:), @"", self).tag = 42087;
 	AddItem(copyPath, Label(@"42088", @"Copy All File Paths"), @selector(copyDocumentPath:), @"", self).tag = 42088;
 	AddItem(edit, Label(@"42028", @"Read-Only on Current Document"), @selector(toggleDocumentReadOnly:), @"");
+	AddItem(edit, Label(@"42102", @"Read-Only for All Documents"), @selector(setAllDocumentsReadOnly:), @"", documents).tag = 42102;
+	AddItem(edit, Label(@"42103", @"Clear Read-Only for All Documents"), @selector(setAllDocumentsReadOnly:), @"", documents).tag = 42103;
 	AddItem(edit, Label(@"42052", @"Clipboard History"), @selector(toggleInsertPanel:), @"", documents).tag = 0;
 	AddItem(edit, Label(@"42051", @"Character Panel"), @selector(toggleInsertPanel:), @"", documents).tag = 1;
 	NSMenu *letterCase = AddMenu(edit, Label(@"edit-convertCaseTo", @"Convert Case"));

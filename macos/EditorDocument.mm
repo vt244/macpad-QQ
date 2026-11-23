@@ -178,6 +178,8 @@ static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
 - (ScintillaView *)primaryEditorView;
 - (ScintillaView *)clonedEditorView;
 - (void)clonedViewNotification:(SCNotification *)notification;
+- (BOOL)userReadOnly;
+- (void)setUserReadOnly:(BOOL)readOnly;
 @end
 
 @interface EditorCloneObserver : NSObject <ScintillaNotificationProtocol>
@@ -1120,6 +1122,8 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 {
 	if (item.action == @selector(reopenClosedTab:))
 		return self.canReopenClosedTab;
+	if (item.action == @selector(setAllDocumentsReadOnly:))
+		return [self canSetAllDocumentsReadOnly:item.tag == 42102];
 	return [super validateUserInterfaceItem:item];
 }
 
@@ -1128,6 +1132,26 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	for (EditorDocument *document in self.documents)
 		[document.chrome refreshTabs];
 	[self refreshDocumentList];
+}
+
+- (BOOL)canSetAllDocumentsReadOnly:(BOOL)readOnly
+{
+	if (!readOnly && self.launchOptions.savingForbidden)
+		return NO;
+	for (EditorDocument *document in self.documents)
+		if (document.editor && document.userReadOnly != readOnly)
+			return YES;
+	return NO;
+}
+
+- (IBAction)setAllDocumentsReadOnly:(NSMenuItem *)sender
+{
+	const BOOL readOnly = sender.tag == 42102;
+	if (![self canSetAllDocumentsReadOnly:readOnly])
+		return;
+	for (EditorDocument *document in self.documents)
+		[document setUserReadOnly:readOnly];
+	[self refreshDocumentTabs];
 }
 
 - (void)refreshDocumentList
@@ -2717,6 +2741,19 @@ static void ApplyPreferencesToView(ScintillaView *view)
 
 - (BOOL)isMonitoring { return _monitoring; }
 
+- (BOOL)userReadOnly
+{
+	return _monitoring ? _readOnlyBeforeMonitoring : [self.editor message:SCI_GETREADONLY] != 0;
+}
+
+- (void)setUserReadOnly:(BOOL)readOnly
+{
+	if (_monitoring)
+		_readOnlyBeforeMonitoring = readOnly;
+	else
+		[self.editor message:SCI_SETREADONLY wParam:readOnly];
+}
+
 - (IBAction)saveCopyAs:(id)sender
 {
 	if (((EditorDocumentController *)NSDocumentController.sharedDocumentController).launchOptions.savingForbidden)
@@ -3857,7 +3894,7 @@ static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end)
 {
 	if (_monitoring)
 		return;
-	[self.editor message:SCI_SETREADONLY wParam:![self.editor message:SCI_GETREADONLY]];
+	[self setUserReadOnly:!self.userReadOnly];
 	[(EditorDocumentController *)NSDocumentController.sharedDocumentController refreshDocumentTabs];
 }
 
