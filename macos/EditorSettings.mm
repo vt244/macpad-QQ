@@ -70,7 +70,9 @@ void EditorShowPreferences(void)
 	};
 	auto labeled = ^(NSView *view, NSString *name, NSString *title, NSControl *control, CGFloat y) {
 		NSString *label = localized([@"pref-" stringByAppendingString:name], title);
-		Place(view, [NSTextField labelWithString:label], 12, y, 220);
+		const BOOL searchLimit = [name isEqual:@"inSelectionAutocheckThreshold"] || [name isEqual:@"fillFindWhatThreshold"];
+		NSTextField *caption = searchLimit ? [NSTextField wrappingLabelWithString:label] : [NSTextField labelWithString:label];
+		Place(view, caption, 12, searchLimit ? y - 10 : y, 220, searchLimit ? 44 : 24);
 		[control setAccessibilityLabel:label];
 		Place(view, control, 232, y, 252);
 		controls[name] = control;
@@ -147,7 +149,13 @@ void EditorShowPreferences(void)
 	NSView *search = tab(@"pref-search", @"Searching");
 	checks(search, @[@[@"fillFindSelection", @"Use selected text when opening Find", @YES],
 		@[@"fillFindWord", @"Use the word under the caret if there is no selection", @NO],
-		@[@"findFilesOnDisk", @"Search files on disk even if a buffer has unsaved edits", @NO]], 220);
+		@[@"findFilesOnDisk", @"Search files on disk even if a buffer has unsaved edits", @NO],
+		@[@"monospacedFontFindDlg", @"Use a monospaced font in Find", @NO]], 248);
+	field(search, @"inSelectionAutocheckThreshold", @"Auto-select search scope from (chars)", @"1024", 132);
+	field(search, @"fillFindWhatThreshold", @"Max characters to fill Find", @"1024", 83);
+	NSTextField *selectionHint = [NSTextField wrappingLabelWithString:localized(@"pref-inSelectionHint",
+		@"Set the selection threshold to 0 to keep manual control of “In selection”.")];
+	Place(search, selectionHint, 12, 24, 472, 40);
 
 	NSView *backup = tab(@"pref-backup", @"Backup and sessions");
 	checks(backup, @[@[@"rememberSession", @"Restore the last session on startup", @YES],
@@ -164,7 +172,8 @@ void EditorShowPreferences(void)
 	NSDictionary<NSString *, NSArray<NSNumber *> *> *ranges =
 		@{@"tabWidth": @[@1, @32], @"autocompleteMinimum": @[@1, @9], @"checkpointMilliseconds": @[@250, @600000],
 			@"largeFileMegabytes": @[@1, @4096], @"caretWidth": @[@0, @20], @"caretBlink": @[@0, @5000],
-			@"currentLineFrameWidth": @[@1, @6]};
+			@"currentLineFrameWidth": @[@1, @6],
+			@"inSelectionAutocheckThreshold": @[@0, @1024], @"fillFindWhatThreshold": @[@1, @16383]};
 	for (NSString *name in controls)
 	{
 		NSControl *control = controls[name];

@@ -4247,6 +4247,7 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	PlaceSearchControl(form, _searchMode, NSMakeRect(12, 269, 594, 26));
 
 	_searchInput = [[NSComboBox alloc] initWithFrame:NSZeroRect];
+	_searchInput.accessibilityIdentifier = @"find-text";
 	_replaceInput = [[NSComboBox alloc] initWithFrame:NSZeroRect];
 	_searchInput.numberOfVisibleItems = _replaceInput.numberOfVisibleItems = 8;
 	LoadSearchHistory(_searchInput, @"findHistory");
@@ -4377,14 +4378,31 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	LoadSearchHistory(_searchInput, @"findHistory");
 	LoadSearchHistory(_replaceInput, @"replaceHistory");
 	EditorResources *resources = EditorResources.shared;
+	NSFont *font = [[resources setting:@"monospacedFontFindDlg" fallback:@NO] boolValue] ?
+		[NSFont monospacedSystemFontOfSize:NSFont.systemFontSize weight:NSFontWeightRegular] :
+		[NSFont systemFontOfSize:NSFont.systemFontSize];
+	for (NSTextField *input in @[_searchInput, _replaceInput, _searchFilters, _searchFolder])
+		input.font = font;
+	ScintillaView *editor = self.editor;
+	const auto start = [editor message:SCI_GETSELECTIONSTART];
+	const auto end = [editor message:SCI_GETSELECTIONEND];
+	const auto selectionLength = [editor message:SCI_COUNTCHARACTERS wParam:start lParam:end];
+	const BOOL canSearchSelection = start < end && [editor message:SCI_GETSELECTIONS] == 1 &&
+		[editor message:SCI_GETSELECTIONMODE] != SC_SEL_RECTANGLE && [editor message:SCI_GETSELECTIONMODE] != SC_SEL_THIN;
+	const NSInteger threshold = [[resources setting:@"inSelectionAutocheckThreshold" fallback:@1024] integerValue];
+	_inSelection.enabled = canSearchSelection;
+	if (threshold > 0 || !canSearchSelection)
+		_inSelection.state = canSearchSelection && selectionLength >= threshold;
+	[self captureSearchSelection:nil];
 	if ([[resources setting:@"fillFindSelection" fallback:@YES] boolValue])
 	{
-		NSString *selection = self.editor.selectedString;
-		if (!selection.length && [[resources setting:@"fillFindWord" fallback:@NO] boolValue])
+		const NSInteger limit = [[resources setting:@"fillFindWhatThreshold" fallback:@1024] integerValue];
+		NSString *selection = canSearchSelection && selectionLength <= limit ? editor.selectedString : nil;
+		if (selectionLength == 0 && [[resources setting:@"fillFindWord" fallback:@NO] boolValue])
 		{
-			const auto [start, end] = TokenRange(self.editor);
-			if (end > start)
-				selection = [[NSString alloc] initWithData:DocumentBytes(self.editor, start, end) encoding:NSUTF8StringEncoding];
+			const auto [tokenStart, tokenEnd] = TokenRange(editor);
+			if (tokenEnd > tokenStart && [editor message:SCI_COUNTCHARACTERS wParam:tokenStart lParam:tokenEnd] <= limit)
+				selection = [[NSString alloc] initWithData:DocumentBytes(editor, tokenStart, tokenEnd) encoding:NSUTF8StringEncoding];
 		}
 		if (selection.length && [selection rangeOfCharacterFromSet:NSCharacterSet.newlineCharacterSet].location == NSNotFound)
 			_searchInput.stringValue = selection;
@@ -4472,6 +4490,20 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		_inSelection.state = NSControlStateValueOff;
 	}
 	_searchSelection = NSMakeRange(start, end - start);
+}
+
+- (void)setSearchStatus:(NSString *)message style:(NSString *)style
+{
+	_searchStatus.textColor = [EditorResources.shared widgetColor:style background:NO] ?: NSColor.labelColor;
+	_searchStatus.stringValue = message;
+}
+
+- (void)showReplacementCount:(NSUInteger)count
+{
+	NSString *message = [EditorResources.shared label:count == 1 ? @"find-status-replaceall-1-replaced" : @"find-status-replaceall-nb-replaced"
+		fallback:@"$INT_REPLACE$ replacements"];
+	[self setSearchStatus:[message stringByReplacingOccurrencesOfString:@"$INT_REPLACE$" withString:@(count).stringValue]
+		style:@"Find status: Message"];
 }
 
 - (NSRange)searchScope
@@ -4651,7 +4683,12 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		}
 		else
 		{
-			document->_searchStatus.stringValue = [NSString localizedStringWithFormat:@"%lu hits in %lu files", report.hits, report.files.count];
+			NSString *message = [EditorResources.shared label:@"find-result-title-info"
+				fallback:@"$INT_REPLACE1$ hits in $INT_REPLACE2$ files"];
+			message = [message stringByReplacingOccurrencesOfString:@"$INT_REPLACE1$" withString:@(report.hits).stringValue];
+			message = [message stringByReplacingOccurrencesOfString:@"$INT_REPLACE2$" withString:@(report.files.count).stringValue];
+			message = [message stringByReplacingOccurrencesOfString:@"$INT_REPLACE3$" withString:@(report.searchedFiles).stringValue];
+			[document setSearchStatus:message style:@"Find status: Message"];
 			[controller showSearchReport:report];
 			if (replacing && report.hits)
 				[document confirmFileReplacement:report mayWriteToDisk:mayWriteToDisk];
@@ -4727,7 +4764,7 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		}
 		replaced += file.matches.count;
 	}
-	_searchStatus.stringValue = [NSString localizedStringWithFormat:@"%lu replacements", replaced];
+	[self showReplacementCount:replaced];
 	if (failures.count)
 	{
 		NSAlert *alert = [[NSAlert alloc] init];
@@ -4820,7 +4857,7 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		_lastEmptyMatch = -1;
 	_query = query;
 	_searchFlags = flags;
-	_searchStatus.stringValue = @"";
+	[self setSearchStatus:@"" style:@"Find status: Message"];
 	[self.editor message:SCI_SETSTATUS wParam:SC_STATUS_OK];
 	[self recordSearchAction:sender.tag];
 	struct PauseRecording {
@@ -4849,7 +4886,9 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 			return;
 	}
 	if ([self.editor message:SCI_GETSTATUS] == SC_STATUS_WARN_REGEX)
-		_searchStatus.stringValue = [EditorResources.shared label:@"search-invalidRegex" fallback:@"Invalid regular expression."];
+		[self setSearchStatus:[EditorResources.shared label:@"search-invalidRegex"
+			fallback:[EditorResources.shared label:@"find-status-invalid-re" fallback:@"Invalid regular expression."]]
+			style:@"Find status: Not found"];
 }
 
 static void ClearMark(ScintillaView *editor, int indicator)
@@ -5149,7 +5188,13 @@ static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor)
 			break;
 		position = end > start ? end : [editor message:SCI_POSITIONAFTER wParam:start];
 	}
-	_searchStatus.stringValue = [NSString localizedStringWithFormat:[EditorResources.shared label:@"search-count" fallback:@"%lu matches"], matches];
+	EditorResources *resources = EditorResources.shared;
+	NSString *statusKey = mark ? (matches == 1 ? @"find-status-mark-1-match" : @"find-status-mark-nb-matches") :
+		(matches == 1 ? @"find-status-count-1-match" : @"find-status-count-nb-matches");
+	NSString *message = [resources label:statusKey fallback:[NSString localizedStringWithFormat:[resources
+		label:@"search-count" fallback:matches == 1 ? @"%lu match" : @"%lu matches"], matches]];
+	[self setSearchStatus:[message stringByReplacingOccurrencesOfString:@"$INT_REPLACE$" withString:@(matches).stringValue]
+		style:@"Find status: Message"];
 	return matches;
 }
 
@@ -5183,13 +5228,21 @@ static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor)
 	BOOL skipEmpty = start == _lastEmptyMatch && [self.editor message:SCI_GETSELECTIONEMPTY];
 	auto next = skipEmpty && start != end ? [self.editor message:forward ? SCI_POSITIONAFTER : SCI_POSITIONBEFORE wParam:start] : start;
 	auto result = skipEmpty && start == end ? -1 : [self searchFrom:next to:end];
-	if (result < 0 && (!_searchPanel || _wrapSearch.state == NSControlStateValueOn) && start != (forward ? lower : upper))
+	const BOOL wrapped = result < 0 && (!_searchPanel || _wrapSearch.state == NSControlStateValueOn) && start != (forward ? lower : upper);
+	if (wrapped)
 		result = [self searchFrom:forward ? lower : upper to:start];
 	if (result < 0)
 	{
-		_searchStatus.stringValue = [EditorResources.shared label:@"search-noMatches" fallback:@"No matches found."];
+		[self setSearchStatus:[EditorResources.shared label:@"search-noMatches" fallback:@"No matches found."]
+			style:@"Find status: Not found"];
 		NSBeep();
 		return;
+	}
+	if (wrapped)
+	{
+		NSString *message = [EditorResources.shared label:forward ? @"find-status-end-reached" : @"find-status-top-reached"
+			fallback:forward ? @"Reached the end and continued from the beginning." : @"Reached the beginning and continued from the end."];
+		[self setSearchStatus:message style:@"Find status: Search end reached"];
 	}
 	auto matchEnd = [self.editor message:SCI_GETTARGETEND];
 	_lastEmptyMatch = matchEnd == result ? result : -1;
@@ -5256,6 +5309,6 @@ static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor)
 	[self.editor message:SCI_ENDUNDOACTION];
 	if (_inSelection.state == NSControlStateValueOn && !_inSelection.hidden)
 		_searchSelection.length = boundary - scope.location;
-	_searchStatus.stringValue = [NSString localizedStringWithFormat:@"%lu replacements", replacedCount];
+	[self showReplacementCount:replacedCount];
 }
 @end

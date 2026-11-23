@@ -793,6 +793,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		{"Searching", "fillFindFieldWithSelected", @"fillFindSelection"},
 		{"Searching", "fillFindFieldSelectCaret", @"fillFindWord"},
 		{"Searching", "FiF_ignoreunsavedChangesInOpenedFiles", @"findFilesOnDisk"},
+		{"Searching", "monospacedFontFindDlg", @"monospacedFontFindDlg"},
 	};
 	for (const auto &entry : booleanSettings)
 		if (auto attribute = config(entry.section).attribute(entry.attribute))
@@ -807,6 +808,8 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		{"NewDocDefaultSettings", "format", @"newDocumentEOL", 0, 2}, {"NewDocDefaultSettings", "encoding", @"newDocumentEncoding", 0, 7},
 		{"auto-completion", "triggerFromNbChar", @"autocompleteMinimum", 1, 9},
 		{"largeFileRestriction", "fileSizeMB", @"largeFileMegabytes", 1, 4096},
+		{"Searching", "inSelectionAutocheckThreshold", @"inSelectionAutocheckThreshold", 0, 1024},
+		{"Searching", "fillFindWhatThreshold", @"fillFindWhatThreshold", 1, 16383},
 		{"multiInst", "setting", @"instanceMode", 0, 2}
 	};
 	for (const auto &entry : integers)

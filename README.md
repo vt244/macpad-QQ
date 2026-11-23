@@ -43,6 +43,7 @@ app and bundles it with matching source and SHA-256 checksums.
 - Use **Window → Manage Open Tabs** to sort tabs by name, path or modification date, apply the order, and save or close a selection.
 - Move, resize or float panels such as **Document List**, **Folder as Workspace**, **Project Panels**, **Function List** and **Document Map**.
 - Find, replace, count and mark matches using literal, extended or regular expression search. Search within a selection, across open documents, in folders or in projects.
+- Under **Settings → Preferences → Searching**, set the character thresholds for automatic search within a selection and for filling the Find field. A selection threshold of 0 keeps **In selection** manual. You can also use a monospaced font for search fields.
 - Refine previous searches from the results panel and navigate between hits with **Search → Next Search Result** and **Previous Search Result**.
 - Use the **Edit** menu for column insertion, multiple selections, commenting, line sorting and autocompletion. **Clipboard History** keeps recent text entries in memory while its panel is open.
 - Open, save and convert UTF‑8, UTF‑16 and legacy text. Automatic detection of legacy encodings is available under **Files and Tabs** in Preferences.
