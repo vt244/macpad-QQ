@@ -51,6 +51,10 @@ static uint64_t NextRuntimeDocumentID = 1;
 @property(nonatomic, copy) NSString *titleSuffix;
 @end
 
+@interface EditorDocumentWindow : NSWindow
+@property(nonatomic, weak) EditorDocument *editorDocument;
+@end
+
 @interface NSObject (EditorPluginToolbarProvider)
 - (NSArray<NSToolbarItem *> *)pluginToolbarItems;
 @end
@@ -832,10 +836,11 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 		[self activateTab:tabs[target] otherView:other];
 }
 
-- (void)prepareToShowDocument:(EditorDocument *)document
+- (NSWindow *)prepareToShowDocument:(EditorDocument *)document
 {
 	NSWindow *previous = _activeDocument.windowControllers.firstObject.window;
 	NSWindow *next = document.windowControllers.firstObject.window;
+	NSWindow *outgoing = nil;
 	if (_activeDocument != document)
 	{
 		[_activeDocument displayOtherDocument:nil];
@@ -850,7 +855,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 		if (previous.visible)
 		{
 			[next setFrame:previous.frame display:NO];
-			[previous orderOut:nil];
+			outgoing = previous;
 		}
 		[document displayOtherDocument:_otherDocument];
 	}
@@ -872,6 +877,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	}
 	[self workspaceChanged];
 	NotifyPlugins(document, MACPAD_DOCUMENT_ACTIVATED);
+	return outgoing;
 }
 
 - (void)checkOpenFilesOnDisk
@@ -1010,6 +1016,25 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	[self workspaceChanged];
 }
 
+- (EditorDocument *)replacementForClosingDocument:(EditorDocument *)document atIndex:(NSUInteger)index
+{
+	for (BOOL other : {NO, YES})
+	{
+		NSMutableArray<EditorDocument *> *tabs = [[self tabsInOtherView:other] mutableCopy];
+		[tabs removeObjectIdenticalTo:document];
+		if (tabs.count)
+			return tabs[MIN(index, tabs.count - 1)];
+	}
+	return nil;
+}
+
+- (void)promoteClosingTabReplacement:(EditorDocument *)replacement
+{
+	[_secondaryTabs removeObject:replacement];
+	if (replacement == _otherDocument)
+		_otherDocument = [self tabsInOtherView:YES].firstObject;
+}
+
 - (void)prepareToCloseDocument:(EditorDocument *)document
 {
 	[_secondaryTabs removeObject:document];
@@ -1020,7 +1045,19 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 		[(_otherDocument ?: _activeDocument) focusEditor];
 	}
 	else if (document == _activeDocument)
+	{
+		if (!_workspaceSavedForQuit && document.windowControllers.firstObject.window.visible)
+		{
+			NSUInteger index = [self.tabDocuments indexOfObjectIdenticalTo:document];
+			if (EditorDocument *replacement = [self replacementForClosingDocument:document atIndex:index])
+			{
+				[self promoteClosingTabReplacement:replacement];
+				[replacement showWindows];
+				return;
+			}
+		}
 		[document displayOtherDocument:nil];
+	}
 }
 
 - (void)restoreViewsWithPrimary:(EditorDocument *)primary other:(EditorDocument *)other focusOther:(BOOL)focusOther
@@ -1072,15 +1109,11 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	if (wasActive)
 	{
 		_activeDocument = nil;
-		NSArray<EditorDocument *> *remaining = [self tabsInOtherView:NO];
-		if (!remaining.count)
-			remaining = [self tabsInOtherView:YES];
-		if (remaining.count)
+		EditorDocument *replacement = _workspaceSavedForQuit ? nil :
+			[self replacementForClosingDocument:(EditorDocument *)document atIndex:index];
+		if (replacement)
 		{
-			NSDocument *replacement = remaining[MIN(index, remaining.count - 1)];
-			[_secondaryTabs removeObject:(EditorDocument *)replacement];
-			if (replacement == _otherDocument)
-				_otherDocument = [self tabsInOtherView:YES].firstObject;
+			[self promoteClosingTabReplacement:replacement];
 			if (!NSIsEmptyRect(frame))
 				[replacement.windowControllers.firstObject.window setFrame:frame display:NO];
 			[replacement showWindows];
@@ -1619,6 +1652,16 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 }
 @end
 
+@implementation EditorDocumentWindow
+- (void)close
+{
+	// The window's close notification can precede NSDocument's close callback.
+	if (EditorDocument *document = self.editorDocument)
+		[(EditorDocumentController *)NSDocumentController.sharedDocumentController prepareToCloseDocument:document];
+	[super close];
+}
+@end
+
 @implementation EditorDocument
 {
 	ScintillaView *_editor;
@@ -1924,10 +1967,12 @@ static void ApplyPreferencesToView(ScintillaView *view)
 
 - (void)makeWindowControllers
 {
-	NSWindow *window = [[NSWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 680)
+	EditorDocumentWindow *window = [[EditorDocumentWindow alloc] initWithContentRect:NSMakeRect(0, 0, 1000, 680)
 		styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable |
 			NSWindowStyleMaskResizable backing:NSBackingStoreBuffered defer:NO];
+	window.editorDocument = self;
 	window.minSize = NSMakeSize(680, 260);
+	window.animationBehavior = NSWindowAnimationBehaviorNone;
 	window.tabbingMode = NSWindowTabbingModeDisallowed;
 	window.releasedWhenClosed = NO;
 	window.restorable = NO;
@@ -2623,9 +2668,10 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	if ([controller focusOtherViewDocument:self])
 		return;
-	[controller prepareToShowDocument:self];
+	NSWindow *outgoing = [controller prepareToShowDocument:self];
 	[super showWindows];
 	[self focusEditor];
+	[outgoing orderOut:nil];
 }
 
 - (IBAction)closeEditorTab:(id)sender

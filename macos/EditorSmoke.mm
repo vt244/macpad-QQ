@@ -54,6 +54,28 @@ static NSView *ViewWithIdentifier(NSWindow *window, NSString *identifier)
 	});
 }
 
+static bool CheckTabWindowHandoff(EditorDocumentController *controller, EditorDocument *document)
+{
+	NSWindow *original = document.windowControllers.firstObject.window;
+	NSRect frame = original.frame;
+	EditorDocument *added = [controller makeUntitledDocumentOfType:controller.defaultType error:nullptr];
+	if (!Check(added != nil, "create a tab for window handoff"))
+		return false;
+	[controller addDocument:added];
+	[added makeWindowControllers];
+	[added showWindows];
+	NSWindow *incoming = added.windowControllers.firstObject.window;
+	BOOL opened = incoming.visible && !original.visible && NSEqualRects(incoming.frame, frame);
+	__block BOOL restoredBeforeClose = NO;
+	NSNotificationCenter *notifications = NSNotificationCenter.defaultCenter;
+	id willClose = [notifications addObserverForName:NSWindowWillCloseNotification object:incoming queue:nil
+		usingBlock:^(NSNotification *notification) { restoredBeforeClose = original.visible; }];
+	[added closeEditorTab:nil];
+	[notifications removeObserver:willClose];
+	return Check(opened && restoredBeforeClose && original.visible && !incoming.visible && NSEqualRects(original.frame, frame),
+		"retain a visible window and its frame when adding and closing a tab");
+}
+
 static bool CheckLiveLabelsAndContrast(EditorDocument *document, EditorDocument *other)
 {
 	EditorResources *resources = EditorResources.shared;
@@ -1157,6 +1179,8 @@ int RunSmokeTest(void)
 		"show file and search commands and honor toolbarButtonsConf.xml"))
 		return 1;
 	[document showWindows];
+	if (!CheckTabWindowHandoff(controller, document))
+		return 1;
 	EditorDocument *second = [controller makeUntitledDocumentOfType:controller.defaultType error:&error];
 	if (!Check(second != nil, "create a second document tab"))
 		return 1;

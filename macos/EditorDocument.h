@@ -110,7 +110,7 @@
 - (IBAction)toggleInsertPanel:(NSMenuItem *)sender;
 - (IBAction)stepSearchResult:(NSMenuItem *)sender;
 - (void)addWorkspaceFolders:(NSArray<NSURL *> *)folders;
-- (void)prepareToShowDocument:(EditorDocument *)document;
+- (NSWindow *)prepareToShowDocument:(EditorDocument *)document;
 - (void)refreshDocumentTabs;
 - (BOOL)canSaveAllDocuments;
 - (IBAction)setAllDocumentsReadOnly:(NSMenuItem *)sender;
