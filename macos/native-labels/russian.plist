@@ -11,14 +11,14 @@
 	<key>pref-eolRepresentation-2</key><string>Текст цветом темы</string>
 	<key>pref-eolRepresentation-3</key><string>Рамка цветом темы</string>
 	<key>42011</key><string>Поменять местами текущую и предыдущую строки</string>
-	<key>app-about</key><string>О программе macpad++</string>
-	<key>app-license</key><string>Лицензия macpad++…</string>
-	<key>app-license-title</key><string>Лицензия macpad++</string>
-	<key>app-hide</key><string>Скрыть macpad++</string>
-	<key>app-quit</key><string>Завершить macpad++</string>
+	<key>app-about</key><string>О программе macpadqq</string>
+	<key>app-license</key><string>Лицензия macpadqq…</string>
+	<key>app-license-title</key><string>Лицензия macpadqq</string>
+	<key>app-hide</key><string>Скрыть macpadqq</string>
+	<key>app-quit</key><string>Завершить macpadqq</string>
 	<key>app-about-description</key><string>Нативный редактор текста и кода для macOS. Использует Scintilla и Lexilla. Распространяется по лицензии GNU GPL версии 3.</string>
 	<key>app-version</key><string>Версия %@ (сборка %@)</string>
-	<key>app-license-description</key><string>macpad++ распространяется по лицензии GNU GPL версии 3. Ниже приведён её оригинальный текст.</string>
+	<key>app-license-description</key><string>macpadqq распространяется по лицензии GNU GPL версии 3. Ниже приведён её оригинальный текст.</string>
 	<key>app-notices</key><string>Авторские права и уведомления…</string>
 	<key>app-notices-title</key><string>Авторские права и уведомления</string>
 	<key>app-license-unavailable</key><string>Не удалось открыть текст лицензии.</string>
@@ -271,7 +271,7 @@
 	<key>native-text:Go</key><string>Перейти</string>
 	<key>native-text:Insert</key><string>Вставить</string>
 	<key>native-text:Install or Update</key><string>Установить или обновить</string>
-	<key>native-text:Install or disable native macOS plugins. Restart macpad++ to apply changes.</key><string>Установите или отключите плагины macOS. Чтобы применить изменения, перезапустите macpad++.</string>
+	<key>native-text:Install or disable native macOS plugins. Restart macpadqq to apply changes.</key><string>Установите или отключите плагины macOS. Чтобы применить изменения, перезапустите macpadqq.</string>
 	<key>native-text:Install…</key><string>Установить…</string>
 	<key>native-text:Keep Editor Contents</key><string>Сохранить содержимое редактора</string>
 	<key>native-text:Line number</key><string>Номер строки</string>
@@ -292,7 +292,7 @@
 	<key>native-text:Reopening clears the undo history.</key><string>При повторном открытии история отмены будет очищена.</string>
 	<key>native-text:Replace</key><string>Заменить</string>
 	<key>native-text:Replace All</key><string>Заменить все</string>
-	<key>native-text:Restart macpad++ to load this version.</key><string>Перезапустите macpad++, чтобы загрузить эту версию.</string>
+	<key>native-text:Restart macpadqq to load this version.</key><string>Перезапустите macpadqq, чтобы загрузить эту версию.</string>
 	<key>native-text:Run</key><string>Выполнить</string>
 	<key>native-text:Run Until End of File</key><string>Выполнять до конца файла</string>
 	<key>native-text:Save</key><string>Сохранить</string>
@@ -373,8 +373,8 @@
 	<key>native-text:Unassigned</key><string>Не назначено</string>
 	<key>native-text:That shortcut is assigned to %@.</key><string>Это сочетание уже назначено команде «%@».</string>
 	<key>native-text:Choose an XML file with a named UDL 2.0 or 2.1 definition.</key><string>Выберите XML-файл с именованным определением UDL 2.0 или 2.1.</string>
-	<key>native-text:This file does not contain a macpad++ theme.</key><string>В файле нет темы оформления macpad++.</string>
-	<key>native-text:This file does not contain a macpad++ translation.</key><string>В файле нет перевода интерфейса macpad++.</string>
+	<key>native-text:This file does not contain a macpadqq theme.</key><string>В файле нет темы оформления macpadqq.</string>
+	<key>native-text:This file does not contain a macpadqq translation.</key><string>В файле нет перевода интерфейса macpadqq.</string>
 	<key>native-text:The recovery file is not a supported workspace.</key><string>Формат файла восстановления рабочей области не поддерживается.</string>
 	<key>native-text:Choose a regular macOS .dylib plugin file.</key><string>Выберите обычный файл плагина macOS с расширением .dylib.</string>
 	<key>native-text:This XML file does not contain an editor session.</key><string>В XML-файле нет сессии редактора.</string>

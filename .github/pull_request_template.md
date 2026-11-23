@@ -8,6 +8,6 @@ If you used AI assistance, describe how you used it and name the model.
 
 -->
 
-- [ ] I have read the [macpad++ contribution guidelines](../CONTRIBUTING.md).
+- [ ] I have read the [macpadqq contribution guidelines](../CONTRIBUTING.md).
 
 fix #NNNNN

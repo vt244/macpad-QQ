@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest an improvement to macpad++
+description: Suggest an improvement to macpadqq
 body:
   - type: textarea
     id: workflow
@@ -12,6 +12,6 @@ body:
     id: proposal
     attributes:
       label: Proposed behavior
-      description: Describe how macpad++ could support the task.
+      description: Describe how macpadqq could support the task.
     validations:
       required: true

@@ -355,8 +355,8 @@ bool PluginsAdminDlg::exitToInstallRemovePlugins(Operation op, const vector<Plug
 	NativeLangSpeaker *pNativeSpeaker = nppParameters.getNativeLangSpeaker();
 	auto res = pNativeSpeaker->messageBox("ExitToUpdatePlugins",
 		_hSelf,
-		L"If you click YES, you will quit macpad++ to continue the operations.\nmacpad++ will be restarted after all the operations are terminated.\nContinue?",
-		L"macpad++ is about to exit",
+		L"If you click YES, you will quit macpadqq to continue the operations.\nmacpadqq will be restarted after all the operations are terminated.\nContinue?",
+		L"macpadqq is about to exit",
 		MB_YESNO | MB_APPLMODAL);
 
 	if (res == IDYES)
@@ -437,8 +437,8 @@ bool PluginsAdminDlg::exitToDeactivateActivatePlugins(Operation op, const vector
 	NativeLangSpeaker* pNativeSpeaker = nppParameters.getNativeLangSpeaker();
 	auto res = pNativeSpeaker->messageBox("ExitToUpdatePlugins",
 		_hSelf,
-		L"If you click YES, you will quit macpad++ to continue the operations.\nmacpad++ will be restarted after all the operations are terminated.\nContinue?",
-		L"macpad++ is about to exit",
+		L"If you click YES, you will quit macpadqq to continue the operations.\nmacpadqq will be restarted after all the operations are terminated.\nContinue?",
+		L"macpadqq is about to exit",
 		MB_YESNO | MB_APPLMODAL);
 
 	if (res == IDYES)

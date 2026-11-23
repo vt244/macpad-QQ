@@ -1,4 +1,4 @@
-name: macpad++ macOS build
+name: macpadqq macOS build
 
 on: [push, pull_request, workflow_dispatch]
 
@@ -16,18 +16,18 @@ jobs:
           macos/test-app.sh
       - name: Archive the app and its corresponding source
         run: |
-          /usr/bin/ditto -c -k --keepParent 'dist/macpad++.app' 'dist/macpad++-macOS.zip'
-          git archive --format=zip --prefix=macpad-plus-plus/ -o 'dist/macpad++-source.zip' HEAD
+          /usr/bin/ditto -c -k --keepParent 'dist/macpadqq.app' 'dist/macpadqq-macOS.zip'
+          git archive --format=zip --prefix=macpadqq/ -o 'dist/macpadqq-source.zip' HEAD
           (
             cd dist
-            shasum -a 256 macpad++-macOS.zip macpad++-source.zip > SHA256SUMS
+            shasum -a 256 macpadqq-macOS.zip macpadqq-source.zip > SHA256SUMS
             shasum -a 256 -c SHA256SUMS
           )
       - uses: actions/upload-artifact@v7
         with:
-          name: macpad-macOS-with-source
+          name: macpadqq-macOS-with-source
           path: |
-            dist/macpad++-macOS.zip
-            dist/macpad++-source.zip
+            dist/macpadqq-macOS.zip
+            dist/macpadqq-source.zip
             dist/SHA256SUMS
           if-no-files-found: error

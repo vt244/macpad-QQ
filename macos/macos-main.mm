@@ -335,13 +335,13 @@ static void AddCharacterSets(NSMenu *menu)
 - (void)buildMenu
 {
 	NSMenu *main = [[NSMenu alloc] initWithTitle:@""];
-	NSMenu *application = AddMenu(main, @"macpad++");
-	AddItem(application, Label(@"app-about", @"About macpad++"), @selector(showAbout:), @"", self);
+	NSMenu *application = AddMenu(main, @"macpadqq");
+	AddItem(application, Label(@"app-about", @"About macpadqq"), @selector(showAbout:), @"", self);
 	AddItem(application, Label(@"app-license", @"License…"), @selector(showLicense:), @"", self);
 	AddItem(application, Label(@"48011", @"Preferences…"), @selector(showPreferences:), @",", self);
 	[application addItem:NSMenuItem.separatorItem];
-	AddItem(application, Label(@"app-hide", @"Hide macpad++"), @selector(hide:), @"h", NSApp);
-	AddItem(application, Label(@"app-quit", @"Quit macpad++"), @selector(terminate:), @"q", NSApp);
+	AddItem(application, Label(@"app-hide", @"Hide macpadqq"), @selector(hide:), @"h", NSApp);
+	AddItem(application, Label(@"app-quit", @"Quit macpadqq"), @selector(terminate:), @"q", NSApp);
 
 	NSDocumentController *documents = NSDocumentController.sharedDocumentController;
 	NSMenu *file = AddMenu(main, Label(@"file", @"File"));
@@ -748,7 +748,7 @@ static void AddCharacterSets(NSMenu *menu)
 	AddItem(window, Label(@"native-zoomWindow", @"Zoom"), @selector(performZoom:), @"");
 	AddItem(window, Label(@"native-openTabs", @"Manage Open Tabs…"), @selector(showTabManager:), @"", self);
 	NSMenu *help = AddMenu(main, @"?");
-	AddItem(help, Label(@"app-about", @"About macpad++"), @selector(showAbout:), @"", self);
+	AddItem(help, Label(@"app-about", @"About macpadqq"), @selector(showAbout:), @"", self);
 	AddItem(help, Label(@"app-license", @"License…"), @selector(showLicense:), @"", self);
 	EditorApplyShortcuts(main);
 	// AppKit adds system editing services to the menu bar. Keep the in-window menu scoped to editor commands.
@@ -852,7 +852,7 @@ static void AddCharacterSets(NSMenu *menu)
 		NSArray<NSURL *> *plugins = _plugins.pluginFiles;
 		NSAlert *panel = [[NSAlert alloc] init];
 		panel.messageText = EditorUIString(@"Plugins Admin");
-		panel.informativeText = EditorUIString(@"Install or disable native macOS plugins. Restart macpad++ to apply changes.");
+		panel.informativeText = EditorUIString(@"Install or disable native macOS plugins. Restart macpadqq to apply changes.");
 		[panel addButtonWithTitle:EditorUIString(@"Close")];
 		[panel addButtonWithTitle:EditorUIString(@"Install…")];
 		NSButton *disable = [panel addButtonWithTitle:EditorUIString(@"Disable")];
@@ -1639,7 +1639,7 @@ static NSScrollView *LegalTextView(NSString *contents)
 	NSString *contents = license ? [NSString stringWithContentsOfURL:license encoding:NSUTF8StringEncoding error:nullptr] : nil;
 	NSAlert *alert = [NSAlert new];
 	alert.icon = NSApp.applicationIconImage;
-	alert.messageText = Label(@"app-license-title", @"macpad++ License");
+	alert.messageText = Label(@"app-license-title", @"macpadqq License");
 	[alert addButtonWithTitle:Label(@"app-ok", @"OK")];
 	if (!contents.length)
 	{
@@ -1648,7 +1648,7 @@ static NSScrollView *LegalTextView(NSString *contents)
 		return;
 	}
 	alert.informativeText = Label(@"app-license-description",
-		@"macpad++ is distributed under version 3 of the GNU GPL. The original license text follows.");
+		@"macpadqq is distributed under version 3 of the GNU GPL. The original license text follows.");
 	NSRange heading = [contents rangeOfString:@"GNU GENERAL PUBLIC LICENSE"];
 	alert.accessoryView = LegalTextView(heading.location == NSNotFound ? contents : [contents substringFromIndex:heading.location]);
 	[alert addButtonWithTitle:Label(@"app-notices", @"Copyright and Notices…")];
@@ -1675,13 +1675,13 @@ static NSScrollView *LegalTextView(NSString *contents)
 	NSString *build = [bundle objectForInfoDictionaryKey:@"CFBundleVersion"];
 	NSAlert *about = [NSAlert new];
 	about.icon = NSApp.applicationIconImage;
-	about.messageText = EditorUIString(@"macpad++");
+	about.messageText = EditorUIString(@"macpadqq");
 	NSString *versionLine = [NSString stringWithFormat:Label(@"app-version", @"Version %@ (build %@)"), version, build];
 	NSString *description = Label(@"app-about-description",
 		@"Native text and code editor for macOS. Built with Scintilla and Lexilla and distributed under version 3 of the GNU GPL.");
 	about.informativeText = [NSString stringWithFormat:@"%@\n\n%@", versionLine, description];
 	[about addButtonWithTitle:Label(@"app-ok", @"OK")];
-	[about addButtonWithTitle:Label(@"app-license", @"macpad++ License…")];
+	[about addButtonWithTitle:Label(@"app-license", @"macpadqq License…")];
 	if ([about runModal] == NSAlertSecondButtonReturn)
 		[self showLicense:nil];
 }
@@ -1692,7 +1692,7 @@ static int QuickPrint(EditorDocumentController *controller, EditorLaunchOptions 
 	NSArray<NSURL *> *files = options.expandedPaths;
 	if (!files.count)
 	{
-		fputs("macpad++: -quickPrint requires a file\n", stderr);
+		fputs("macpadqq: -quickPrint requires a file\n", stderr);
 		return 1;
 	}
 	int result = 0;
@@ -1713,7 +1713,7 @@ static int QuickPrint(EditorDocumentController *controller, EditorLaunchOptions 
 		operation.showsProgressPanel = NO;
 		if (![operation runOperation])
 		{
-			fprintf(stderr, "macpad++: %s: %s\n", url.fileSystemRepresentation,
+			fprintf(stderr, "macpadqq: %s: %s\n", url.fileSystemRepresentation,
 				error.localizedDescription.UTF8String ?: "print job failed");
 			result = 1;
 		}
@@ -1731,7 +1731,7 @@ int main(int argc, const char *argv[])
 			[arguments subarrayWithRange:NSMakeRange(1, arguments.count - 1)]];
 		if (options.help)
 		{
-			puts("macpad++ [-nLINE] [-cCOLUMN] [-pBYTE] [-lLANGUAGE] [-udl=NAME] [-LCODE]\n"
+			puts("macpadqq [-nLINE] [-cCOLUMN] [-pBYTE] [-lLANGUAGE] [-udl=NAME] [-LCODE]\n"
 				"         [-nosession] [-noPlugin] [-notabbar] [-ro] [-monitor]\n"
 				"         [-multiInst] [-r] [-quickPrint] [-alwaysOnTop] [-xLEFT] [-yTOP] [-titleAdd=TEXT]\n"
 				"         [-fullReadOnly] [-fullReadOnlySavingForbidden] [-monitoringMode]\n"

@@ -273,7 +273,7 @@ static NSString *XMLString(pugi::xml_attribute value)
 		NSData *current = [NSData dataWithContentsOfURL:url];
 		if (!(_diskData == current || [_diskData isEqualToData:current]))
 		{
-			failure = MacroError(@"Another editor instance changed the macro library. Reopen macpad++ to load those changes.", NSFileWriteUnknownError);
+			failure = MacroError(@"Another editor instance changed the macro library. Reopen macpadqq to load those changes.", NSFileWriteUnknownError);
 			return;
 		}
 		NSError *writeError = nil;

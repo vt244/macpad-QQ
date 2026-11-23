@@ -389,7 +389,7 @@ struct PluginCommand
 			void *library = dlopen(url.fileSystemRepresentation, RTLD_LOCAL | RTLD_NOW);
 			if (!library)
 			{
-				NSLog(@"macpad++ plugin %@: %s", url.lastPathComponent, dlerror());
+				NSLog(@"macpadqq plugin %@: %s", url.lastPathComponent, dlerror());
 				continue;
 			}
 			auto entryV3 = reinterpret_cast<MacpadPluginEntryV3>(dlsym(library, "macpad_plugin_v3"));
@@ -402,7 +402,7 @@ struct PluginCommand
 				if (!title.length || [pluginIDs containsObject:identifier] || plugin->commandCount > 256 ||
 					(plugin->commandCount && !plugin->commands))
 				{
-					NSLog(@"macpad++ plugin %@: incompatible version 3 API", url.lastPathComponent);
+					NSLog(@"macpadqq plugin %@: incompatible version 3 API", url.lastPathComponent);
 					dlclose(library);
 					continue;
 				}
@@ -441,7 +441,7 @@ struct PluginCommand
 					!plugin->title || ![NSString stringWithUTF8String:plugin->title].length || plugin->commandCount > 256 ||
 					(plugin->commandCount && !plugin->commands))
 				{
-					NSLog(@"macpad++ plugin %@: incompatible version 2 API", url.lastPathComponent);
+					NSLog(@"macpadqq plugin %@: incompatible version 2 API", url.lastPathComponent);
 					dlclose(library);
 					continue;
 				}
@@ -460,7 +460,7 @@ struct PluginCommand
 			if (!command || command->version != MACPAD_PLUGIN_ABI_VERSION || !command->title || !command->run ||
 				![NSString stringWithUTF8String:command->title].length)
 			{
-				NSLog(@"macpad++ plugin %@: incompatible plugin API", url.lastPathComponent);
+				NSLog(@"macpadqq plugin %@: incompatible plugin API", url.lastPathComponent);
 				dlclose(library);
 				continue;
 			}

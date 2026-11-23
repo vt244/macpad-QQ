@@ -3,15 +3,15 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleExecutable</key>
-	<string>macpad++</string>
+	<string>macpadqq</string>
 	<key>CFBundleIdentifier</key>
-	<string>io.github.vt244.macpad-plus-plus</string>
+	<string>io.github.vt244.macpadqq</string>
 	<key>CFBundleName</key>
-	<string>macpad++</string>
+	<string>macpadqq</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>macpad++</string>
+	<string>macpadqq</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon.icns</string>
 	<key>CFBundlePackageType</key>
@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.1.0</string>
 	<key>CFBundleVersion</key>
-	<string>3</string>
+	<string>4</string>
 	<key>MacpadReleaseVersion</key>
 	<string>0.1-beta</string>
 	<key>LSMinimumSystemVersion</key>
@@ -30,12 +30,12 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>Open in macpad++</string>
+				<string>Open in macpadqq</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>openFinderSelection</string>
 			<key>NSPortName</key>
-			<string>macpad++</string>
+			<string>macpadqq</string>
 			<key>NSSendFileTypes</key>
 			<array>
 				<string>public.data</string>

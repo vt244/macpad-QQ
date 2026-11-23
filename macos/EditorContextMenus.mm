@@ -188,7 +188,7 @@ static NSMenu *CustomContextMenu(NSMenu *defaults, EditorDocument *document, BOO
 		}
 		NSString *title = attribute("ItemNameAs");
 		if (title.length)
-			item.title = [title stringByReplacingOccurrencesOfString:@"Notepad++" withString:@"macpad++"];
+			item.title = [title stringByReplacingOccurrencesOfString:@"Notepad++" withString:@"macpadqq"];
 		item.keyEquivalent = @"";
 		[destination addItem:item];
 	}
@@ -371,7 +371,7 @@ NSMenu *EditorTabMenu(EditorDocument *document)
 	item(menu, 41014, Label(@"41014", @"Reload from Disk"), saved);
 	item(menu, 41010, Label(@"41010", @"Print…"), YES);
 	[menu addItem:NSMenuItem.separatorItem];
-	item(menu, 42028, @"Read-Only in macpad++", YES).state = [document.editor message:SCI_GETREADONLY] ?
+	item(menu, 42028, @"Read-Only in macpadqq", YES).state = [document.editor message:SCI_GETREADONLY] ?
 		NSControlStateValueOn : NSControlStateValueOff;
 	[menu addItem:NSMenuItem.separatorItem];
 	NSMenu *copy = Submenu(menu, titleFor(2, @"Copy to Clipboard"));

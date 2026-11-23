@@ -41,7 +41,7 @@ Translation note:
 					<Item subMenuId="edit-onSelection" name="選取字元(&amp;O)"/>
 					<Item subMenuId="edit-multiSelectALL" name="選取所有相符項目"/>
 					<Item subMenuId="edit-multiSelectNext" name="選取下一個相符項目"/>
-					<Item subMenuId="edit-readonlyInNotepad++" name="在 macpad++ 中唯讀"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="在 macpadqq 中唯讀"/>
 					<Item subMenuId="search-changeHistory" name="文件修改紀錄"/>
 					<Item subMenuId="search-markAll" name="全部標記(&amp;A)"/>
 					<Item subMenuId="search-markOne" name="僅標記選取(&amp;O)"/>
@@ -201,7 +201,7 @@ Translation note:
 					<Item id="42025" name="儲存巨集(&amp;S)"/>
 					<Item id="42026" name="文字由右至左"/>
 					<Item id="42027" name="文字由左至右"/>
-					<Item id="42028" name="在 macpad++ 中設為唯讀"/>
+					<Item id="42028" name="在 macpadqq 中設為唯讀"/>
 					<Item id="42102" name="全部設為唯讀"/>
 					<Item id="42103" name="全部取消唯讀"/>
 					<Item id="42029" name="複製路徑及檔名"/>
@@ -369,17 +369,17 @@ Translation note:
 					<Item id="46016" name="無 (純文字)"/>
 					<Item id="46250" name="定義自訂程式語言..."/>
 					<Item id="46300" name="開啟自訂程式語言資料夾..."/>
-					<Item id="46301" name="macpad++ 自訂程式語言集"/>
+					<Item id="46301" name="macpadqq 自訂程式語言集"/>
 					<Item id="46180" name="自訂"/>
-					<Item id="47000" name="關於 macpad++"/>
+					<Item id="47000" name="關於 macpadqq"/>
 					<Item id="47010" name="命令列參數..."/>
-					<Item id="47001" name="macpad++ 首頁"/>
-					<Item id="47002" name="macpad++ 專案網頁"/>
+					<Item id="47001" name="macpadqq 首頁"/>
+					<Item id="47002" name="macpadqq 專案網頁"/>
 					<Item id="47003" name="線上文件"/>
-					<Item id="47004" name="macpad++ 社群(論壇)"/>
+					<Item id="47004" name="macpadqq 社群(論壇)"/>
 					<Item id="47012" name="偵錯資訊..."/>
 					<Item id="47005" name="取得更多外掛"/>
-					<Item id="47006" name="更新 macpad++"/>
+					<Item id="47006" name="更新 macpadqq"/>
 					<Item id="47009" name="設定更新代理伺服器..."/>
 					<Item id="48005" name="匯入外掛..."/>
 					<Item id="48006" name="匯入樣式主題..."/>
@@ -450,7 +450,7 @@ Translation note:
 				<Item CMDID="41016" name="移至資源回收筒"/>
 				<Item CMDID="41014" name="重新載入"/>
 				<Item CMDID="41010" name="列印"/>
-				<Item CMDID="42028" name="在 macpad++ 中設為唯讀"/>
+				<Item CMDID="42028" name="在 macpadqq 中設為唯讀"/>
 				<Item CMDID="42033" name="檔案唯讀屬性"/>
 				<Item CMDID="2" name="複製到剪貼簿"/>
 				<Item CMDID="42029" name="複製完整路徑檔名"/>
@@ -975,7 +975,7 @@ Translation note:
 					<Item id="6132" name="隱藏選單中右邊的 ＋ ▼ ✕ 捷徑"/>
 					<Item id="6133" name="狀態列"/>
 					<Item id="6134" name="隱藏"/>
-					<Item id="7165" name="對話方塊字型 (需要重新啟動 macpad++)"/>
+					<Item id="7165" name="對話方塊字型 (需要重新啟動 macpadqq)"/>
 					<Item id="7166" name="字型名稱："/>
 					<Item id="7168" name="字型大小："/>
 				</Global>
@@ -1145,7 +1145,7 @@ Translation note:
 				</DefaultDir>
 
 				<FileAssoc title="副檔名連結設定">
-					<Item id="4008" name="請以系統管理員身分重新啟動 macpad++，再使用此功能。"/>
+					<Item id="4008" name="請以系統管理員身分重新啟動 macpadqq，再使用此功能。"/>
 					<Item id="4009" name="支援的副檔名"/>
 					<Item id="4010" name="已連結的副檔名"/>
 				</FileAssoc>
@@ -1231,7 +1231,7 @@ Translation note:
 				</Print>
 
 				<Searching title="尋找">
-					<Item id="6902" name="在尋找與取代對話方塊中使用等寬字型 (需要重新啟動 macpad++)"/>
+					<Item id="6902" name="在尋找與取代對話方塊中使用等寬字型 (需要重新啟動 macpadqq)"/>
 					<Item id="6903" name="顯示搜尋結果後，保留尋找與取代對話方塊"/>
 					<Item id="6906" name="搜尋結果視窗：盡可能將同一行的搜尋結果合併為一個項目"/>
 					<Item id="6907" name="開啟尋找對話方塊時"/>
@@ -1298,7 +1298,7 @@ Translation note:
 					<Item id="6152" name="以新執行個體開啟文件群組 (結束時自動儲存群組)"/>
 					<Item id="6153" name="允許多個執行個體"/>
 					<Item id="6154" name="禁止多個執行個體 (預設)"/>
-					<Item id="6155" name="(重新啟動 macpad++ 後生效)"/>
+					<Item id="6155" name="(重新啟動 macpadqq 後生效)"/>
 					<Item id="6171" name="自訂插入日期時間"/>
 					<Item id="6175" name="交換日期與時間的順序 (簡短與完整格式)"/>
 					<Item id="6172" name="自訂格式："/>
@@ -1469,7 +1469,7 @@ Translation note:
 				<Item id="7" name="不儲存(&amp;N)"/>
 				<Item id="4" name="一律儲存"/>
 			</DoSaveAll><!-- HowToReproduce: Check the "Enable Save All confirm dialog" checkbox in Preference->MISC, now click "Save all" -->
-			<NetworkPathWarning title="macpad++ 文件群組載入" title2="可點選的 file:// 連結" title3="toolbarButtonsConf.xml 載入中" title4="專案管理員 XML 檔案載入中">
+			<NetworkPathWarning title="macpadqq 文件群組載入" title2="可點選的 file:// 連結" title3="toolbarButtonsConf.xml 載入中" title4="專案管理員 XML 檔案載入中">
 				<Item id="1771" name="網路路徑警告：
 
 $STR_REPLACE$
@@ -1488,16 +1488,16 @@ $STR_REPLACE$
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ and $STR_REPLACE$ are place holders, don't translate these place holders. -->
-			<ContextMenuXmlEditWarning title="編輯快顯功能表" message="編輯 contextMenu.xml 可以變更 macpad++ 之快顯功能表。
-請於修改後重新啟動 macpad++ 以使變更生效。"/>
+			<ContextMenuXmlEditWarning title="編輯快顯功能表" message="編輯 contextMenu.xml 可以變更 macpadqq 之快顯功能表。
+請於修改後重新啟動 macpadqq 以使變更生效。"/>
 			<SaveCurrentModifWarning title="警告" message="你必須儲存目前的修改，而儲存後將無法復原。
 你確定要繼續嗎？"/><!-- HowToReproduce: when you openned file is modified but unsaved yet, and you are changing file encoding. -->
 			<LoseUndoAbilityWarning title="警告" message="你必須儲存目前的修改，而儲存後將無法復原。
 你確定要繼續嗎？"/><!-- HowToReproduce: when you openned file is modified and saved, then you are changing file encoding. -->
-			<CannotMoveDoc title="移至新的 macpad++ 執行個體" message="文件已被修改，請在儲存後再試一次。"/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
-			<DocReloadWarning title="重新載入" message="你確定要重新載入目前檔案，並捨棄在 macpad++ 中所做的修改嗎？"/>
+			<CannotMoveDoc title="移至新的 macpadqq 執行個體" message="文件已被修改，請在儲存後再試一次。"/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
+			<DocReloadWarning title="重新載入" message="你確定要重新載入目前檔案，並捨棄在 macpadqq 中所做的修改嗎？"/>
 			<FileLockedWarning title="儲存失敗" message="請檢查其他應用程式是否已開啟此檔案。"/>
-			<FileAlreadyOpenedInNpp title="已開啟" message="這個檔案已在 macpad++ 中開啟。"/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
+			<FileAlreadyOpenedInNpp title="已開啟" message="這個檔案已在 macpadqq 中開啟。"/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
 			<RenameTabTemporaryNameAlreadyInUse title="命名失敗" message="指定的名稱已在另一個頁籤上使用。"/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
 			<RenameTabTemporaryNameIsEmpty title="命名失敗" message="指定的名稱不能為空字串，或者不能只包含空白字元。"/><!-- HowToReproduce: Rename the tab of an untitled document and provide an empty string or only some white speces. -->
 			<DeleteFileFailed title="刪除失敗" message="檔案刪除失敗。"/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
@@ -1522,7 +1522,7 @@ $STR_REPLACE$
 3. 鍵盤或滑鼠：先將游標移至矩形選取區塊的起點，執行「開始／結束矩形選取」；再將游標移至終點，再次執行同一指令。"/>
 			<BufferInvalidWarning title="儲存失敗" message="緩衝區無效。"/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
 			<DoCloseOrNot title="保留檔案" message="檔案「$STR_REPLACE$」已不存在。
-你要在 macpad++ 中保留這個檔案嗎？"/>
+你要在 macpadqq 中保留這個檔案嗎？"/>
 			<DoDeleteOrNot title="刪除檔案" message="要將「$STR_REPLACE$」移至資源回收筒，並關閉此文件嗎？"/>
 			<NoBackupDoSaveFile title="儲存" message="你的備份檔案已從外部刪除。
 請儲存「$STR_REPLACE$」，否則你的資料將會遺失。
@@ -1530,13 +1530,13 @@ $STR_REPLACE$
 			<DoReloadOrNot title="重新載入" message="「$STR_REPLACE$」已被其他程式修改。
 你要重新載入此檔案嗎？"/>
 			<DoReloadOrNotAndLooseChange title="重新載入" message="「$STR_REPLACE$」已被其他程式修改。
-你要重新載入並捨棄在 macpad++ 中所做的修改嗎？"/>
+你要重新載入並捨棄在 macpadqq 中所做的修改嗎？"/>
 			<PrehistoricSystemDetected title="系統過舊" message="很抱歉，此功能不適用於過舊的系統。"/><!-- HowToReproduce: Launch "Document Map" under Windows XP. -->
-			<XpUpdaterProblem title="macpad++ 更新程式" message="由於 XP 的安全機制過舊，更新程式與 XP 並不相容。
-你要直接到 macpad++ 網站下載最新版本嗎？"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
+			<XpUpdaterProblem title="macpadqq 更新程式" message="由於 XP 的安全機制過舊，更新程式與 XP 並不相容。
+你要直接到 macpadqq 網站下載最新版本嗎？"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
 			<DocTooDirtyToMonitor title="監控錯誤" message="文件尚未儲存，請先儲存再開始監控。"/>
 			<DocNoExistToMonitor title="監控錯誤" message="檔案不存在，無法監控。"/>
-			<FileTooBigToOpen title="檔案太大" message="檔案太大，無法使用 macpad++ 開啟。"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
+			<FileTooBigToOpen title="檔案太大" message="檔案太大，無法使用 macpadqq 開啟。"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
 			<FileLoadingException title="例外狀況代碼：$STR_REPLACE$" message="開啟檔案時發生錯誤！"/>
 			<WantToOpenHugeFile title="開啟大型檔案" message="開啟 2GB 以上的檔案可能需要數分鐘。
 仍要開啟嗎？"/>
@@ -1573,19 +1573,19 @@ $STR_REPLACE$
 			<SCMapperDoDeleteOrNot title="刪除快速鍵" message="你確定要刪除這個快速鍵嗎？"/>
 			<FindCharRangeValueError title="輸入值範圍錯誤" message="你輸入的值應在 0 到 255 之間。如要搜尋字元編號大於 255 的字元，請在「尋找」對話方塊中使用「正規表示式」。"/> <!-- HowToReproduce: Search menu, then Find characters in range, select Custom range, enter 999 in either edit box, press Find. -->
 			<OpenInAdminMode title="儲存失敗" message="無法儲存檔案，可能受到存取權限保護。
-要以系統管理員身分重新啟動 macpad++ 嗎？"/>
+要以系統管理員身分重新啟動 macpadqq 嗎？"/>
 			<OpenInAdminModeWithoutCloseCurrent title="儲存失敗" message="無法儲存檔案，可能受到存取權限保護。
-要以系統管理員身分重新啟動 macpad++ 嗎？"/>
-			<OpenInAdminModeFailed title="無法以系統管理員身分啟動" message="無法以系統管理員身分啟動 macpad++。"/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
+要以系統管理員身分重新啟動 macpadqq 嗎？"/>
+			<OpenInAdminModeFailed title="無法以系統管理員身分啟動" message="無法以系統管理員身分啟動 macpadqq。"/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
 			<ViewInBrowser title="使用瀏覽器開啟檔案" message="找不到指定的應用程式。"/>
-			<ExitToUpdatePlugins title="關閉 macpad++" message="macpad++ 將自動關閉以進行後續作業。
-在所有後續作業完成後，macpad++ 將重新啟動。
+			<ExitToUpdatePlugins title="關閉 macpadqq" message="macpadqq 將自動關閉以進行後續作業。
+在所有後續作業完成後，macpadqq 將重新啟動。
 繼續嗎？"/>
-			<NeedToRestartToLoadPlugins title="重新啟動 macpad++" message="你必須重新啟動 macpad++ 才能載入已安裝的外掛。"/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
-			<ChangeHistoryEnabledWarning title="重新啟動 macpad++" message="你必須重新啟動 macpad++ 才能啟用文件修改紀錄。"/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
-			<WindowsSessionExit title="macpad++－Windows 即將登出" message="Windows 即將登出，但仍有尚未儲存的內容。
-確定要結束 macpad++ 嗎？"/>
-			<LanguageMenuCompactWarning title="精簡程式語言選單" message="下次啟動 macpad++ 時生效。"/><!-- HowToReproduce: toggle "Make language menu compact" via Preferences dialog "Language/Language Menu. -->
+			<NeedToRestartToLoadPlugins title="重新啟動 macpadqq" message="你必須重新啟動 macpadqq 才能載入已安裝的外掛。"/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
+			<ChangeHistoryEnabledWarning title="重新啟動 macpadqq" message="你必須重新啟動 macpadqq 才能啟用文件修改紀錄。"/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
+			<WindowsSessionExit title="macpadqq－Windows 即將登出" message="Windows 即將登出，但仍有尚未儲存的內容。
+確定要結束 macpadqq 嗎？"/>
+			<LanguageMenuCompactWarning title="精簡程式語言選單" message="下次啟動 macpadqq 時生效。"/><!-- HowToReproduce: toggle "Make language menu compact" via Preferences dialog "Language/Language Menu. -->
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="切換佈景主題將捨棄尚未儲存的變更。
 要先儲存嗎？"/><!-- HowToReproduce: In the Style Configurator dialog change some theme and switch to other theme without saving. -->
 			<FullReadOnlySavingForbidden title="儲存失敗" message="目前為禁止儲存的完整唯讀模式，無法儲存檔案。"/>
@@ -1598,7 +1598,7 @@ $STR_REPLACE$
 要用空白唯讀文件保留這些項目的位置嗎？
 
 若不建立，或稍後關閉這些預留文件，結束程式時將變更文件群組。建議先備份「session.xml」。"/>
-			<RTLvsDirectWrite title="無法執行「文字由右至左」指令" message="「文字由右至左」指令與 DirectWrite 模式不相容。請在「偏好設定」的「其他」中停用 DirectWrite 模式，然後重新啟動 macpad++。"/>
+			<RTLvsDirectWrite title="無法執行「文字由右至左」指令" message="「文字由右至左」指令與 DirectWrite 模式不相容。請在「偏好設定」的「其他」中停用 DirectWrite 模式，然後重新啟動 macpadqq。"/>
 			<FileMemoryAllocationFailed title="記憶體配置失敗" message="連續可用記憶體可能不足，無法載入此檔案。"/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
 			<FindRegexBackwardDisabled title="正規表示式向上搜尋已停用" message="為避免搜尋結果不符預期，預設停用正規表示式向上搜尋。
 如需向上搜尋，請改用「一般」或「延伸」模式。
@@ -1608,8 +1608,8 @@ $STR_REPLACE$
 			<PrintError title="0" message="無法開始列印文件。"/><!-- Use title="0" to use Windows OS default translated "Error" title. -->
 			<FindAutoChangeOfInSelectionWarning title="搜尋警告" message="「僅尋找選取範圍」已自動變更勾選狀態。
 請先確認搜尋條件，再繼續操作。"/> <!-- HowToReproduce: https://github.com/notepad-plus-plus/notepad-plus-plus/issues/14897#issuecomment-2564316224 -->
-			<Need2Restart2ShowMenuShortcuts title="重新啟動 macpad++" message="macpad++ 需要重新啟動才能顯示選單右邊捷徑。"/>
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="變更檔案唯讀屬性失敗" message="請在系統管理員模式下重新啟動 macpad++ 以使用此功能。"/>
+			<Need2Restart2ShowMenuShortcuts title="重新啟動 macpadqq" message="macpadqq 需要重新啟動才能顯示選單右邊捷徑。"/>
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="變更檔案唯讀屬性失敗" message="請在系統管理員模式下重新啟動 macpadqq 以使用此功能。"/>
 			<ReadOnlyFileCannotBeSaved title="儲存檔案失敗 - 該檔案為唯讀" message="&quot;$STR_REPLACE$&quot;
 該檔案為唯讀，無法儲存。
 請取消唯讀設定後再儲存檔案。"/>
@@ -1622,7 +1622,7 @@ $STR_REPLACE$
 
 基於安全考量，請檢視已開啟的 shortcuts.xml。
 如果內容正確，請從「執行」選單中使用「驗證 shortcuts.xml 檔案」來確認。"/>
-			<SymlinkLoadingWarning title="警告：載入符號連結可能導致程式凍結" message="啟用「資料夾工作區」中的符號連結載入功能可能會使 macpad++ 進入無限循環並造成程式凍結。
+			<SymlinkLoadingWarning title="警告：載入符號連結可能導致程式凍結" message="啟用「資料夾工作區」中的符號連結載入功能可能會使 macpadqq 進入無限循環並造成程式凍結。
 當目錄符號連結指向父層資料夾或形成循環引用時，就可能發生此問題。
 請在充分了解風險後再繼續操作。"/>
 			<UnPin2Sort title="分頁排序問題" message="無法排序已釘選的檔案。是否移除所有釘選？"/>
@@ -1746,8 +1746,8 @@ $STR_REPLACE$
 			<word-chars-list-warning-end value=" 在你的單字字元集中。"/><!-- HowToReproduce: In "Delimiter" section of Preferences dialog, check "Add your character as part of word\r(don't choose it unless you know what you're doing)", then type a white-space in the text field. -->
 			<backup-select-folder value="選擇備份資料夾"/><!-- HowToReproduce: Settings > Preferences > Backup > [...] -->
 			<cloud-invalid-warning value="無效的路徑。"/>
-			<cloud-restart-warning value="請重新啟動 macpad++ 以使變更生效。"/>
-			<cloud-select-folder value="選擇儲存 macpad++ 設定的資料夾"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
+			<cloud-restart-warning value="請重新啟動 macpadqq 以使變更生效。"/>
+			<cloud-select-folder value="選擇儲存 macpadqq 設定的資料夾"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
 			<default-open-save-select-folder value="選擇預設資料夾"/><!-- HowToReproduce: Settings > Preferences > Default Directory > [...] -->
 			<shift-change-direction-tip value="使用「Shift + Enter」以相反方向進行搜尋"/>
 			<two-find-buttons-tip value="顯示「尋找上一個」按鈕"/>
@@ -1907,7 +1907,7 @@ C、C++、Java、C#、Objective-C、PHP、JavaScript、JSP、CSS、Perl、Rust�
 
 			<!-- Don't translate "Global override" and "Default Style" -->
 			<global-override-tip value="在此啟用「Global override」會覆寫所有語言樣式的對應設定。若只想調整預設樣式，請使用「Default Style」。"/>
-			<scintillaRenderingTechnology-tip value="變更選項可能會改善特殊字元的顯示或解決一些圖形問題。請重新啟動 macpad++ 以套用變更。"/>
+			<scintillaRenderingTechnology-tip value="變更選項可能會改善特殊字元的顯示或解決一些圖形問題。請重新啟動 macpadqq 以套用變更。"/>
 
 			<!-- Due to the limited space on the status bar, if the translations for 'length' & 'lines' are much longer than the English words, please leave them in English instead of translating them. -->
 			<statusbar-length-lines value="長度：$STR_REPLACE1$    行數：$STR_REPLACE2$"/>

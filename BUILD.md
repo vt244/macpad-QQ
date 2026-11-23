@@ -1,4 +1,4 @@
-# Building macpad++
+# Building macpadqq
 
 ## macOS
 
@@ -8,9 +8,9 @@ With Apple Command Line Tools and CMake 3.20 or later, run from the repository r
 macos/build-app.sh
 ```
 
-The script builds and ad hoc signs the universal native app at `dist/macpad++.app`.
-Open it in Finder, or run `open 'dist/macpad++.app'`. The app uses a profile
-under `~/Library/Application Support/macpad++/`. For an isolated run, set
+The script builds and ad hoc signs the universal native app at `dist/macpadqq.app`.
+Open it in Finder, or run `open 'dist/macpadqq.app'`. The app uses a profile
+under `~/Library/Application Support/macpadqq/`. For an isolated run, set
 `MACPAD_DATA_DIR` to an absolute profile path in the launch environment.
 
 Run the smoke test in a macOS graphical session:
@@ -30,10 +30,10 @@ the app with its corresponding source.
 1. Resolve the app icon and theme redistribution terms recorded in
    [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 2. Run the macOS workflow for the exact commit to release. Download its
-   `macpad-macOS-with-source` artifact and extract it.
+   `macpadqq-macOS-with-source` artifact and extract it.
 3. Verify both archives with `shasum -a 256 -c SHA256SUMS`. The archive
-   `macpad++-macOS.zip` contains the app and its license notices.
-   `macpad++-source.zip` contains the source from the same commit.
+   `macpadqq-macOS.zip` contains the app and its license notices.
+   `macpadqq-source.zip` contains the source from the same commit.
 4. Attach both archives and `SHA256SUMS` to a draft release whose tag
    points to that commit. Keep the source available alongside the app.
    If the release app is signed with Developer ID and notarized separately,
@@ -54,7 +54,7 @@ xcrun clang -dynamiclib -arch arm64 -arch x86_64 -mmacosx-version-min=13.0 \
   -I macos macos/tests/SelectionPlugin.c -o .tmp/SelectionPlugin.dylib
 ```
 
-Copy a plugin you trust into the `plugins/` directory in the macpad++ profile
+Copy a plugin you trust into the `plugins/` directory in the macpadqq profile
 and restart the app. Plugins run in the editor process with its permissions.
 ABI v2 host callbacks are valid during the synchronous command or event call
 on the main thread. Panel views are retained while open.
@@ -104,7 +104,7 @@ The editor is built **with** Boost regex PCRE support instead of default c++11 r
 
 #### Build `libScintilla.lib` and `libLexilla.lib`
 
-As mentioned above, you'll need `libScintilla.lib` and `libLexilla.lib` for the macpad++ editor build. This is done automatically on building the whole solution. So normally you don't need to care about this.
+As mentioned above, you'll need `libScintilla.lib` and `libLexilla.lib` for the macpadqq editor build. This is done automatically on building the whole solution. So normally you don't need to care about this.
 
 ##### Build `libScintilla.lib` with boost and `libLexilla.lib` via nmake
 

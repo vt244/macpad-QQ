@@ -355,17 +355,17 @@ Translation note:
 					<Item id="46016" name="Heç bir şey (Normal Mətn)"/>
 					<Item id="46250" name="Öz dilinizi müəyyən edin..."/>
 					<Item id="46300" name="İstifadəçi Tərtibindəki Dil Qovluğunu Aç..."/>
-					<Item id="46301" name="macpad++ İstifadəçi Tərtibindəki Diller Kolleksiyası"/>
+					<Item id="46301" name="macpadqq İstifadəçi Tərtibindəki Diller Kolleksiyası"/>
 					<Item id="46180" name="İstifadəçi Tərtibindəki"/>
-					<Item id="47000" name="macpad++ Haqqında"/>
+					<Item id="47000" name="macpadqq Haqqında"/>
 					<Item id="47010" name="Komanda Sətiri Arqümentləri..."/>
-					<Item id="47001" name="macpad++ Ana Səhifəsi"/>
-					<Item id="47002" name="macpad++ Layihə Səhifəsi"/>
-					<Item id="47003" name="macpad++ Onlayn İstifadəçi Təlimatı"/>
-					<Item id="47004" name="macpad++ İcmalı (Forum)"/>
+					<Item id="47001" name="macpadqq Ana Səhifəsi"/>
+					<Item id="47002" name="macpadqq Layihə Səhifəsi"/>
+					<Item id="47003" name="macpadqq Onlayn İstifadəçi Təlimatı"/>
+					<Item id="47004" name="macpadqq İcmalı (Forum)"/>
 					<Item id="47012" name="Yazılım məlumatları..."/>
 					<Item id="47005" name="Daha çox plagin əldə et"/>
-					<Item id="47006" name="macpad++ yeniləməsini həyata keçir"/>
+					<Item id="47006" name="macpadqq yeniləməsini həyata keçir"/>
 					<Item id="47009" name="Yeniləyici proksisi qur..."/>
 					<Item id="48005" name="Plaginləri idxal et..."/>
 					<Item id="48006" name="Stil mövzularını idxal et..."/>
@@ -968,7 +968,7 @@ Translation note:
 
 					<Item id="6131" name="Menyu"/>
 					<Item id="6122" name="Menyu panelini gizlət (Alt və ya F10 düyməsi ilə açıb bağlamaq üçün)"/>
-					<Item id="6132" name="Menyu panelindəki sağ qısayolları gizlət ＋ ▼ ✕ (macpad++ yenidən başlatmaq tələb olunur)"/>
+					<Item id="6132" name="Menyu panelindəki sağ qısayolları gizlət ＋ ▼ ✕ (macpadqq yenidən başlatmaq tələb olunur)"/>
 
 					<Item id="6123" name="Lokalizasiya"/>
 				</Global>
@@ -1092,7 +1092,7 @@ Translation note:
 				</DefaultDir>
 
 				<FileAssoc title="Fayl Assosiasiyası">
-					<Item id="4008" name="Zəhmət olmasa macpad++ çıxın və bu xüsusiyyətdən istifadə etmək üçün macpad++ Administrator rejimində yenidən başladın."/>
+					<Item id="4008" name="Zəhmət olmasa macpadqq çıxın və bu xüsusiyyətdən istifadə etmək üçün macpadqq Administrator rejimində yenidən başladın."/>
 					<Item id="4009" name="Dəstəklənən uzantılar:"/>
 					<Item id="4010" name="Qeydiyyatdan keçmiş uzantılar:"/>
 				</FileAssoc>
@@ -1176,7 +1176,7 @@ Translation note:
 				</Print>
 
 				<Searching title="Axtarış">
-					<Item id="6902" name="Axtarış dialoqunda monospaced şrift istifadə et (macpad++ yenidən başlatmaq tələb olunur)"/>
+					<Item id="6902" name="Axtarış dialoqunda monospaced şrift istifadə et (macpadqq yenidən başlatmaq tələb olunur)"/>
 					<Item id="6903" name="Nəticələr pəncərəsinə çıxış verən axtarışdan sonra Axtarış dialoqu açıq qalsın"/>
 					<Item id="6904" name="Bütün Açıq Sənədlərdə Hamısını Dəyişdirməni təsdiqlə"/>
 					<Item id="6905" name="Dəyişdir: Növbəti uyğunluğa keçmə"/>
@@ -1243,7 +1243,7 @@ Translation note:
 					<Item id="6152" name="Sessiyanı yeni nümunədə aç (və çıxış zamanı sessiyanı avtomatik saxla)"/>
 					<Item id="6153" name="Həmişə çoxlu nümunə rejimində"/>
 					<Item id="6154" name="Standart (tək nümunə)"/>
-					<Item id="6155" name="* Bu parametrin dəyişdirilməsi üçün macpad++ yenidən başlatmaq tələb olunur"/>
+					<Item id="6155" name="* Bu parametrin dəyişdirilməsi üçün macpadqq yenidən başlatmaq tələb olunur"/>
 					<Item id="6171" name="Tarix Saatını Fərdiləşdir"/>
 					<Item id="6175" name="Standart tarix saatı sırasını tərsinə çevir (qısa &amp;&amp; uzun formatlar)"/>
 					<Item id="6172" name="Fərdi format:"/>
@@ -1321,11 +1321,11 @@ Translation note:
 					<Item id="6313" name="Sessiz şəkildə yenilə"/>
 					<Item id="6325" name="Yeniləmədən sonra son xəttə sürüş"/>
 					<Item id="6322" name="Sessiya fayl uzantısı:"/>
-					<Item id="6323" name="macpad++ avtomatik yeniləməsini aktivləşdir"/>
+					<Item id="6323" name="macpadqq avtomatik yeniləməsini aktivləşdir"/>
 					<Item id="6324" name="Sənəd Dəyişdirici (Ctrl+TAB)"/>
 					<Item id="6331" name="Başlıq çubuğunda yalnız fayl adını göstər"/>
 					<Item id="6334" name="Simvol kodlaşdırmasını avtomatik aşkarla"/>
-					<Item id="6349" name="DirectWrite istifadə et (Xüsusi simvolların renderini yaxşılaşdıra bilər, macpad++ yenidən başlatmaq tələb olunur)"/>
+					<Item id="6349" name="DirectWrite istifadə et (Xüsusi simvolların renderini yaxşılaşdıra bilər, macpadqq yenidən başlatmaq tələb olunur)"/>
 					<Item id="6337" name="İş Sahəsi fayl uzantısı:"/>
 					<Item id="6114" name="Aktivləşdir"/>
 					<Item id="6117" name="MRU davranışını aktivləşdirin"/>
@@ -1409,8 +1409,8 @@ Bu dialoqu daha sonra Nizamlamalarda yenidən aktivləşdirə bilərsiniz."/>
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ və $STR_REPLACE$ əvəz ediləcək dəyərlərdir, bu dəyərləri tərcümə etməyin. -->
-			<ContextMenuXmlEditWarning title="contextMenu redaktəsi" message="contextMenu.xml faylını redaktə etməklə macpad++ popup kontekst menyusunu dəyişə bilərsiniz.
-contextMenu.xml faylını dəyişdikdən sonra macpad++ yenidən başlatmaq lazımdır."/>
+			<ContextMenuXmlEditWarning title="contextMenu redaktəsi" message="contextMenu.xml faylını redaktə etməklə macpadqq popup kontekst menyusunu dəyişə bilərsiniz.
+contextMenu.xml faylını dəyişdikdən sonra macpadqq yenidən başlatmaq lazımdır."/>
 			<SaveCurrentModifWarning title="Cari Dəyişikliyi Saxla" message="Cari dəyişikliyi saxlamalısınız.
 Bütün saxlanılmış dəyişikliklər geri qaytarıla bilməz.
 
@@ -1419,10 +1419,10 @@ Davam etmək istəyirsiniz?"/><!-- HowToReproduce: açıq fayl dəyişdirilib, l
 Bütün saxlanılmış dəyişikliklər geri qaytarıla bilməz.
 
 Davam etmək istəyirsiniz?"/><!-- HowToReproduce: açıq fayl dəyişdirilib və saxlanılıb, sonra siz fayl kodlaşdırmasını dəyişirsiniz. -->
-			<CannotMoveDoc title="Yeni macpad++ Nümunəsinə Köçür" message="Sənəd dəyişdirilib, saxlayın və yenidən cəhd edin."/><!-- HowToReproduce: Notepad++-dən təmiz (dəyişdirilməmiş) faylı Notepad++ xaricindəki bir yerə sürükləyin, yeni Notepad++ nümunəsi yaradılacaq. Sonra ilk Notepad++-dən saxlanılmamış faylı yeni nümunəyə sürükləyin. -->
-			<DocReloadWarning title="Yenidən yüklə" message="Cari faylı yenidən yükləyib macpad++-də edilən dəyişiklikləri itirmək istədiyinizə əminsiniz?"/>
+			<CannotMoveDoc title="Yeni macpadqq Nümunəsinə Köçür" message="Sənəd dəyişdirilib, saxlayın və yenidən cəhd edin."/><!-- HowToReproduce: Notepad++-dən təmiz (dəyişdirilməmiş) faylı Notepad++ xaricindəki bir yerə sürükləyin, yeni Notepad++ nümunəsi yaradılacaq. Sonra ilk Notepad++-dən saxlanılmamış faylı yeni nümunəyə sürükləyin. -->
+			<DocReloadWarning title="Yenidən yüklə" message="Cari faylı yenidən yükləyib macpadqq-də edilən dəyişiklikləri itirmək istədiyinizə əminsiniz?"/>
 			<FileLockedWarning title="Saxlama uğursuz oldu" message="Zəhmət olmasa bu faylın başqa proqramda açıq olub-olmadığını yoxlayın"/>
-			<FileAlreadyOpenedInNpp title="" message="Fayl artıq macpad++-də açıqdır."/><!-- HowToReproduce: Yeni sənəd açın və "c:/tmp/foo" faylını açın, bu yeni sənədi "c:/tmp/foo" kimi saxlayın, "bəli" cavabını verin, sonra bu mesaj görünəcək. -->
+			<FileAlreadyOpenedInNpp title="" message="Fayl artıq macpadqq-də açıqdır."/><!-- HowToReproduce: Yeni sənəd açın və "c:/tmp/foo" faylını açın, bu yeni sənədi "c:/tmp/foo" kimi saxlayın, "bəli" cavabını verin, sonra bu mesaj görünəcək. -->
 			<RenameTabTemporaryNameAlreadyInUse title="Yenidən adlandırma uğursuz oldu" message="Təyin edilən ad artıq başqa vərəqdə istifadə olunur."/><!-- HowToReproduce: Adsız sənədin vərəqini yenidən adlandırın və artıq mövcud olan başqa adsız sənədin adını verin. -->
 			<RenameTabTemporaryNameIsEmpty title="Yenidən adlandırma uğursuz oldu" message="Təyin edilən ad boş ola bilməz və ya yalnız boşluq(lar) və ya TAB(lar) ola bilməz."/><!-- HowToReproduce: Adsız sənədin vərəqini yenidən adlandırın və boş sətir və ya yalnız boşluqlar verin. -->
 			<DeleteFileFailed title="Faylı Sil" message="Faylı silmək uğursuz oldu"/><!-- HowToReproduce: Bu mesaj sistem xətasını qarşısını almaq üçündür. Təkrarlamaq çətindir. -->
@@ -1465,13 +1465,13 @@ Yenidən yükləmək istəyirsiniz?"/>
 			<DoReloadOrNotAndLooseChange title="Yenidən yüklə" message="&quot;$STR_REPLACE$&quot;
 
 Bu fayl başqa proqram tərəfindən dəyişdirilib.
-Onu yenidən yükləyib macpad++-də edilən dəyişiklikləri itirmək istəyirsiniz?"/>
+Onu yenidən yükləyib macpadqq-də edilən dəyişiklikləri itirmək istəyirsiniz?"/>
 			<PrehistoricSystemDetected title="Köhnə sistem aşkarlandı" message="Görünür ki, siz hələ də köhnə sistem istifadə edirsiniz. Bu xüsusiyyət yalnız müasir sistemlərdə işləyir, təəssüf ki."/><!-- HowToReproduce: Windows XP altında "Sənəd Xəritəsi"ni başladın. -->
-			<XpUpdaterProblem title="macpad++ Yeniləyici" message="macpad++ yeniləyicisi XP ilə uyğun deyil, çünki XP-də təhlükəsizlik təbəqəsi köhnəlib.
-macpad++ səhifəsinə keçib ən son versiyanı yükləmək istəyirsiniz?"/><!-- HowToReproduce: Windows XP altında "? -> Notepad++ Yenilə" menyusunu işə salın. -->
+			<XpUpdaterProblem title="macpadqq Yeniləyici" message="macpadqq yeniləyicisi XP ilə uyğun deyil, çünki XP-də təhlükəsizlik təbəqəsi köhnəlib.
+macpadqq səhifəsinə keçib ən son versiyanı yükləmək istəyirsiniz?"/><!-- HowToReproduce: Windows XP altında "? -> Notepad++ Yenilə" menyusunu işə salın. -->
 			<DocTooDirtyToMonitor title="Monitorinq problemi" message="Sənəd dəyişdirilib. Zəhmət olmasa monitorinqdən əvvəl dəyişikliyi saxlayın."/>
 			<DocNoExistToMonitor title="Monitorinq problemi" message="Fayl monitorinq üçün mövcud olmalıdır."/>
-			<FileTooBigToOpen title="Fayl ölçüsü problemi" message="Fayl macpad++ tərəfindən açılmaq üçün çox böyükdür."/><!-- HowToReproduce: 4GB fayl açmağa cəhd edin (təkrarlamaq asan deyil, sisteminizdən asılıdır). -->
+			<FileTooBigToOpen title="Fayl ölçüsü problemi" message="Fayl macpadqq tərəfindən açılmaq üçün çox böyükdür."/><!-- HowToReproduce: 4GB fayl açmağa cəhd edin (təkrarlamaq asan deyil, sisteminizdən asılıdır). -->
 			<FileLoadingException title="Xəta kodu: $STR_REPLACE$" message="Fayl yüklənərkən xəta baş verdi!"/>
 			<WantToOpenHugeFile title="Böyük fayl açma xəbərdarlığı" message="2GB+ böyüklüyündə fayl açmaq bir neçə dəqiqə çəkə bilər.
 Onu açmaq istəyirsiniz?"/>
@@ -1509,25 +1509,25 @@ zəhmət olmasa başqa ad verin."/>
 			<SCMapperDoDeleteOrNot title="Əminsiniz?" message="Bu qısayolu silmək istədiyinizə əminsiniz?"/>
 			<FindCharRangeValueError title="Aralıq dəyəri problemi" message="0 ilə 255 arasında dəyər daxil etməlisiniz."/>
 			<OpenInAdminMode title="Saxlama uğursuz oldu" message="Fayl saxlanıla bilmədi və qorunur ola bilər.
-macpad++-i Admin rejimində başlatmaq istəyirsiniz?"/>
+macpadqq-i Admin rejimində başlatmaq istəyirsiniz?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Saxlama uğursuz oldu" message="Fayl saxlanıla bilmədi və qorunur ola bilər.
-macpad++-i Admin rejimində başlatmaq istəyirsiniz?"/>
-			<OpenInAdminModeFailed title="Admin rejimində açma uğursuz oldu" message="macpad++ Admin rejimində açıla bilmədi."/><!-- HowToReproduce: Admin hüquqlarınız yoxdursa və qorunan yerdə (məsələn, "C:\Program Files\" alt qovluğunda) dəyişdirilmiş fayl saxlamaq istəyirsinizsə, bu mesaj "Admin rejimində aç" dialoqunda "Bəli" cavabı verdikdən sonra görünəcək. -->
+macpadqq-i Admin rejimində başlatmaq istəyirsiniz?"/>
+			<OpenInAdminModeFailed title="Admin rejimində açma uğursuz oldu" message="macpadqq Admin rejimində açıla bilmədi."/><!-- HowToReproduce: Admin hüquqlarınız yoxdursa və qorunan yerdə (məsələn, "C:\Program Files\" alt qovluğunda) dəyişdirilmiş fayl saxlamaq istəyirsinizsə, bu mesaj "Admin rejimində aç" dialoqunda "Bəli" cavabı verdikdən sonra görünəcək. -->
 			<ViewInBrowser title="Cari Faylı Brauzerdə Göstər" message="Tətbiq sisteminizdə tapılmadı."/>
-			<ExitToUpdatePlugins title="macpad++ bağlanmaq üzrədir" message="Bəli düyməsini basarsanız, macpad++ bağlanacaq və əməliyyatlar davam edəcək.
-Bütün əməliyyatlar bitdikdən sonra macpad++ yenidən başladılacaq.
+			<ExitToUpdatePlugins title="macpadqq bağlanmaq üzrədir" message="Bəli düyməsini basarsanız, macpadqq bağlanacaq və əməliyyatlar davam edəcək.
+Bütün əməliyyatlar bitdikdən sonra macpadqq yenidən başladılacaq.
 Davam etmək istəyirsiniz?"/>
-			<NeedToRestartToLoadPlugins title="macpad++ yenidən başladılmalıdır" message="Yüklədiyiniz pluginləri yükləmək üçün macpad++-i yenidən başlatmalısınız."/><!-- HowToReproduce: "Nizamlamalar -> İdxal -> Plugin(lər) idxal et..." menyusu vasitəsilə plugin idxal edin. -->
-			<ChangeHistoryEnabledWarning title="macpad++ yenidən başladılmalıdır" message="Dəyişiklik Tarixçəsini aktivləşdirmək üçün macpad++-i yenidən başlatmalısınız."/><!-- HowToReproduce: Nizamlamalar dialoqunda "Dəyişiklik Tarixçəsini göstər" seçimini söndürün. -->
-			<WindowsSessionExit title="macpad++ - Windows sessiyası bağlanır" message="Windows sessiyası bağlanmaq üzrədir, lakin sizdə saxlanılmamış məlumatlar var. macpad++-i indi bağlamaq istəyirsiniz?"/>
+			<NeedToRestartToLoadPlugins title="macpadqq yenidən başladılmalıdır" message="Yüklədiyiniz pluginləri yükləmək üçün macpadqq-i yenidən başlatmalısınız."/><!-- HowToReproduce: "Nizamlamalar -> İdxal -> Plugin(lər) idxal et..." menyusu vasitəsilə plugin idxal edin. -->
+			<ChangeHistoryEnabledWarning title="macpadqq yenidən başladılmalıdır" message="Dəyişiklik Tarixçəsini aktivləşdirmək üçün macpadqq-i yenidən başlatmalısınız."/><!-- HowToReproduce: Nizamlamalar dialoqunda "Dəyişiklik Tarixçəsini göstər" seçimini söndürün. -->
+			<WindowsSessionExit title="macpadqq - Windows sessiyası bağlanır" message="Windows sessiyası bağlanmaq üzrədir, lakin sizdə saxlanılmamış məlumatlar var. macpadqq-i indi bağlamaq istəyirsiniz?"/>
 			<LanguageMenuCompactWarning title="Yığcam Dil Menyusu" message="Bu seçim növbəti başlatmada dəyişdiriləcək."/><!-- HowToReproduce: Nizamlamalar dialoqunda "Dil/Dil Menyusu" bölməsində "Dil menyusunu yığcam et" seçimini dəyişdirin. -->
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="Saxlanılmamış dəyişikliklər ləğv ediləcək!
 Temaları dəyişməzdən əvvəl dəyişikliklərinizi saxlamaq istəyirsiniz?"/><!-- HowToReproduce: Stil Konfiquratoru dialoqunda bəzi temanı dəyişdirin və saxlamadan başqa temaya keçin. -->
-			<MacroAndRunCmdlWarning title="Makro və Əmrlərin Uyğunluğu" message="macpad++ v.8.5.2 (və ya daha köhnə) versiyasında saxlanılmış Makro və Əmrləriniz macpad++-in cari versiyası ilə uyğun olmaya bilər.
+			<MacroAndRunCmdlWarning title="Makro və Əmrlərin Uyğunluğu" message="macpadqq v.8.5.2 (və ya daha köhnə) versiyasında saxlanılmış Makro və Əmrləriniz macpadqq-in cari versiyası ilə uyğun olmaya bilər.
 Zəhmət olmasa bu əmrləri yoxlayın və lazım gələrsə, yenidən redaktə edin.
 
-Alternativ olaraq, macpad++ v8.5.2 versiyasına geri qayıda və əvvəlki məlumatlarınızı bərpa edə bilərsiniz.
-macpad++ köhnə &quot;shortcuts.xml&quot; faylını ehtiyat nüsxə kimi saxlayacaq və &quot;shortcuts.xml.v8.5.2.backup&quot; kimi qeyd edəcək.
+Alternativ olaraq, macpadqq v8.5.2 versiyasına geri qayıda və əvvəlki məlumatlarınızı bərpa edə bilərsiniz.
+macpadqq köhnə &quot;shortcuts.xml&quot; faylını ehtiyat nüsxə kimi saxlayacaq və &quot;shortcuts.xml.v8.5.2.backup&quot; kimi qeyd edəcək.
 &quot;shortcuts.xml.v8.5.2.backup&quot; faylını &quot;shortcuts.xml&quot; adına dəyişdirərək əmrləriniz bərpa ediləcək və düzgün işləyəcək."/><!-- HowToReproduce: Notepad++-i bağlayın, shortcuts.xml.v8.5.2.backup və v852ShortcutsCompatibilityWarning.xml fayllarını silin, Notepad++-i yenidən başladın, Qısayol Xəritəsi vasitəsilə qısayolları silin və ya dəyişdirin, Notepad++-i bağlayın, sonra bu mesaj görünəcək. -->
 			<NotEnoughRoom4Saving title="Saxlama uğursuz oldu" message="Fayl saxlanıla bilmədi.
 Görünür ki, diskdə faylı saxlamaq üçün kifayət qədər yer yoxdur. Faylınız saxlanılmayıb."/>
@@ -1541,8 +1541,8 @@ QEYD: Sənədləri yaratmamaq və ya sonradan bağlamaq seçimi ilə əl ilə sa
 Bu sənədləri yaratmaq istəyirsiniz?
 
 QEYD: Sənədləri yaratmamaq və ya sonradan bağlamaq seçimi ilə sessiyanız ÇIXIŞ ZAMANI DƏYİŞDİRİLƏCƏK! Təqdim edirik ki, &quot;session.xml&quot; faylını indi ehtiyat nüsxə kimi saxlayasınız."/>
-			<RTLvsDirectWrite title="RTL işlədilə bilməz" message="RTL DirectWrite rejimi ilə uyğun deyil. Zəhmət olmasa Nizamlamalar dialoqunda DirectWrite rejimini söndürün və macpad++-i yenidən başladın."/>
-			<FileMemoryAllocationFailed title="Xəta: Fayl yaddaş ayrılması uğursuz oldu" message="macpad++ tərəfindən yüklənən fayl üçün kifayət qədər bitişik yaddaş yoxdur."/><!-- HowToReproduce: x86 Notepad++-da ümumi ölçüsü ~700MB-dan çox olan bir neçə fayl açmağa cəhd edin (bu, kompüterin yaddaş konfiqurasiyası və cari sistem yaddaş istifadəsindən asılıdır...). -->
+			<RTLvsDirectWrite title="RTL işlədilə bilməz" message="RTL DirectWrite rejimi ilə uyğun deyil. Zəhmət olmasa Nizamlamalar dialoqunda DirectWrite rejimini söndürün və macpadqq-i yenidən başladın."/>
+			<FileMemoryAllocationFailed title="Xəta: Fayl yaddaş ayrılması uğursuz oldu" message="macpadqq tərəfindən yüklənən fayl üçün kifayət qədər bitişik yaddaş yoxdur."/><!-- HowToReproduce: x86 Notepad++-da ümumi ölçüsü ~700MB-dan çox olan bir neçə fayl açmağa cəhd edin (bu, kompüterin yaddaş konfiqurasiyası və cari sistem yaddaş istifadəsindən asılıdır...). -->
 			<FindRegexBackwardDisabled title="Regex geriyə axtarış deaktivdir" message="Standart olaraq, gözlənilməz nəticələrə səbəb ola biləcəyi üçün geriyə regex axtarışı deaktivdir. Geriyə axtarış etmək üçün Axtarış dialoqunu açın və normal və ya genişləndirilmiş axtarış rejimini seçin, regex əvəzinə.
 Axtarış dialoqunu açmaq və ya ona fokus vermək üçün OK düyməsini basın.
 
@@ -1666,8 +1666,8 @@ Axtarış dialoqunu açmaq və ya ona fokus vermək üçün OK düyməsini bası
 			<word-chars-list-warning-end value="  simvollar siyahınızda."/><!-- HowToReproduce: Nizamlamalar dialoqunda "Ayırıcı" bölməsində "Sözün bir hissəsi kimi öz simvollarınızı əlavə edin\r(nə etdiyinizi bilmirsinizsə, bunu seçməyin)" seçimini yoxlayın, sonra mətn sahəsinə boşluq daxil edin. -->
 			<backup-select-folder value="Ehtiyat nüsxə qovluğu kimi qovluq seçin"/><!-- HowToReproduce: Nizamlamalar > Nizamlamalar > Ehtiyat Nüsxə > [...] -->
 			<cloud-invalid-warning value="Etibarsız yol."/>
-			<cloud-restart-warning value="Zəhmət olmasa macpad++-i yenidən başladın ki, təsir göstərsin."/>
-			<cloud-select-folder value="macpad++-in nizamlamalarını oxuduğu/yazdığı qovluğu seçin"/><!-- HowToReproduce: Nizamlamalar dialoqunda "Bulud" bölməsində "Bulud yeri yolunu burada təyin edin: " seçimini yoxlayın, sonra "..." düyməsini basın. Bu mesaj "Qovluq Seç" dialoqunda göstərilir. -->
+			<cloud-restart-warning value="Zəhmət olmasa macpadqq-i yenidən başladın ki, təsir göstərsin."/>
+			<cloud-select-folder value="macpadqq-in nizamlamalarını oxuduğu/yazdığı qovluğu seçin"/><!-- HowToReproduce: Nizamlamalar dialoqunda "Bulud" bölməsində "Bulud yeri yolunu burada təyin edin: " seçimini yoxlayın, sonra "..." düyməsini basın. Bu mesaj "Qovluq Seç" dialoqunda göstərilir. -->
 			<default-open-save-select-folder value="Standart qovluq kimi qovluq seçin"/><!-- HowToReproduce: Nizamlamalar > Nizamlamalar > Standart Qovluq > [...] -->
 			<shift-change-direction-tip value="Əks istiqamətdə axtarış etmək üçün Shift+Enter istifadə edin"/>
 			<two-find-buttons-tip value="2 axtarış düyməsi rejimi"/>

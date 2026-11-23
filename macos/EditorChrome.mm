@@ -5,7 +5,7 @@
 #import "EditorPanelChrome.h"
 #import "EditorResources.h"
 
-static NSPasteboardType const TabPasteboardType = @"io.github.vt244.macpad-plus-plus.tab";
+static NSPasteboardType const TabPasteboardType = @"io.github.vt244.macpadqq.tab";
 
 static CGFloat RelativeLuminance(NSColor *color)
 {
@@ -510,7 +510,7 @@ static EditorTabStrip *TabStrip(BOOL other)
 	RemoveItems(_menus);
 	for (NSMenuItem *item in NSApp.mainMenu.itemArray)
 	{
-		if (!item.submenu || [item.title isEqualToString:@"macpad++"])
+		if (!item.submenu || [item.title isEqualToString:@"macpadqq"])
 			continue;
 		ChromeButton *button = Button(item.title, self, @selector(showMenu:));
 		button.popup = [item.representedObject isKindOfClass:NSMenu.class] ? item.representedObject : item.submenu;

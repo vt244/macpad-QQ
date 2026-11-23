@@ -591,7 +591,7 @@ bool Notepad_plus::doReload(BufferID id, bool alert)
 	{
 		int answer = _nativeLangSpeaker.messageBox("DocReloadWarning",
 			_pPublicInterface->getHSelf(),
-			L"Are you sure you want to reload the current file and lose the changes made in macpad++?",
+			L"Are you sure you want to reload the current file and lose the changes made in macpadqq?",
 			L"Reload",
 			MB_YESNO | MB_ICONEXCLAMATION | MB_APPLMODAL);
 		if (answer != IDYES)
@@ -715,7 +715,7 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 	{
 		_nativeLangSpeaker.messageBox("FullReadOnlySavingForbidden",
 			_pPublicInterface->getHSelf(),
-			L"Cannot save file.\nThe macpad++ full read-only saving forbidden mode prevented the file from being saved.",
+			L"Cannot save file.\nThe macpadqq full read-only saving forbidden mode prevented the file from being saved.",
 			L"Save failed",
 			MB_OK);
 	}
@@ -768,7 +768,7 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 
 					int openInAdminModeRes = _nativeLangSpeaker.messageBox("OpenInAdminMode",
 						_pPublicInterface->getHSelf(),
-						L"This file cannot be saved and it may be protected.\rDo you want to launch macpad++ in Administrator mode?",
+						L"This file cannot be saved and it may be protected.\rDo you want to launch macpadqq in Administrator mode?",
 						L"Save failed",
 						MB_YESNO);
 
@@ -788,7 +788,7 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 						{
 							_nativeLangSpeaker.messageBox("OpenInAdminModeFailed",
 								_pPublicInterface->getHSelf(),
-								L"macpad++ cannot be opened in Administrator mode.",
+								L"macpadqq cannot be opened in Administrator mode.",
 								L"Open in Administrator mode failed",
 								MB_OK);
 						}
@@ -804,7 +804,7 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 
 					int openInAdminModeRes = _nativeLangSpeaker.messageBox("OpenInAdminModeWithoutCloseCurrent",
 						_pPublicInterface->getHSelf(),
-						L"The file cannot be saved and it may be protected.\rDo you want to launch macpad++ in Administrator mode?",
+						L"The file cannot be saved and it may be protected.\rDo you want to launch macpadqq in Administrator mode?",
 						L"Save failed",
 						MB_YESNO);
 
@@ -830,7 +830,7 @@ bool Notepad_plus::doSave(BufferID id, const wchar_t * filename, bool isCopy)
 						{
 							_nativeLangSpeaker.messageBox("OpenInAdminModeFailed",
 								_pPublicInterface->getHSelf(),
-								L"macpad++ cannot be opened in Administrator mode.",
+								L"macpadqq cannot be opened in Administrator mode.",
 								L"Open in Administrator mode failed",
 								MB_OK);
 						}
@@ -2080,7 +2080,7 @@ bool Notepad_plus::fileSaveAs(BufferID bufferID, bool isSaveCopy)
 		{
 			_nativeLangSpeaker.messageBox("FileAlreadyOpenedInNpp",
 				_pPublicInterface->getHSelf(),
-				L"The file is already opened in macpad++.",
+				L"The file is already opened in macpadqq.",
 				L"ERROR",
 				MB_OK | MB_ICONSTOP);
 			switchToFile(other);

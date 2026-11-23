@@ -41,7 +41,7 @@ Translation note:
 					<Item subMenuId="edit-onSelection" name="選択した文字列を(&amp;O)"/>
 					<Item subMenuId="edit-multiSelectALL" name="すべての一致を 選択する"/>
 					<Item subMenuId="edit-multiSelectNext" name="次の一致を 選択に追加"/>
-					<Item subMenuId="edit-readonlyInNotepad++" name="macpad++ 内で読み取り専用"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="macpadqq 内で読み取り専用"/>
 					<Item subMenuId="search-changeHistory" name="編集履歴"/>
 					<Item subMenuId="search-markAll" name="選択した語をすべて色づけ(&amp;A)"/>
 					<Item subMenuId="search-markOne" name="選択した語を一つだけ色づけ(&amp;O)"/>
@@ -373,17 +373,17 @@ Translation note:
 					<Item id="46001" name="スタイル設定..."/>
 					<Item id="46250" name="言語を定義..."/>
 					<Item id="46300" name="言語定義のフォルダーを開く..."/>
-					<Item id="46301" name="macpad++ ユーザー言語定義コレクション"/>
+					<Item id="46301" name="macpadqq ユーザー言語定義コレクション"/>
 					<Item id="46180" name="ユーザー定義"/>
-					<Item id="47000" name="macpad++について"/>
+					<Item id="47000" name="macpadqqについて"/>
 					<Item id="47010" name="コマンドライン引数..."/>
-					<Item id="47001" name="macpad++のサイト"/>
-					<Item id="47002" name="macpad++のプロジェクトページ"/>
-					<Item id="47003" name="macpad++のオンラインマニュアル"/>
-					<Item id="47004" name="macpad++のコミュニティ(フォーラム)"/>
+					<Item id="47001" name="macpadqqのサイト"/>
+					<Item id="47002" name="macpadqqのプロジェクトページ"/>
+					<Item id="47003" name="macpadqqのオンラインマニュアル"/>
+					<Item id="47004" name="macpadqqのコミュニティ(フォーラム)"/>
 					<Item id="47012" name="デバッグ情報..."/>
 					<Item id="47005" name="プラグインを探す"/>
-					<Item id="47006" name="macpad++をアップデート"/>
+					<Item id="47006" name="macpadqqをアップデート"/>
 					<Item id="47009" name="アップデーターのプロキシを設定..."/>
 					<Item id="48005" name="プラグインをインポート..."/>
 					<Item id="48006" name="テーマをインポート..."/>
@@ -454,7 +454,7 @@ Translation note:
 				<Item CMDID="41016" name="ごみ箱に移動"/>
 				<Item CMDID="41014" name="再読み込み"/>
 				<Item CMDID="41010" name="印刷..."/>
-				<Item CMDID="42028" name="macpad++内で読み取り専用"/>
+				<Item CMDID="42028" name="macpadqq内で読み取り専用"/>
 				<Item CMDID="42033" name="Windowsの読み取り専用属性"/>
 				<Item CMDID="2" name="クリップボードにコピー"/>
 				<Item CMDID="42029" name="フルパスをコピー"/>
@@ -980,7 +980,7 @@ Translation note:
 					<Item id="6132" name="右端の ＋ ▼ ✕ ボタンを非表示にする(&amp;R)"/>
 					<Item id="6133" name="ステータスバー"/>
 					<Item id="6134" name="隠す(&amp;D)"/>
-					<Item id="7165" name="ダイアログのフォント (macpad++の再起動が必要)"/>
+					<Item id="7165" name="ダイアログのフォント (macpadqqの再起動が必要)"/>
 					<Item id="7166" name="サイズ(&amp;S)"/>
 					<Item id="7168" name="フォント名:"/>
 				</Global>
@@ -1150,7 +1150,7 @@ Translation note:
 				</DefaultDir>
 
 				<FileAssoc title="ファイルの関連付け">
-					<Item id="4008" name="この機能を使うには、macpad++ をいったん終了し、管理者権限で起動し直してください。"/>
+					<Item id="4008" name="この機能を使うには、macpadqq をいったん終了し、管理者権限で起動し直してください。"/>
 					<Item id="4009" name="サポート形式:"/>
 					<Item id="4010" name="登録済み形式:"/>
 				</FileAssoc>
@@ -1235,7 +1235,7 @@ Translation note:
 				</Print>
 
 				<Searching title="検索">
-					<Item id="6902" name="検索画面で固定幅フォントを使用する（macpad++ の再起動が必要）"/>
+					<Item id="6902" name="検索画面で固定幅フォントを使用する（macpadqq の再起動が必要）"/>
 					<Item id="6903" name="検索結果を結果ウィンドウに表示する時に、検索画面を自動で閉じないようにする"/>
 					<Item id="6906" name="検索結果画面：可能であれば、複数回一致した行を 1行にまとめて表示する"/>
 					<Item id="6907" name="検索画面を開くときの動作"/>
@@ -1303,7 +1303,7 @@ Translation note:
 					<Item id="6152" name="セッションを新しいインスタンスで開く（セッションは終了時に自動保存）"/>
 					<Item id="6153" name="常にマルチインスタンスモードとする"/>
 					<Item id="6154" name="デフォルト（1つのインスタンス）"/>
-					<Item id="6155" name="* この変更を有効にするにはmacpad++の再起動が必要です"/>
+					<Item id="6155" name="* この変更を有効にするにはmacpadqqの再起動が必要です"/>
 					<Item id="6171" name="挿入する日時の書式設定"/>
 					<Item id="6175" name="日付と時刻の順序を逆にする（短い形式、長い形式の場合）"/>
 					<Item id="6172" name="カスタム書式:"/>
@@ -1386,8 +1386,8 @@ Translation note:
 					</ComboBox>
 					<ComboBox id="6364">
 						<Element name="行わない"/>
-						<Element name="macpad++ の起動時に行う"/>
-						<Element name="macpad++ の終了時に行う"/>
+						<Element name="macpadqq の起動時に行う"/>
+						<Element name="macpadqq の終了時に行う"/>
 					</ComboBox>
 					<Item id="6308" name="タスクトレイへ格納"/>
 					<Item id="6363" name="描画モード"/>
@@ -1475,7 +1475,7 @@ Translation note:
 				<Item id="7" name="いいえ(&amp;N)"/>
 				<Item id="4" name="常に はい(&amp;A)"/>
 			</DoSaveAll><!-- HowToReproduce: Check the 'Enable Save All confirm dialog' checkbox in Preference->MISC, now click 'Save all' -->
-			<NetworkPathWarning title="macpad++ セッションの読み込み" title2="クリックできる file:// リンク" title3="toolbarButtonsConf.xml の読み込み" title4="プロジェクトパネルの XML ファイルの読み込み">
+			<NetworkPathWarning title="macpadqq セッションの読み込み" title2="クリックできる file:// リンク" title3="toolbarButtonsConf.xml の読み込み" title4="プロジェクトパネルの XML ファイルの読み込み">
 				<Item id="1771" name="ネットワークパスの警告:
 
 $STR_REPLACE$
@@ -1494,8 +1494,8 @@ $STR_REPLACE$
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ and $STR_REPLACE$ are place holders, don't translate these place holders. -->
-			<ContextMenuXmlEditWarning title="コンテキストメニューの編集" message="これから開く contextMenu.xml を編集することで、macpad++のポップアップメニューを変更できます。
-変更を適用するには、保存後、macpad++を再起動して下さい。"/>
+			<ContextMenuXmlEditWarning title="コンテキストメニューの編集" message="これから開く contextMenu.xml を編集することで、macpadqqのポップアップメニューを変更できます。
+変更を適用するには、保存後、macpadqqを再起動して下さい。"/>
 			<SaveCurrentModifWarning title="警告: 現在の変更を保存" message="現在の変更を保存する必要があります。
 保存したすべての変更は取り消すことはできません。
 
@@ -1507,7 +1507,7 @@ $STR_REPLACE$
 			<CannotMoveDoc title="新しいウィンドウに移動" message="ドキュメントが変更されました。保存してやり直してください。"/>
 			<DocReloadWarning title="再読み込み" message="変更が失われますが、このドキュメントを本当に開き直しますか?"/>
 			<FileLockedWarning title="警告: 保存失敗" message="このファイルを別のプログラムで開いていないか確認してください。"/>
-			<FileAlreadyOpenedInNpp title="" message="そのファイルは既にmacpad++で開かれています。"/>
+			<FileAlreadyOpenedInNpp title="" message="そのファイルは既にmacpadqqで開かれています。"/>
 			<RenameTabTemporaryNameAlreadyInUse title="名前の変更に失敗" message="指定された名前は、ほかのタブで使用されています。"/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
 			<RenameTabTemporaryNameIsEmpty title="名前の変更に失敗" message="名前が指定されなかったか、半角スペースやタブ文字だけの名前でした。"/><!-- HowToReproduce: Rename the tab of an untitled document and provide an empty string or only some white speces. -->
 			<DeleteFileFailed title="削除失敗" message="ファイルの削除に失敗しました。"/>
@@ -1549,13 +1549,13 @@ $STR_REPLACE$
 			<DoReloadOrNotAndLooseChange title="再読み込み" message="&quot;$STR_REPLACE$&quot;
 
 このファイルは他のプログラムによって変更されました。
-macpad++ で行った変更は破棄されますが、再読み込みしますか？"/>
+macpadqq で行った変更は破棄されますが、再読み込みしますか？"/>
 			<PrehistoricSystemDetected title="古いシステムです" message="システムが古いため、この機能は利用できません。"/>
-			<XpUpdaterProblem title="macpad++ アップデーター" message="macpad++ アップデーターは XP では利用できません。これは XP のセキュリティー機能が古いためです。
-macpad++ のダウンロードページを開きますか？"/>
+			<XpUpdaterProblem title="macpadqq アップデーター" message="macpadqq アップデーターは XP では利用できません。これは XP のセキュリティー機能が古いためです。
+macpadqq のダウンロードページを開きますか？"/>
 			<DocTooDirtyToMonitor title="ファイル監視" message="この文書は変更されています。監視を始める前に保存をして下さい。"/>
 			<DocNoExistToMonitor title="ファイル監視" message="監視対象のファイルが存在しません。"/>
-			<FileTooBigToOpen title="ファイルサイズ" message="ファイルサイズが大きいため macpad++ で開けません。"/>
+			<FileTooBigToOpen title="ファイルサイズ" message="ファイルサイズが大きいため macpadqq で開けません。"/>
 			<FileLoadingException title="例外コード：$STR_REPLACE$" message="ファイルの読み込み中にエラーが発生しました。"/>
 			<WantToOpenHugeFile title="大きなファイルを開こうとしています" message="2GBより大きなファイルを開くには何分かかかるかもしれません。
 ファイルを開きますか？"/>
@@ -1598,22 +1598,22 @@ langs.xml を復元しますか？"/>
 			<SCMapperDoDeleteOrNot title="よろしいですか？" message="このショートカットを削除してよろしいですか？"/>
 			<FindCharRangeValueError title="数値範囲" message="0 から 255 の値を入力して下さい。"/> <!-- HowToReproduce: Search menu, then Find characters in range, select Custom range, enter 999 in either edit box, press Find. -->
 			<OpenInAdminMode title="保存に失敗" message="ファイルを保存できませんでした。保護されたファイルのようです。
-macpad++ を管理者権限で立ち上げますか？"/>
+macpadqq を管理者権限で立ち上げますか？"/>
 			<OpenInAdminModeWithoutCloseCurrent title="保存に失敗" message="ファイルを保存できませんでした。保護されたファイルのようです。
-macpad++ を管理者権限で立ち上げますか？"/>
-			<OpenInAdminModeFailed title="管理者権限で立ち上げることに失敗" message="macpad++ を管理者権限で立ち上げられませんでした。"/>
+macpadqq を管理者権限で立ち上げますか？"/>
+			<OpenInAdminModeFailed title="管理者権限で立ち上げることに失敗" message="macpadqq を管理者権限で立ち上げられませんでした。"/>
 			<ViewInBrowser title="ブラウザーで開く" message="アプリケーションが見つかりませんでした。"/>
-			<ExitToUpdatePlugins title="macpad++ を終了しようとしています" message="「はい」を選択すると、macpad++ を終了して更新作業を行います。
-すべての作業が完了すると macpad++ は再起動します。
+			<ExitToUpdatePlugins title="macpadqq を終了しようとしています" message="「はい」を選択すると、macpadqq を終了して更新作業を行います。
+すべての作業が完了すると macpadqq は再起動します。
 処理を続けますか？"/>
-			<NeedToRestartToLoadPlugins title="macpad++ を再起動してください" message="インストールしたプラグインを読み込むには、macpad++ を再起動してください。"/>
-			<ChangeHistoryEnabledWarning title="macpad++ を再起動してください" message="編集履歴マーカーを有効にするには、macpad++ を再起動してください。"/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
-			<WindowsSessionExit title="macpad++ - Windows セッションの終了" message="Windows セッションを終了しようとしていますが、保存されていない文書があります。macpad++ を終了してもよろしいですか？"/>
+			<NeedToRestartToLoadPlugins title="macpadqq を再起動してください" message="インストールしたプラグインを読み込むには、macpadqq を再起動してください。"/>
+			<ChangeHistoryEnabledWarning title="macpadqq を再起動してください" message="編集履歴マーカーを有効にするには、macpadqq を再起動してください。"/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
+			<WindowsSessionExit title="macpadqq - Windows セッションの終了" message="Windows セッションを終了しようとしていますが、保存されていない文書があります。macpadqq を終了してもよろしいですか？"/>
 			<LanguageMenuCompactWarning title="言語メニューをまとめる" message="この設定は次回の起動時に反映されます"/><!-- HowToReproduce: toggle "Make language menu compact" via Preferences dialog "Language/Language Menu. -->
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="テーマへの変更が保存されていません。
 テーマを切り替える前に、変更を保存しますか？"/><!-- HowToReproduce: In the Style Configurator dialog change some theme and switch to other theme without saving. -->
 			<FullReadOnlySavingForbidden title="保存に失敗しました" message="ファイルを保存できません。
-macpad++ が強制読み取り専用モードのため、ファイルの保存を行いませんでした。"/>
+macpadqq が強制読み取り専用モードのため、ファイルの保存を行いませんでした。"/>
 			<NotEnoughRoom4Saving title="保存に失敗しました" message="保存に失敗しました。
 保存先に十分な空き容量がないようです。ファイルは保存されませんでした。"/>
 			<FileInaccessibleUserSession title="ファイルにアクセスできません" message="手動で保存されたセッション「$STR_REPLACE$」の中に、アクセスできないファイルがあります。これらを、読み取り専用の空文書（プレースホルダー）として残しておくことができます。
@@ -1626,8 +1626,8 @@ macpad++ が強制読み取り専用モードのため、ファイルの保存�
 プレースホルダーとして残しますか？
 
 注意：プレースホルダーとして残さない場合や残した後に閉じた場合、プログラム終了時にセッションに反映されます！　ファイル「session.xml」のバックアップを今すぐ作成することをお勧めします。"/>
-			<RTLvsDirectWrite title="RTL を利用できません" message="右から左への書字方向（RTL）は DirectWrite と互換性がありません。「環境設定」の「その他」にて DirectWrite をオフにし、macpad++ を再起動してください。"/>
-			<FileMemoryAllocationFailed title="メモリー領域の確保に失敗しました" message="macpad++ で開こうとしているファイルに対し、十分な連続したメモリー領域が確保できなかったことが原因と思われます。"/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
+			<RTLvsDirectWrite title="RTL を利用できません" message="右から左への書字方向（RTL）は DirectWrite と互換性がありません。「環境設定」の「その他」にて DirectWrite をオフにし、macpadqq を再起動してください。"/>
+			<FileMemoryAllocationFailed title="メモリー領域の確保に失敗しました" message="macpadqq で開こうとしているファイルに対し、十分な連続したメモリー領域が確保できなかったことが原因と思われます。"/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
 			<FindRegexBackwardDisabled title="正規表現での逆方向の検索は無効です" message="標準では、正規表現使用時は逆方向への検索はできません。これは予想外の検索結果になることがあるためです。逆方向へ検索するには、検索ダイアログを開き、検索モードを「標準」か「拡張」にしてください。
 OKボタンを押すと検索ダイアログが開きます。
 
@@ -1635,8 +1635,8 @@ OKボタンを押すと検索ダイアログが開きます。
 			<PrintError title="0" message="印刷を開始できませんでした。"/><!-- Use title="0" to use Windows OS default translated "Error" title. -->
 			<FindAutoChangeOfInSelectionWarning title="検索条件についての注意" message="「選択内のみ」のチェックボックスが自動で変更されました。
 検索条件が予期したものであるか確認してから、操作を続けてください。"/> <!-- HowToReproduce: https://github.com/notepad-plus-plus/notepad-plus-plus/issues/14897#issuecomment-2564316224 -->
-			<Need2Restart2ShowMenuShortcuts title="macpad++ を再起動してください" message="メニュー右端のボタンを表示するには、macpad++ を再起動してください。"/>
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="読み取り専用属性を変更できませんでした" message="このファイルの読み取り専用属性を変更するには、macpad++ を管理者権限で実行してください。"/>
+			<Need2Restart2ShowMenuShortcuts title="macpadqq を再起動してください" message="メニュー右端のボタンを表示するには、macpadqq を再起動してください。"/>
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="読み取り専用属性を変更できませんでした" message="このファイルの読み取り専用属性を変更するには、macpadqq を管理者権限で実行してください。"/>
 			<ReadOnlyFileCannotBeSaved title="保存に失敗しました - 読み取り専用です" message="「$STR_REPLACE$」
 このファイルが読み取り専用のため、保存できませんでした。
 読み取り専用を解除してから保存を行ってください。"/>
@@ -1646,7 +1646,7 @@ OKボタンを押すと検索ダイアログが開きます。
 			<ShortcutsXmlTampered title="セキュリティー警告" message="shortcuts.xml が手動で変更されたようです。
 
 セキュリティーのため、shortcuts.xml の内容が意図したものであるかを確認してください。問題なければ、「実行」メニューから「shortcuts.xml を承認する」を押してください。"/>
-			<SymlinkLoadingWarning title="警告: シンボリックリンクを開くとフリーズすることがあります" message="シンボリックリンクの読み込みを「フォルダーをワークスペースとして開く」で許可すると、macpad++ が無限ループに陥り、フリーズすることが起こりえます。
+			<SymlinkLoadingWarning title="警告: シンボリックリンクを開くとフリーズすることがあります" message="シンボリックリンクの読み込みを「フォルダーをワークスペースとして開く」で許可すると、macpadqq が無限ループに陥り、フリーズすることが起こりえます。
 この状況は、シンボリックリンクが親フォルダーを指していたり、循環参照を作ったりすると起こります。
 十分注意してこの機能を利用してください。"/>
 		</MessageBox>
@@ -1768,7 +1768,7 @@ OKボタンを押すと検索ダイアログが開きます。
 			<backup-select-folder value="バックアップ先を選択してください"/>
 			<cloud-invalid-warning value="無効なパスです。"/>
 			<cloud-restart-warning value="変更を有効にするには再起動が必要です。"/>
-			<cloud-select-folder value="macpad++ が設定を読み書きするフォルダーを選択してください。"/>
+			<cloud-select-folder value="macpadqq が設定を読み書きするフォルダーを選択してください。"/>
 			<default-open-save-select-folder value="既定のディレクトリを選択してください"/>
 			<shift-change-direction-tip value="Shift+Enter で逆方向に検索します"/>
 			<two-find-buttons-tip value="検索ボタンを2個に分ける"/>
@@ -1928,7 +1928,7 @@ C、C++、Java、C#、Objective-C、PHP、JavaScript、JSP、CSS、Perl、Rust�
 
 			<!-- Don't translate "Global override" and "Default Style" -->
 			<global-override-tip value="&quot;Global override&quot; を使用すると、すべての言語のスタイル設定が、チェックを入れたもので上書きされます。&quot;Default Style&quot; を使われるほうが、お望みの挙動に近いかもしれません。"/>
-			<scintillaRenderingTechnology-tip value="特殊な文字の描画や、グラフィックス関連の問題が改善することがあります。macpad++ の再起動が必要です。"/>
+			<scintillaRenderingTechnology-tip value="特殊な文字の描画や、グラフィックス関連の問題が改善することがあります。macpadqq の再起動が必要です。"/>
 
 			<!-- Due to the limited space on the status bar, if the translations for 'length' & 'lines' are much longer than the English words, please leave them in English instead of translating them. -->
 			<statusbar-length-lines value="長さ: $STR_REPLACE1$    行数: $STR_REPLACE2$"/>
@@ -1946,7 +1946,7 @@ C、C++、Java、C#、Objective-C、PHP、JavaScript、JSP、CSS、Perl、Rust�
 			<max-len-on-save-tip value="入力された文字列が非常に長いため、次回のセッションに引き継がれない可能性があります。"/>
 			<goto-setting-tip value="関連する設定はこちら"/>
 			<tabbar-tabcompactlabellen-tip value="タブの名称が長いときに、表示する文字数を制限します。Enterキーを押すと反映されます。設定可能な値: 1-257 文字 (無効にするには 0 を入力)。"/>
-			<networkpathwarning-serverwhitelist-tip value="このファイルのサーバー名を、macpad++ の serverWhiteList.xml に保存します。
+			<networkpathwarning-serverwhitelist-tip value="このファイルのサーバー名を、macpadqq の serverWhiteList.xml に保存します。
 
 詳しくは、このボタンを押すと開く、オンラインマニュアルをご確認ください。"/>
 		</MiscStrings>

@@ -115,7 +115,7 @@ std::string getFileContent(const wchar_t* file2read, bool* pbFailed)
 			*pbFailed = true;
 		std::string().swap(wholeFileContent); // to immediately release all the allocated memory
 		::MessageBoxW(NULL, L"std::bad_alloc exception caught!\n\nProbably not enough contiguous memory to complete the operation.",
-			L"macpad++ - getFileContent", MB_OK | MB_ICONWARNING | MB_APPLMODAL);
+			L"macpadqq - getFileContent", MB_OK | MB_ICONWARNING | MB_APPLMODAL);
 	}
 	catch (...)
 	{

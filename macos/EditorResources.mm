@@ -320,7 +320,15 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		NSString *override = NSProcessInfo.processInfo.environment[@"MACPAD_DATA_DIR"];
 		NSURL *support = [fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
 		_profile = override.isAbsolutePath ? [NSURL fileURLWithPath:override isDirectory:YES] :
-			[support URLByAppendingPathComponent:@"macpad++/profile" isDirectory:YES];
+			[support URLByAppendingPathComponent:@"macpadqq/profile" isDirectory:YES];
+		if (!override.isAbsolutePath && ![fm fileExistsAtPath:_profile.path])
+		{
+			// Keep existing sessions, plugins, and settings when upgrading.
+			NSURL *legacyProfile = [support URLByAppendingPathComponent:@"macpad++/profile" isDirectory:YES];
+			BOOL isDirectory = NO;
+			if ([fm fileExistsAtPath:legacyProfile.path isDirectory:&isDirectory] && isDirectory)
+				_profile = legacyProfile;
+		}
 		LoadXML(_toolbar, [_profile URLByAppendingPathComponent:@"toolbarButtonsConf.xml"]);
 		LoadXML(_languages, [NSBundle.mainBundle URLForResource:@"langs.model" withExtension:@"xml"]);
 		NSMutableDictionary *englishLabels = [NSMutableDictionary dictionary];
@@ -1230,7 +1238,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError
 				userInfo:@{NSURLErrorKey: url, NSLocalizedDescriptionKey: theme ?
-					EditorUIString(@"This file does not contain a macpad++ theme.") : EditorUIString(@"This file does not contain a macpad++ translation.")}];
+					EditorUIString(@"This file does not contain a macpadqq theme.") : EditorUIString(@"This file does not contain a macpadqq translation.")}];
 		return nil;
 	}
 	NSURL *directory = [_profile URLByAppendingPathComponent:theme ? @"themes" : @"localization" isDirectory:YES];

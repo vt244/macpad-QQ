@@ -3888,7 +3888,7 @@ static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end)
 
 - (IBAction)specialClipboard:(NSMenuItem *)sender
 {
-	static NSPasteboardType const binaryType = @"io.github.vt244.macpad-plus-plus.binary-text";
+	static NSPasteboardType const binaryType = @"io.github.vt244.macpadqq.binary-text";
 	ScintillaView *editor = self.editor;
 	NSPasteboard *pasteboard = NSPasteboard.generalPasteboard;
 	const BOOL readOnly = [editor message:SCI_GETREADONLY] != 0;

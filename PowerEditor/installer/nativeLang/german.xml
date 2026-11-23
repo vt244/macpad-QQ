@@ -50,7 +50,7 @@ Translation note:
 					<Item subMenuId="edit-onSelection" name="Mit Auswahl"/>
 					<Item subMenuId="edit-multiSelectALL" name="Mehrfachauswahl ALLE"/>
 					<Item subMenuId="edit-multiSelectNext" name="Mehrfachauswahl Nächstes"/>
-					<Item subMenuId="edit-readonlyInNotepad++" name="Schreibsch&amp;utz in macpad++"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="Schreibsch&amp;utz in macpadqq"/>
 					<Item subMenuId="search-changeHistory" name="Änderungs-Historie"/>
 					<Item subMenuId="search-markAll" name="&amp;Alle Treffer hervorheben"/>
 					<Item subMenuId="search-markOne" name="Di&amp;esen Treffer hervorheben"/>
@@ -378,17 +378,17 @@ Translation note:
 					<Item id="46016" name="Keine (Normaler Text)"/>
 					<Item id="46250" name="Eigene Sprache &amp;definieren …"/>
 					<Item id="46300" name="Verzeichnis mit benutzerdefinierten Sprachen öffnen …"/>
-					<Item id="46301" name="Sammlung benutzerdefinierter Sprachen für macpad++"/>
+					<Item id="46301" name="Sammlung benutzerdefinierter Sprachen für macpadqq"/>
 					<Item id="46180" name="Benutzerdefiniert"/>
 					<Item id="47000" name="&amp;Info …"/>
 					<Item id="47010" name="&amp;Kommandozeilenparameter …"/>
-					<Item id="47001" name="macpad++ im &amp;Web"/>
-					<Item id="47002" name="macpad++ bei &amp;GitHub"/>
-					<Item id="47003" name="macpad++ Online-Dokumentation"/>
-					<Item id="47004" name="macpad++ Online-Forum"/>
+					<Item id="47001" name="macpadqq im &amp;Web"/>
+					<Item id="47002" name="macpadqq bei &amp;GitHub"/>
+					<Item id="47003" name="macpadqq Online-Dokumentation"/>
+					<Item id="47004" name="macpadqq Online-Forum"/>
 					<Item id="47012" name="Debug-Info"/>
 					<Item id="47005" name="&amp;Erweiterungen"/>
-					<Item id="47006" name="macpad++ &amp;aktualisieren"/>
+					<Item id="47006" name="macpadqq &amp;aktualisieren"/>
 					<Item id="47009" name="&amp;Proxy für Updater einstellen …"/>
 					<Item id="48005" name="Plugin(s) &amp;importieren …"/>
 					<Item id="48006" name="Stil-&amp;Themen importieren …"/>
@@ -459,7 +459,7 @@ Translation note:
 				<Item CMDID="41016" name="L&amp;öschen"/>
 				<Item CMDID="41014" name="Neu &amp;laden"/>
 				<Item CMDID="41010" name="&amp;Drucken …"/>
-				<Item CMDID="42028" name="Schreibsch&amp;utz in macpad++"/>
+				<Item CMDID="42028" name="Schreibsch&amp;utz in macpadqq"/>
 				<Item CMDID="42033" name="Schreibschutz-Attribut in &amp;Windows"/>
 				<Item CMDID="2" name="In Zwischenablage kopieren"/>
 				<Item CMDID="42029" name="Vollständigen Dateipfad &amp;kopieren"/>
@@ -984,7 +984,7 @@ Translation note:
 					<Item id="6132" name="Schalt&amp;flächen '＋ ▼ ✕' ausblenden"/>
 					<Item id="6133" name="Statusleiste"/>
 					<Item id="6134" name="Aus&amp;blenden"/>
-					<Item id="7165" name="Schriftart im Dialogfeld (Neustart von macpad++ erforderlich)"/>
+					<Item id="7165" name="Schriftart im Dialogfeld (Neustart von macpadqq erforderlich)"/>
 					<Item id="7166" name="&amp;Größe:"/>
 					<Item id="7168" name="Name:"/>
 				</Global>
@@ -1154,7 +1154,7 @@ Translation note:
 				</DefaultDir>
 
 				<FileAssoc title="Dateiverknüpfungen">
-					<Item id="4008" name="Um diese Option zu nutzen muss macpad++ im Administrator-Modus neu gestartet werden."/>
+					<Item id="4008" name="Um diese Option zu nutzen muss macpadqq im Administrator-Modus neu gestartet werden."/>
 					<Item id="4009" name="Unterstützte Erw.:"/>
 					<Item id="4010" name="Registrierte Erw.:"/>
 				</FileAssoc>
@@ -1240,7 +1240,7 @@ Translation note:
 				</Print>
 
 				<Searching title="Suche">
-					<Item id="6902" name="Festbreitenschrift im Dialogfeld 'Suchen' verwenden (Neustart von macpad++ erforderlich)."/>
+					<Item id="6902" name="Festbreitenschrift im Dialogfeld 'Suchen' verwenden (Neustart von macpadqq erforderlich)."/>
 					<Item id="6903" name="Der Suchdialog bleibt nach der Suche geöffnet, die im Ergebnisfenster ausgegeben wird"/>
 					<Item id="6906" name="Suchergebnisfenster: Zeige wenn möglich nur einen Eintrag pro gefundener Zeile"/>
 					<Item id="6907" name="Wenn der Suchdialog aufgerufen wird"/>
@@ -1307,7 +1307,7 @@ Translation note:
 					<Item id="6152" name="Sitzungsdateien in einer neuen Instanz öffnen (und die Sitzung beim Beenden automatisch speichern)"/>
 					<Item id="6153" name="Immer im Mehrinstanzen-Modus"/>
 					<Item id="6154" name="Standard (nur eine Instanz)"/>
-					<Item id="6155" name="Nach Änderung der Einstellung muss macpad++ neu gestartet werden."/>
+					<Item id="6155" name="Nach Änderung der Einstellung muss macpadqq neu gestartet werden."/>
 					<Item id="6171" name="Einfügen von Datum/Zeit anpassen"/>
 					<Item id="6175" name="Datum vor Zeit ausgeben (kurzes &amp;&amp; langes Format)"/>
 					<Item id="6172" name="Eigenes Format:"/>
@@ -1390,8 +1390,8 @@ Translation note:
 					</ComboBox>
 					<ComboBox id="6364">
 						<Element name="deaktivieren"/>
-						<Element name="beim Start von macpad++"/>
-						<Element name="beim Beenden von macpad++"/>
+						<Element name="beim Start von macpadqq"/>
+						<Element name="beim Beenden von macpadqq"/>
 					</ComboBox>
 					<Item id="6308" name="Infobereich (Tray)"/>
 					<Item id="6363" name="Darstellungsmodus"/>
@@ -1479,7 +1479,7 @@ Diese Wahl kann jederzeit in den Einstellungen angepasst werden."/>
 				<Item id="7" name="&amp;Nein"/>
 				<Item id="4" name="&amp;Immer Ja"/>
 			</DoSaveAll><!-- HowToReproduce: Check the 'Enable Save All confirm dialog' checkbox in Preference->MISC, now click 'Save all' -->
-			<NetworkPathWarning title="Laden der macpad++-Sitzung" title2="Anklickbarer file://-Link" title3="Laden von toolbarButtonsConf.xml" title4="Laden der Projekt-Panel-XML-Datei">
+			<NetworkPathWarning title="Laden der macpadqq-Sitzung" title2="Anklickbarer file://-Link" title3="Laden von toolbarButtonsConf.xml" title4="Laden der Projekt-Panel-XML-Datei">
 				<Item id="1771" name="Warnung vor Netzwerkpfad:
 
 $STR_REPLACE$
@@ -1498,8 +1498,8 @@ Dennoch laden?"/>
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ and $STR_REPLACE$ are place holders, don't translate these place holders. -->
-			<ContextMenuXmlEditWarning title="Kontextmenü anpassen" message="Durch Bearbeiten der Datei 'contextMenu.xml' können Sie das Kontextmenü von macpad++ anpassen.
-Nach dem Bearbeiten müssen Sie macpad++ neu starten, damit die Änderungen wirksam werden."/>
+			<ContextMenuXmlEditWarning title="Kontextmenü anpassen" message="Durch Bearbeiten der Datei 'contextMenu.xml' können Sie das Kontextmenü von macpadqq anpassen.
+Nach dem Bearbeiten müssen Sie macpadqq neu starten, damit die Änderungen wirksam werden."/>
 			<SaveCurrentModifWarning title="Änderungen speichern" message="Bitte speichern Sie Ihre Änderungen.
 Alle gespeicherten Änderungen können nicht rückgängig gemacht werden.
 
@@ -1509,14 +1509,14 @@ Alle gespeicherten Änderungen können nicht rückgängig gemacht werden.
 
 Fortfahren?"/><!-- HowToReproduce: when you openned file is modified but unsaved yet, and you are changing file encoding. -->
 			<CannotMoveDoc title="In neue Instanz verschieben" message="Dokument wurde geändert.&#x0A;Bitte zuerst speichern und erneut versuchen."/>
-			<DocReloadWarning title="Datei wurde geändert!" message="Sind Sie sicher, dass Sie die Datei in der zuletzt&#x0A;gespeicherten Version erneut laden und die&#x0A;in macpad++ gemachten Änderungen verwerfen wollen?"/>
-			<FileLockedWarning title="Speichern fehlgeschlagen!" message="Datei konnte von macpad++ nicht gespeichert werden. &#x0A;Bitte überprüfen Sie, ob die Datei in einem anderen Programm geöffnet ist."/>
-			<FileAlreadyOpenedInNpp title="Datei bereits geöffnet" message="Die Datei ist bereits in macpad++ geöffnet."/>
+			<DocReloadWarning title="Datei wurde geändert!" message="Sind Sie sicher, dass Sie die Datei in der zuletzt&#x0A;gespeicherten Version erneut laden und die&#x0A;in macpadqq gemachten Änderungen verwerfen wollen?"/>
+			<FileLockedWarning title="Speichern fehlgeschlagen!" message="Datei konnte von macpadqq nicht gespeichert werden. &#x0A;Bitte überprüfen Sie, ob die Datei in einem anderen Programm geöffnet ist."/>
+			<FileAlreadyOpenedInNpp title="Datei bereits geöffnet" message="Die Datei ist bereits in macpadqq geöffnet."/>
 			<RenameTabTemporaryNameAlreadyInUse title="Umbenennen fehlgeschlagen!" message="Der angegebene Name wird bereits in einem anderen Tab verwendet."/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
 			<RenameTabTemporaryNameIsEmpty title="Umbenennen fehlgeschlagen!" message="Der angegebene Name darf nicht leer sein oder nur Leerzeichen oder nur TAB's enthalten."/><!-- HowToReproduce: Rename the tab of an untitled document and provide an empty string or only some white speces. -->
 			<DeleteFileFailed title="Löschen fehlgeschlagen!" message="Datei konnte nicht gelöscht werden."/>
 
-			<NbFileToOpenImportantWarning title="Viele Dateien zu öffnen" message="$INT_REPLACE$ Dateien sollen in macpad++ geöffnet werden.
+			<NbFileToOpenImportantWarning title="Viele Dateien zu öffnen" message="$INT_REPLACE$ Dateien sollen in macpadqq geöffnet werden.
 Sind Sie sicher?"/>
 			<SettingsOnCloudError title="Cloud-Einstellungen" message="Der von Ihnen angegebene Pfad für die Einstellungen in der Cloud erlaubt kein
 Speichern oder es fehlen die Schreibberechtigungen.
@@ -1559,11 +1559,11 @@ Soll die Datei erneut geladen werden?"/>
 Diese Datei wurde durch ein anderes Programm geändert.
 Soll die Datei erneut geladen werden und die Änderungen ignoriert werden?"/>
 			<PrehistoricSystemDetected title="Altes Betriebssystem festgestellt" message="Anscheinend verwenden Sie ein veraltetes Betriebssystem - diese Funktion funktioniert nur mit einem modernen Betriebssystem."/>
-			<XpUpdaterProblem title="Automatisches Update" message="Die Update-Funktion von macpad++ ist unter Windows XP wegen fehlender Sicherheitsebene nicht kompatibel.
-Soll auf die Homepage von macpad++ gewechselt werden um die aktuellste Version herunterzuladen?"/>
+			<XpUpdaterProblem title="Automatisches Update" message="Die Update-Funktion von macpadqq ist unter Windows XP wegen fehlender Sicherheitsebene nicht kompatibel.
+Soll auf die Homepage von macpadqq gewechselt werden um die aktuellste Version herunterzuladen?"/>
 			<DocTooDirtyToMonitor title="Überwachungsproblem" message="Die Datei ist unsauber. Bitte vor der Überwachung die Änderungen speichern."/>
 			<DocNoExistToMonitor title="Überwachungsproblem" message="Die Datei muss existieren, um überwacht werden zu können."/>
-			<FileTooBigToOpen title="Problem mit Dateigröße" message="Die Datei ist zu groß, um mit macpad++ geöffnet zu werden."/>
+			<FileTooBigToOpen title="Problem mit Dateigröße" message="Die Datei ist zu groß, um mit macpadqq geöffnet zu werden."/>
 			<FileLoadingException title="Ausnahme-Code: $STR_REPLACE$" message="Beim Laden der Datei ist ein Fehler aufgetreten!"/>
 			<WantToOpenHugeFile title="Warnung vor Dateigröße" message="Das Öffnen von Dateien größer als 2 GB kann mehrere Minuten dauern.
 Soll die Datei trotzdem geöffnet werden?"/>
@@ -1606,22 +1606,22 @@ Bitte wählen Sie einen anderen Namen."/>
 			<SCMapperDoDeleteOrNot title="Bestätigung" message="Soll die Tastenkombination wirklich gelöscht werden?"/>
 			<FindCharRangeValueError title="Problem mit Wertebereich" message="Der Wert muss zwischen 0 und 255 liegen."/> <!-- HowToReproduce: Search menu, then Find characters in range, select Custom range, enter 999 in either edit box, press Find. -->
 			<OpenInAdminMode title="Speichern fehlgeschlagen" message="Die Datei konnte nicht gespeichert werden, eventuell wegen vorhandenem Schreibschutz.
-Soll dazu macpad++ im Administrator-Modus gestartet werden?"/>
+Soll dazu macpadqq im Administrator-Modus gestartet werden?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Speichern fehlgeschlagen" message="Die Datei konnte nicht gespeichert werden, eventuell wegen vorhandenem Schreibschutz.
-Soll dazu macpad++ im Administrator-Modus gestartet werden?"/>
-			<OpenInAdminModeFailed title="Öffnen im Administrator-Modus fehlgeschlagen" message="macpad++ konnte nicht im Administrator-Modus gestartet werden."/>
+Soll dazu macpadqq im Administrator-Modus gestartet werden?"/>
+			<OpenInAdminModeFailed title="Öffnen im Administrator-Modus fehlgeschlagen" message="macpadqq konnte nicht im Administrator-Modus gestartet werden."/>
 			<ViewInBrowser title="Aktuelle Datei im Browser betrachten" message="Die Anwendung konnte nicht gefunden werden."/>
-			<ExitToUpdatePlugins title="macpad++ wird beendet" message="Beim Drücken auf 'Ja' wird macpad++ beendet um die Vorgänge abzuschließen.
-macpad++ wird neu gestartet.
+			<ExitToUpdatePlugins title="macpadqq wird beendet" message="Beim Drücken auf 'Ja' wird macpadqq beendet um die Vorgänge abzuschließen.
+macpadqq wird neu gestartet.
 Fortsetzen?"/>
-			<NeedToRestartToLoadPlugins title="macpad++ muss neu gestartet werden" message="Ein Neustart von macpad++ ist zum Laden der Plugins erforderlich."/>
-			<ChangeHistoryEnabledWarning title="macpad++ muss neu gestartet werden" message="Ein Neustart von macpad++ ist für das Aktivieren der Änderungshistorie erforderlich."/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
-			<WindowsSessionExit title="macpad++ - Windows wird beendet" message="Windows wird beendet aber es gibt noch ungespeicherte Daten. Soll macpad++ jetzt beendet werden?"/>
+			<NeedToRestartToLoadPlugins title="macpadqq muss neu gestartet werden" message="Ein Neustart von macpadqq ist zum Laden der Plugins erforderlich."/>
+			<ChangeHistoryEnabledWarning title="macpadqq muss neu gestartet werden" message="Ein Neustart von macpadqq ist für das Aktivieren der Änderungshistorie erforderlich."/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
+			<WindowsSessionExit title="macpadqq - Windows wird beendet" message="Windows wird beendet aber es gibt noch ungespeicherte Daten. Soll macpadqq jetzt beendet werden?"/>
 			<LanguageMenuCompactWarning title="Verschachteltes Sprachmenü" message="Diese Änderung wird erst nach dem nächsten Start aktiv."/><!-- HowToReproduce: toggle "Make language menu compact" via Preferences dialog "Language/Language Menu. -->
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="Änderungen wurden nicht gespeichert.
 Möchten Sie die Änderungen speichern, bevor Sie das Thema wechseln?"/><!-- HowToReproduce: In the Style Configurator dialog change some theme and switch to other theme without saving. -->
 			<FullReadOnlySavingForbidden title="Speichern fehlgeschlagen" message="Datei kann nicht gespeichert werden.
-Der Schreibschutz von macpad++ verhindert das Speichern der Datei."/>
+Der Schreibschutz von macpadqq verhindert das Speichern der Datei."/>
 			<NotEnoughRoom4Saving title="Speichern fehlgeschlagen" message="Datei kann nicht gespeichert werden.
 Es ist nicht genügend Speicherplatz auf der Festplatte vorhanden, um die Datei zu speichern. Die Datei wurde nicht gespeichert."/>
 			<FileInaccessibleUserSession title="Datei nicht zugänglich" message="Einige Dateien der manuell gespeicherten Sitzung &quot;$STR_REPLACE$&quot; sind nicht zugänglich. Sie können aber als leere Datei und schreibgeschützt als Platzhalter geöffnet werden.
@@ -1634,8 +1634,8 @@ HINWEIS: Wenn die Platzhalter nicht erstellt oder später geschlossen werden, wi
 Sollen diese Dateil-Platzhalter erstellt werden?
 
 HINWEIS: Wenn die Platzhalter nicht erstellt oder später geschlossen werden, wird die Sitzung beim Beenden MODIFIZIERT! Es wird empfohlen jetzt eine Sicherung der Sitzung 'session.xml' zu machen."/>
-			<RTLvsDirectWrite title="Kann nicht auf 'Schreibrichtung von rechts nach links' (RTL) schalten" message="'RTL' ist nicht kompatibel mit dem 'DirectWrite' Modus. Bitte dazu 'DirectWrite' unter 'Diverses' in den Einstellungen deaktivieren und danach macpad++ neu starten."/>
-			<FileMemoryAllocationFailed title="Ausnahmefehler: Dateispeicherzuweisung fehlgeschlagen" message="Eventuell gibt es nicht genügend zusammenhängenden freien Speicher für die von macpad++ geladene Datei."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
+			<RTLvsDirectWrite title="Kann nicht auf 'Schreibrichtung von rechts nach links' (RTL) schalten" message="'RTL' ist nicht kompatibel mit dem 'DirectWrite' Modus. Bitte dazu 'DirectWrite' unter 'Diverses' in den Einstellungen deaktivieren und danach macpadqq neu starten."/>
+			<FileMemoryAllocationFailed title="Ausnahmefehler: Dateispeicherzuweisung fehlgeschlagen" message="Eventuell gibt es nicht genügend zusammenhängenden freien Speicher für die von macpadqq geladene Datei."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
 			<FindRegexBackwardDisabled title="Regex-Rückwärtssuche nicht aktiv" message="Standardmäßig ist die Regex-Rückwärtssuche deaktiviert da möglicherweise unerwartete Ergebnisse auftreten. Um dennoch eine Regex-Rückwärtssuche durchzuführen, ist in der Suche entweder die normale oder erweiterte Suche statt regulärer Ausdrucke auszuwählen.
 OK auswählen um die Suche zu öffnen oder in den Vordergrund zu bringen.
 
@@ -1643,8 +1643,8 @@ Falls die Regex-Rückwärtssuche dennoch benötigt wird, kann deren Aktivierung 
 			<PrintError title="0" message="Druckerdokument kann nicht gestartet werden."/><!-- Use title="0" to use Windows OS default translated "Error" title. -->
 			<FindAutoChangeOfInSelectionWarning title="Suchwarnung" message="Der Status des Kontrollkästchens 'In Auswahl' wurde automatisch geändert.
 Bitte die Suchbedingungen überprüfen, bevor die Aktion ausgeführt wird."/> <!-- HowToReproduce: https://github.com/notepad-plus-plus/notepad-plus-plus/issues/14897#issuecomment-2564316224 -->
-			<Need2Restart2ShowMenuShortcuts title="Neustart von macpad++ erforderlich" message="macpad++ muss zur Anzeige der Tastenkürzel neu gestartet werden."/>
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="Ändern des Schreibschutz-Attributs der Datei fehlgeschlagen" message="Bitte macpad++ als Administrator ausführen, um Dateiattribute zu ändern."/>
+			<Need2Restart2ShowMenuShortcuts title="Neustart von macpadqq erforderlich" message="macpadqq muss zur Anzeige der Tastenkürzel neu gestartet werden."/>
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="Ändern des Schreibschutz-Attributs der Datei fehlgeschlagen" message="Bitte macpadqq als Administrator ausführen, um Dateiattribute zu ändern."/>
 			<ReadOnlyFileCannotBeSaved title="Speichern fehlgeschlagen – Schreibschutz" message="&quot;$STR_REPLACE$&quot;
 Die Datei ist schreibgeschützt und kann nicht gespeichert werden.
 Entferne den Schreibschutz, um die Datei zu speichern."/>
@@ -1654,7 +1654,7 @@ Aus Sicherheitsgründen wird die Integrität der Datei 'shortcuts.xml' überprü
 			<ShortcutsXmlTampered title="Sicherheitswarnung" message="Die Datei 'shortcuts.xml' wurde anscheinend manuell verändert.
 
 Aus Sicherheitsgründen bitte die geöffnete Datei 'shortcuts.xml' durchsehen. Wenn der Dateiinhalt in Ordnung ist, verwende 'Datei shortcuts.xml prüfen' im Menü 'Ausführen', um dies zu bestätigen."/>
-			<SymlinkLoadingWarning title="Warnung: Laden von symbolischen Links kann zum Einfrieren führen" message="Das Aktivieren des Ladens symbolischer Links in 'Ordner als Arbeitsbereich' kann dazu führen, dass macpad++ in eine Endlosschleife gerät und einfriert.
+			<SymlinkLoadingWarning title="Warnung: Laden von symbolischen Links kann zum Einfrieren führen" message="Das Aktivieren des Ladens symbolischer Links in 'Ordner als Arbeitsbereich' kann dazu führen, dass macpadqq in eine Endlosschleife gerät und einfriert.
 Dies kann geschehen, wenn symbolische Links von Verzeichnissen auf übergeordnete Ordner verweisen oder zirkuläre Verweise bilden.
 Nur fortfahren, wenn man sich dieser Risiken bewusst ist."/>
 		</MessageBox>
@@ -1777,8 +1777,8 @@ Nur fortfahren, wenn man sich dieser Risiken bewusst ist."/>
 			<word-chars-list-warning-end value=" in der Liste der Wortzeichen."/>
 			<backup-select-folder value="Wählen Sie ein Sicherungsverzeichnis"/><!-- HowToReproduce: Settings > Preferences > Backup > [...] -->
 			<cloud-invalid-warning value="Ungültiger Pfad."/>
-			<cloud-restart-warning value="Zum Übernehmen macpad++ bitte neu starten."/>
-			<cloud-select-folder value="Wählen Sie ein Verzeichnis, in dem macpad++ seine Einstellungen speichert bzw. liest"/>
+			<cloud-restart-warning value="Zum Übernehmen macpadqq bitte neu starten."/>
+			<cloud-select-folder value="Wählen Sie ein Verzeichnis, in dem macpadqq seine Einstellungen speichert bzw. liest"/>
 			<default-open-save-select-folder value="Wählen Sie ein Standardverzeichnis"/><!-- HowToReproduce: Settings > Preferences > Default Directory > [...] -->
 			<shift-change-direction-tip value="Shift+Enter verwenden um die Suchrichtung umzudrehen."/>
 			<two-find-buttons-tip value="Modus mit 2 Suchknöpfen"/>
@@ -1943,7 +1943,7 @@ Wenn diese 'Intelligente Einrückung' gewählt wird, aber keine Dateien in den o
 
 			<!-- Don't translate "Global override" and "Default Style" -->
 			<global-override-tip value="Das Aktivieren von 'Global override' überschreibt die Parameter in allen Schriftstilen. Was aber wahrscheinlich stattdessen gewünscht ist, sind die Einstellungen für 'Default Style'"/>
-			<scintillaRenderingTechnology-tip value="Verwende DirectWrite (kann die Darstellung von Sonderzeichen verbessern oder einige Grafikprobleme beheben - erfordert einen Neustart von macpad++."/>
+			<scintillaRenderingTechnology-tip value="Verwende DirectWrite (kann die Darstellung von Sonderzeichen verbessern oder einige Grafikprobleme beheben - erfordert einen Neustart von macpadqq."/>
 
 			<!-- Due to the limited space on the status bar, if the translations for 'length' & 'lines' are much longer than the English words, please leave them in English instead of translating them. -->
 			<statusbar-length-lines value="Länge: $STR_REPLACE1$    Zeilen: $STR_REPLACE2$"/>
@@ -1961,7 +1961,7 @@ Wenn diese 'Intelligente Einrückung' gewählt wird, aber keine Dateien in den o
 			<max-len-on-save-tip value="Die Eingabe ist sehr lang und wird möglicherweise nicht für die nächste Sitzung gespeichert."/>
 			<goto-setting-tip value="Gehe zu den Einstellungen"/>
 			<tabbar-tabcompactlabellen-tip value="Beschränkt die sichtbare Länge von Tab-Namen. Enter-Taste drücken, um den Eingabewert anzuwenden. Wertebereich: 1-257 Zeichen (0 deaktiviert das Kürzen)."/>
-			<networkpathwarning-serverwhitelist-tip value="Fügt den Server der aktuellen Datei zur Datei 'serverWhiteList.xml' von macpad++ hinzu.
+			<networkpathwarning-serverwhitelist-tip value="Fügt den Server der aktuellen Datei zur Datei 'serverWhiteList.xml' von macpadqq hinzu.
 
 Für weitere Informationen: Klicke auf diese Schaltfläche, um die Website mit dem entsprechenden Abschnitt des Benutzerhandbuchs zu öffnen."/>
 		</MiscStrings>

@@ -17,7 +17,7 @@
 
 ; Define the application name
 !define APPNAME "Notepad++" ; Windows install and registry identity
-!define APPDISPLAYNAME "macpad++"
+!define APPDISPLAYNAME "macpadqq"
 
 ; ------------------------------------------------------------------------
 ; Get Notepad++ version from the notepad++ binary
@@ -48,7 +48,7 @@
 
 !define APPNAMEANDVERSION	"${APPDISPLAYNAME} v${APPVERSION}"
 !define CompanyName		"Don HO don.h@free.fr"
-!define Description		"macpad++ source code editor"
+!define Description		"macpadqq source code editor"
 !define Version		"${nppVer_1}.${nppVer_2}.${nppVer_3}.${nppVer_4}"
 !define ProdVer		"${APPVERSION}"
 !define LegalCopyright		"Copyleft 1998-2026 by Don HO"

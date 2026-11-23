@@ -48,7 +48,7 @@ BEGIN
     GROUPBOX        "Status Bar",IDC_STATUSBAR_GB_STATIC,134,94,186,28,BS_CENTER
     CONTROL         "Hi&de",IDC_CHECK_HIDESTATUSBAR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,140,106,174,10
 
-    GROUPBOX        "Dialog Font (Need to restart macpad++)",IDC_DIALOG_FONT_GB_STATIC,134,128,186,50,BS_CENTER
+    GROUPBOX        "Dialog Font (Need to restart macpadqq)",IDC_DIALOG_FONT_GB_STATIC,134,128,186,50,BS_CENTER
     RTEXT           "&Size:",IDC_STATIC_DIALOG_FONT_SIZE,140,143,45,8
     COMBOBOX        IDC_COMBO_DIALOG_FONT_SIZE,191,142,30,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     RTEXT           "Name:",IDC_STATIC_DIALOG_FONT_NAME,140,160,45,8
@@ -446,7 +446,7 @@ BEGIN
     LTEXT           ": Max Characters to Auto-Fill Find Field from Selection",IDC_FILLFINDWHAT_THRESHOLD_STATIC,92,69,260,8
     CONTROL         "Select Word Under Caret when Nothing Selected",IDC_CHECK_FILL_FIND_FIELD_SELECT_CARET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,52,84,275,10
 
-    CONTROL         "Use Monospaced font in Find dialog (Need to restart macpad++)",IDC_CHECK_MONOSPACEDFONT_FINDDLG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,121,350,10
+    CONTROL         "Use Monospaced font in Find dialog (Need to restart macpadqq)",IDC_CHECK_MONOSPACEDFONT_FINDDLG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,121,350,10
     CONTROL         "Find dialog remains open after search that outputs to results window",IDC_CHECK_FINDDLG_ALWAYS_VISIBLE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,136,350,10
     CONTROL         "Search Result window: show only one entry per found line if possible",IDC_CHECK_SHOWONCEPERFOUNDLINE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,151,350,10
     CONTROL         "Find in Files: Prefer on‑disk file content over open buffers",IDC_CHECK_FIF_IGNOREOPENEDFILES,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,37,166,350,10
@@ -550,7 +550,7 @@ BEGIN
     CONTROL         "Function List",IDC_CHECK_FUNCLIST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,294,145,134,10
     CONTROL         "Plugin Panels",IDC_CHECK_PLUGINPANEL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,294,160,134,10
 
-    LTEXT           "* The modification of this setting needs to restart macpad++",IDD_STATIC_RESTARTNOTE,15,187,239,20
+    LTEXT           "* The modification of this setting needs to restart macpadqq",IDD_STATIC_RESTARTNOTE,15,187,239,20
 END
 
 

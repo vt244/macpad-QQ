@@ -2142,7 +2142,7 @@ bool FileManager::loadFileData(Document doc, int64_t fileSize, const wchar_t * f
 		{
 			pNativeSpeaker->messageBox("FileTooBigToOpen",
 				_pNotepadPlus->_pEditView->getHSelf(),
-				L"File is too big to be opened by macpad++",
+				L"File is too big to be opened by macpadqq",
 				L"File size problem",
 				MB_OK | MB_APPLMODAL);
 
@@ -2256,7 +2256,7 @@ bool FileManager::loadFileData(Document doc, int64_t fileSize, const wchar_t * f
 			{
 				pNativeSpeaker->messageBox("FileMemoryAllocationFailed",
 					_pNotepadPlus->_pEditView->getHSelf(),
-					L"There is probably not enough contiguous free memory for the file being loaded by macpad++.",
+					L"There is probably not enough contiguous free memory for the file being loaded by macpadqq.",
 					L"Exception: File memory allocation failed",
 					MB_OK | MB_APPLMODAL);
 			}
