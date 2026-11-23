@@ -20,6 +20,7 @@ mkdir -p "$app/Contents/MacOS" "$resources/licenses"
 
 cp macos/Info.plist "$app/Contents/"
 cp macos/AppIcon.icns "$resources/"
+cp -R macos/en.lproj macos/ru.lproj "$resources/"
 mkdir -p "$resources/toolbar" "$resources/tabbar"
 toolbar_icons=(new open save saveall close closeall print cut copy paste undo redo find findrep zoomIn zoomOut syncV syncH wrap allChars indentGuide udl docMap docList funcList fileBrowser monitoring startrecord stoprecord playrecord saverecord playrecord_m)
 for scheme in light dark; do

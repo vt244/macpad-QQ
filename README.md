@@ -59,6 +59,9 @@ app and bundles it with matching source and SHA-256 checksums.
 - Import existing XML themes, translations and user-defined languages.
 
 Open files from **File → Open** or from Finder with **Open With → macpad++**.
+You can also select one or more files in Finder and choose **Open in macpad++**
+from the context menu’s **Services** section. If the action is hidden, enable
+it under **System Settings → Keyboard → Keyboard Shortcuts → Services**.
 Use the executable directly to open a file from the terminal at a specific line and column.
 
 ```sh

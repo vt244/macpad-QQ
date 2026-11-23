@@ -3,6 +3,7 @@
 | Component | Native macOS support |
 | --- | --- |
 | Platform | macOS 13 or later on Apple silicon and Intel. The app includes both architectures. |
+| Finder | Open selected files with the **Open in macpad++** service or the standard **Open With** menu. |
 | Documents | UTF‑8 and BOM-marked UTF‑16 are recognized before heuristic detection. Legacy detection uses uchardet and checks that the decoded text round-trips to the original bytes. Windows‑1252 is the fallback. Explicitly reopening in a chosen encoding overrides detection. |
 | Editor window | Independent tab strips with vertical and multi-row modes, hover previews and a Control-Tab switcher for recent documents. The rotatable split supports cloned buffers and synchronized zoom. Use File to reopen a recently closed file and View to open or move a saved document to another instance. |
 | Panels | Dock, resize or float the document list, file trees, three project panels, function list, document map, clipboard history and character panel. Panels on the same edge share a reorderable tab strip and can float together. Project XML accepts workspace-relative paths and mapped Windows paths. |

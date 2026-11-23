@@ -223,6 +223,7 @@ static void AddCharacterSets(NSMenu *menu)
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification
 {
+	NSApp.servicesProvider = self;
 	if (!self.launchOptions.noPlugins && !self.launchOptions.quickPrint)
 		_plugins = [[EditorPlugins alloc] initWithDirectory:[EditorResources.shared.profile URLByAppendingPathComponent:@"plugins"]];
 	if (self.launchOptions.translation.length)
@@ -1574,6 +1575,28 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 - (void)application:(NSApplication *)app openURLs:(NSArray<NSURL *> *)urls
 {
 	[self openDocuments:urls];
+}
+
+- (void)openFinderSelection:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)error
+{
+	NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[NSURL.class]
+		options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
+	NSMutableOrderedSet<NSURL *> *files = [NSMutableOrderedSet orderedSet];
+	for (NSURL *url in urls)
+	{
+		NSNumber *regular = nil;
+		if ([url.URLByResolvingSymlinksInPath getResourceValue:&regular forKey:NSURLIsRegularFileKey error:nullptr] &&
+			regular.boolValue)
+			[files addObject:url.URLByStandardizingPath];
+	}
+	if (!files.count)
+	{
+		if (error)
+			*error = EditorUIString(@"Select one or more files in Finder.");
+		return;
+	}
+	[NSApp activateIgnoringOtherApps:YES];
+	[self openDocuments:files.array];
 }
 
 - (void)openDocuments:(NSArray<NSURL *> *)urls

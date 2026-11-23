@@ -8,6 +8,8 @@
 	<string>io.github.vt244.macpad-plus-plus</string>
 	<key>CFBundleName</key>
 	<string>macpad++</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
 	<key>CFBundleDisplayName</key>
 	<string>macpad++</string>
 	<key>CFBundleIconFile</key>
@@ -20,6 +22,29 @@
 	<string>2</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>13.0</string>
+	<key>NSServices</key>
+	<array>
+		<dict>
+			<key>NSMenuItem</key>
+			<dict>
+				<key>default</key>
+				<string>Open in macpad++</string>
+			</dict>
+			<key>NSMessage</key>
+			<string>openFinderSelection</string>
+			<key>NSPortName</key>
+			<string>macpad++</string>
+			<key>NSSendFileTypes</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>NSRequiredContext</key>
+			<dict>
+				<key>NSApplicationIdentifier</key>
+				<string>com.apple.finder</string>
+			</dict>
+		</dict>
+	</array>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
