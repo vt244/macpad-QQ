@@ -61,7 +61,10 @@ static BOOL ReadChildren(pugi::xml_node xml, ProjectEntry *parent, NSURL *base, 
 			ProjectEntry *entry = [ProjectEntry new];
 			entry.name = path.lastPathComponent;
 			if ([path hasPrefix:@"//"] || (path.length >= 2 && [path characterAtIndex:1] == ':'))
+			{
 				entry.externalPath = name;
+				entry.url = [EditorResources.shared localURLForWindowsPath:name];
+			}
 			else if (path.isAbsolutePath)
 				entry.url = [NSURL fileURLWithPath:path];
 			else if (base)
@@ -308,7 +311,7 @@ struct ProjectXMLWriter final : pugi::xml_writer
 	label.font = [NSFont systemFontOfSize:11];
 	label.lineBreakMode = NSLineBreakByTruncatingMiddle;
 	label.toolTip = entry.url.path ?: entry.externalPath;
-	if (entry.externalPath)
+	if (entry.externalPath && !entry.url)
 		label.textColor = NSColor.secondaryLabelColor;
 	return label;
 }

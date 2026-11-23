@@ -5,7 +5,7 @@
 | Platform | macOS 13 or later on Apple silicon and Intel. The app includes both architectures. |
 | Documents | Automatic UTF‑8, BOM-marked UTF‑16 LE/BE, and Windows‑1252. Reopen saved files using the character sets provided by macOS, including Windows‑1251 and KOI8‑R. Saving preserves the encoding, BOM and existing line endings. |
 | Editor window | Independent tab strips with vertical and multi-row modes, hover previews and a Control-Tab switcher for recent documents. The rotatable split supports cloned buffers and synchronized zoom. Use File to reopen a recently closed file and View to open or move a saved document to another instance. |
-| Panels | Dock, resize or float the document list, file trees, three project panels, function list, document map, clipboard history and character panel. Panels on the same edge share a reorderable tab strip and can float together. The Function List nests methods under their classes. The folder tree can expand or collapse all roots and locate the current file. Project XML paths can be relative to their workspace. Windows drive and UNC paths remain unresolved on macOS. |
+| Panels | Dock, resize or float the document list, file trees, three project panels, function list, document map, clipboard history and character panel. Panels on the same edge share a reorderable tab strip and can float together. Project XML accepts workspace-relative paths and mapped Windows paths. |
 | Search | Literal, Extended and Boost.Regex modes. Search in a selection, open buffers, folders and projects or refine earlier results. Five token styles support marking, navigation and copying. Volatile searches leave the previous query and history intact. Search by Unicode code point or range. Batch replacement preserves encodings and checks for stale changes. |
 | Editing | Select text or columns in two steps, convert tabs and spaces, change case, insert a date using a custom format and copy the paths of open files. Jump to matching braces, adjust multiple selections, open a selected path, search with a custom search provider or redact text. Paste HTML or RTF source from the macOS clipboard and transfer binary text bytes between macpad++ documents. |
 | Syntax highlighting | Built-in Lexilla languages and UDL XML 2.0 and 2.1. Create, edit and export UDL definitions through an XML editor. Function List and Auto-Completion accept bundled and profile XML rules. |
@@ -22,3 +22,11 @@
 The macOS port uses native AppKit shortcuts and dialogs. Compatibility varies
 for Windows-specific commands, unsupported XML options and older plugin APIs.
 The legacy Windows source and build instructions are available in [BUILD.md](BUILD.md).
+
+## Map Windows paths
+
+Put a property list named `windowsPathMappings.plist` in the macpad++ profile. Each
+key is a drive or UNC prefix. Each value is a local absolute directory.
+For example, `C:` can map to `/Volumes/Windows` and `//server/share` can map to
+`/Volumes/share`. More specific prefixes take precedence. A project saved
+after opening mapped files keeps the original Windows paths.

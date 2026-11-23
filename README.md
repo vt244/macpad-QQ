@@ -73,6 +73,7 @@ The profile folder is `~/Library/Application Support/macpad++/profile/`.
 | Function and completion rules | `functionList/` and `autoCompletion/` | Override the supplied XML rules for **Function List** and **Auto-Completion**. |
 | Context menus | `contextMenu.xml` and `tabContextMenu.xml` | Edit the editor and tab menus from **Settings**. |
 | Toolbar | `toolbarButtonsConf.xml` and `toolbarIcons/` | Set built-in button visibility and supply icon overrides. Relaunch to apply changes. |
+| Windows project and session paths | `windowsPathMappings.plist` | Map drive letters and UNC shares to local directories. See [path mapping examples](SUPPORTED_SYSTEM.md#map-windows-paths). |
 | macOS plugin | `plugins/*.dylib` | Install from a local file or the catalog in **Plugins → Plugins Admin…**, then restart. Disabled files remain in `plugins/Disabled/`. |
 
 The native plugin API supports document access, editor events, AppKit panels

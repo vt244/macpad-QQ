@@ -1033,6 +1033,45 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	return [icon checkResourceIsReachableAndReturnError:nullptr] ? icon : nil;
 }
 
+- (NSURL *)localURLForWindowsPath:(NSString *)path
+{
+	NSString *normalized = [path stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
+	if (![normalized hasPrefix:@"//"] && !(normalized.length > 2 && [normalized characterAtIndex:1] == ':' &&
+		[normalized characterAtIndex:2] == '/'))
+		return nil;
+	NSURL *file = [_profile URLByAppendingPathComponent:@"windowsPathMappings.plist"];
+	NSDictionary *mapping = [NSDictionary dictionaryWithContentsOfURL:file];
+	NSString *longest = nil;
+	NSString *destination = nil;
+	for (NSString *key in mapping)
+	{
+		NSString *root = mapping[key];
+		if (![key isKindOfClass:NSString.class] || ![root isKindOfClass:NSString.class])
+			continue;
+		NSString *prefix = [key stringByReplacingOccurrencesOfString:@"\\" withString:@"/"];
+		while (prefix.length && [prefix hasSuffix:@"/"])
+			prefix = [prefix substringToIndex:prefix.length - 1];
+		if (prefix.length <= longest.length || !root.stringByExpandingTildeInPath.isAbsolutePath)
+			continue;
+		NSString *lowercase = normalized.lowercaseString;
+		if ([lowercase isEqualToString:prefix.lowercaseString] ||
+			[lowercase hasPrefix:[prefix.lowercaseString stringByAppendingString:@"/"]])
+		{
+			longest = prefix;
+			destination = root.stringByExpandingTildeInPath;
+		}
+	}
+	if (!destination)
+		return nil;
+	NSURL *root = [NSURL fileURLWithPath:destination isDirectory:YES].URLByStandardizingPath;
+	NSString *suffix = [normalized substringFromIndex:longest.length];
+	if ([suffix hasPrefix:@"/"])
+		suffix = [suffix substringFromIndex:1];
+	if ([[suffix componentsSeparatedByString:@"/"] containsObject:@".."])
+		return nil;
+	return suffix.length ? [root URLByAppendingPathComponent:suffix].URLByStandardizingPath : root;
+}
+
 - (NSArray<NSString *> *)commandIDsWithEnglishTitle:(NSString *)title
 {
 	NSString *(^normalized)(NSString *) = ^NSString *(NSString *value) {

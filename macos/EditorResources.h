@@ -19,6 +19,7 @@ NSString *EditorUIString(NSString *english);
 - (BOOL)toolbarHidesCommand:(NSString *)identifier atIndex:(NSUInteger)index;
 - (BOOL)toolbarHidesPluginAtIndex:(NSUInteger)index;
 - (NSURL *)toolbarIconNamed:(NSString *)name disabled:(BOOL)disabled;
+- (NSURL *)localURLForWindowsPath:(NSString *)path;
 - (NSString *)findLabel:(NSString *)identifier fallback:(NSString *)fallback;
 - (NSString *)translationName:(NSURL *)url;
 - (void)chooseTheme:(NSURL *)url;

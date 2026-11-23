@@ -1451,12 +1451,14 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 			NSString *path = [NSString stringWithUTF8String:file.attribute("filename").value()];
 			if (!path.length)
 				continue;
-			if (!path.isAbsolutePath)
+			NSURL *fileURL = [EditorResources.shared localURLForWindowsPath:path];
+			if (!fileURL && path.isAbsolutePath && ![path hasPrefix:@"//"])
+				fileURL = [NSURL fileURLWithPath:path];
+			if (!fileURL)
 			{
 				[missing addObject:path];
 				continue;
 			}
-			NSURL *fileURL = [NSURL fileURLWithPath:path];
 			EditorDocument *document = (EditorDocument *)[self documentForURL:fileURL];
 			if (!document)
 			{
