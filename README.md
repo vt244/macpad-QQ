@@ -11,7 +11,7 @@ and Lexilla for syntax highlighting. [Upstream project](https://github.com/notep
 
 ## Install on macOS
 
-The current version is `0.1-beta`.
+The current version is `0.2-beta`.
 
 macpadqq runs natively on Apple silicon and Intel Macs with macOS 13 or later.
 It reads existing XML themes, translations and user-defined languages.

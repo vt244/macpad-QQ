@@ -30,7 +30,7 @@
 	!getdllversion "..\bin\notepad++.exe" nppVer_
 !endif
 
-!define APPVERSION		"0.1-beta"
+!define APPVERSION		"0.2-beta"
 !define VERSION_MAJOR		${nppVer_1}			; 7
 !define VERSION_MINOR		${nppVer_2}			; 5
 
