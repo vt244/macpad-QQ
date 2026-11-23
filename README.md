@@ -67,7 +67,7 @@ The profile folder is `~/Library/Application Support/macpad++/profile/`.
 
 | Resource | Where to install it | Where to use it |
 | --- | --- | --- |
-| XML theme | `themes/` | **View → Theme** selects a theme. **Settings → Style Configurator** edits colors and fonts. |
+| XML theme | `themes/` | **View → Theme** selects a theme. **Settings → Style Configurator** edits colors and fonts. Enable individual attributes from the theme’s **Global override** style in **Preferences → Global style override**. |
 | XML translation | `localization/` | **Settings → Interface Language**. **Import XML…** copies the file into the profile. The default option also reads `nativeLang.xml` at the profile root. |
 | User Defined Language XML | `userDefineLangs/` or `userDefineLang.xml` | Create, edit, import and export definitions from **Language**. Apply a definition from the menu or by file extension. |
 | Function and completion rules | `functionList/` and `autoCompletion/` | Override the supplied XML rules for **Function List** and **Auto-Completion**. |

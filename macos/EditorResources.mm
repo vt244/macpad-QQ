@@ -116,24 +116,72 @@ static std::optional<int> Color(pugi::xml_attribute attribute)
 	return ((rgb & 0xff) << 16) | (rgb & 0xff00) | (rgb >> 16);
 }
 
-static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes)
+// The order matches the globalOverride flags in config.xml and Preferences.
+static NSString *const GlobalOverrideSettings[] = {
+	@"styleOverrideForeground", @"styleOverrideBackground", @"styleOverrideFont", @"styleOverrideSize",
+	@"styleOverrideBold", @"styleOverrideItalic", @"styleOverrideUnderline",
+};
+
+static std::optional<int> WidgetThemeColor(pugi::xml_node widgets, const char *name, bool background)
 {
-	const int colorStyle = attributes.attribute("colorStyle").as_int(3);
-	if (auto color = Color(attributes.attribute("fgColor")); color && (colorStyle & 1))
-		[view message:SCI_STYLESETFORE wParam:index lParam:*color];
-	if (auto color = Color(attributes.attribute("bgColor")); color && (colorStyle & 2))
-		[view message:SCI_STYLESETBACK wParam:index lParam:*color];
-	NSString *font = String(attributes.attribute("fontName").value());
+	auto style = widgets.find_child_by_attribute("WidgetStyle", "name", name);
+	if (!(style.attribute("colorStyle").as_int(3) & (background ? 2 : 1)))
+		return std::nullopt;
+	return Color(style.attribute(background ? "bgColor" : "fgColor"));
+}
+
+static void ApplyFoldTheme(ScintillaView *view, pugi::xml_node widgets, BOOL dark)
+{
+	const auto foreground = WidgetThemeColor(widgets, "Fold", true).value_or(dark ? 0x282828 : 0xffffff);
+	const auto background = WidgetThemeColor(widgets, "Fold", false).value_or(dark ? 0xa0a0a0 : 0x808080);
+	const auto active = WidgetThemeColor(widgets, "Fold active", false).value_or(background);
+	for (int marker = SC_MARKNUM_FOLDEREND; marker <= SC_MARKNUM_FOLDEROPEN; ++marker)
+	{
+		[view message:SCI_MARKERSETFORE wParam:marker lParam:foreground];
+		[view message:SCI_MARKERSETBACK wParam:marker lParam:background];
+		[view message:SCI_MARKERSETBACKSELECTED wParam:marker lParam:active];
+	}
+	const auto margin = WidgetThemeColor(widgets, "Fold margin", true);
+	const auto highlight = WidgetThemeColor(widgets, "Fold margin", false);
+	[view message:SCI_SETFOLDMARGINCOLOUR wParam:margin.has_value() lParam:margin.value_or(0)];
+	[view message:SCI_SETFOLDMARGINHICOLOUR wParam:highlight.has_value() lParam:highlight.value_or(0)];
+}
+
+static void ApplyStyle(ScintillaView *view, int index, pugi::xml_node attributes,
+	pugi::xml_node overrideStyle = {}, unsigned overrides = 0)
+{
+	for (unsigned i = 0; i < 2; ++i)
+	{
+		const char *name = i ? "bgColor" : "fgColor";
+		const auto mask = 1U << i;
+		auto color = Color(attributes.attribute(name));
+		if (!(attributes.attribute("colorStyle").as_uint(3) & mask))
+			color.reset();
+		if ((overrides & mask) && (overrideStyle.attribute("colorStyle").as_uint(3) & mask))
+			if (auto value = Color(overrideStyle.attribute(name)))
+				color = value;
+		if (color)
+			[view message:i ? SCI_STYLESETBACK : SCI_STYLESETFORE wParam:index lParam:*color];
+	}
+	NSString *font = String(overrideStyle.attribute("fontName").value());
+	if (!(overrides & 4) || !font.length || ![NSFont fontWithName:font size:12])
+		font = String(attributes.attribute("fontName").value());
 	if (font.length && [NSFont fontWithName:font size:12])
 		[view setStringProperty:SCI_STYLESETFONT parameter:index value:font];
-	if (int size = attributes.attribute("fontSize").as_int(); size > 0 && size <= 144)
+	int size = (overrides & 8) ? overrideStyle.attribute("fontSize").as_int() : 0;
+	if (size <= 0 || size > 144)
+		size = attributes.attribute("fontSize").as_int();
+	if (size > 0 && size <= 144)
 		[view message:SCI_STYLESETSIZE wParam:index lParam:size];
 	auto flags = attributes.attribute("fontStyle");
-	if (!String(flags.value()).length)
-		return;
-	[view message:SCI_STYLESETBOLD wParam:index lParam:(flags.as_int() & 1) != 0];
-	[view message:SCI_STYLESETITALIC wParam:index lParam:(flags.as_int() & 2) != 0];
-	[view message:SCI_STYLESETUNDERLINE wParam:index lParam:(flags.as_int() & 4) != 0];
+	auto overrideFlags = overrideStyle.attribute("fontStyle");
+	const unsigned messages[] = {SCI_STYLESETBOLD, SCI_STYLESETITALIC, SCI_STYLESETUNDERLINE};
+	for (unsigned i = 0; i < std::size(messages); ++i)
+	{
+		const auto value = (overrides & (16U << i)) && *overrideFlags.value() ? overrideFlags : flags;
+		if (*value.value())
+			[view message:messages[i] wParam:index lParam:(value.as_int() & (1 << i)) != 0];
+	}
 }
 
 static NSString *UDLKeywords(const char *source)
@@ -165,7 +213,7 @@ static void SetProperty(ScintillaView *view, const char *key, NSString *value)
 		lParam:reinterpret_cast<sptr_t>(value.UTF8String)];
 }
 
-static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
+static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml_node overrideStyle, unsigned overrides)
 {
 	auto global = language.child("Settings").child("Global");
 	auto prefix = language.child("Settings").child("Prefix");
@@ -224,7 +272,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	for (NSUInteger i = 0; i < std::size(styleNames); ++i)
 	{
 		auto style = styles.find_child_by_attribute("WordsStyle", "name", styleNames[i]);
-		ApplyStyle(view, i, style);
+		ApplyStyle(view, i, style, overrideStyle, overrides);
 		char property[32];
 		snprintf(property, sizeof(property), "userDefine.nesting.%02u", static_cast<unsigned>(i));
 		SetProperty(view, property, @(style.attribute("nesting").as_int()).stringValue);
@@ -603,6 +651,9 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 		for (const auto &section : sections)
 			if (auto title = root.child("Dialog").child("Preference").child(section[1]).attribute("title"); *title.value())
 				labels[String(section[0])] = MenuLabel(String(title.value()));
+		for (unsigned i = 0; i < std::size(GlobalOverrideSettings); ++i)
+			if (NSString *translation = labels[[NSString stringWithFormat:@"StyleConfig:%u", 2226 + i]])
+				labels[[@"pref-" stringByAppendingString:GlobalOverrideSettings[i]]] = translation;
 		NSDictionary *windows = @{@"native-openTabs-save": @"Window:7002", @"native-openTabs-close": @"Window:7003",
 			@"native-openTabs-sort": @"Window:7004"};
 		for (NSString *key in windows)
@@ -669,6 +720,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 		{"ScintillaPrimaryView", "scrollBeyondLastLine", @"scrollBeyondLastLine"},
 		{"ScintillaPrimaryView", "virtualSpace", @"virtualSpace"},
 		{"ScintillaPrimaryView", "multiSelection", @"multipleSelections"},
+		{"ScintillaPrimaryView", "selectedTextForegroundSingleColor", @"selectedTextForeground"},
 		{"TabSetting", "replaceBySpace", @"insertSpaces"}, {"TabSetting", "backspaceUnindent", @"backspaceUnindent"},
 		{"TabBar", "hide", @"hideTabBar"}, {"TabBar", "closeButton", @"tabCloseButtons"},
 		{"TabBar", "doubleClick2Close", @"doubleClickClosesTab"},
@@ -700,6 +752,40 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	for (const auto &entry : integers)
 		if (auto attribute = config(entry.section).attribute(entry.attribute))
 			settings[entry.setting] = @(std::clamp(attribute.as_int(entry.minimum), entry.minimum, entry.maximum));
+	if (auto overrideStyle = config("globalOverride"))
+	{
+		const char *attributes[] = {"fg", "bg", "font", "fontSize", "bold", "italic", "underline"};
+		for (unsigned i = 0; i < std::size(attributes); ++i)
+			if (auto value = overrideStyle.attribute(attributes[i]))
+				settings[GlobalOverrideSettings[i]] = @(std::string_view(value.value()) == "yes");
+	}
+	if (auto caret = config("Caret"))
+	{
+		if (auto width = caret.attribute("width"))
+			settings[@"caretWidth"] = @(std::clamp(width.as_int(1), 0, 20));
+		if (auto rate = caret.attribute("blinkRate"))
+			settings[@"caretBlink"] = @(std::clamp(rate.as_int(500), 0, 5000));
+	}
+	if (auto view = config("ScintillaPrimaryView"))
+	{
+		if (auto value = view.attribute("currentLineIndicator"))
+			settings[@"currentLineMode"] = @(std::clamp(value.as_int(), 0, 2));
+		else if (auto value = view.attribute("currentLineHilitingShow"))
+			settings[@"currentLineMode"] = @(std::string_view(value.value()) == "show" ? 1 : 0);
+		if (auto value = view.attribute("currentLineFrameWidth"))
+			settings[@"currentLineFrameWidth"] = @(std::clamp(value.as_int(1), 1, 6));
+		if (auto value = view.attribute("eolMode"))
+			settings[@"eolRepresentation"] = @(std::clamp(value.as_int(1), 0, 3));
+		if (auto value = view.attribute("edgeMultiColumnPos"))
+			settings[@"edgeColumns"] = String(value.value());
+		if (auto value = view.attribute("isEdgeBgMode"))
+			settings[@"edgeBackground"] = @(std::string_view(value.value()) == "yes");
+		if (auto value = view.attribute("lineWrapMethod"))
+		{
+			const std::string_view method = value.value();
+			settings[@"wrapIndent"] = @(method == "aligned" ? 1 : method == "indent" ? 2 : 0);
+		}
+	}
 	if (auto action = config("auto-completion").attribute("autoCAction"))
 		settings[@"autocomplete"] = @(action.as_int() != 0);
 	if (auto snapshotMode = config("Backup").attribute("isSnapshotMode"))
@@ -1017,8 +1103,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 - (NSColor *)widgetColor:(NSString *)name background:(BOOL)background
 {
 	auto widgets = _theme.child("NotepadPlus").child("GlobalStyles");
-	auto widget = widgets.find_child_by_attribute("WidgetStyle", "name", name.UTF8String);
-	auto color = Color(widget.attribute(background ? "bgColor" : "fgColor"));
+	auto color = WidgetThemeColor(widgets, name.UTF8String, background);
 	if (!color)
 		return nil;
 	return [NSColor colorWithSRGBRed:(*color & 255) / 255.0
@@ -1027,7 +1112,9 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 
 - (BOOL)usesDarkColors
 {
-	NSColor *color = [[self widgetColor:@"Default Style" background:YES] colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+	NSColor *color = [[self setting:@"styleOverrideBackground" fallback:@NO] boolValue] ?
+		[self widgetColor:@"Global override" background:YES] : nil;
+	color = [(color ?: [self widgetColor:@"Default Style" background:YES]) colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
 	return color && (0.2126 * color.redComponent + 0.7152 * color.greenComponent + 0.0722 * color.blueComponent) < 0.4;
 }
 
@@ -1060,6 +1147,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	[view message:SCI_STYLESETEOLFILLED wParam:1 lParam:1];
 	[view message:SCI_STYLESETEOLFILLED wParam:2 lParam:1];
 	ApplyStyle(view, STYLE_LINENUMBER, widgets.find_child_by_attribute("WidgetStyle", "styleID", "33"));
+	ApplyFoldTheme(view, widgets, self.usesDarkColors);
 }
 
 - (pugi::xml_node)lexerStylesForExtension:(NSString *)extension
@@ -1097,10 +1185,16 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 {
 	auto root = _theme.child("NotepadPlus");
 	auto widgets = root.child("GlobalStyles");
+	auto overrideStyle = widgets.find_child_by_attribute("WidgetStyle", "name", "Global override");
+	unsigned overrides = 0;
+	if (overrideStyle)
+		for (unsigned i = 0; i < std::size(GlobalOverrideSettings); ++i)
+			if ([[self setting:GlobalOverrideSettings[i] fallback:@NO] boolValue])
+				overrides |= 1U << i;
 	[view message:SCI_STYLERESETDEFAULT];
 	[view setStringProperty:SCI_STYLESETFONT parameter:STYLE_DEFAULT value:@"Menlo"];
 	[view message:SCI_STYLESETSIZE wParam:STYLE_DEFAULT lParam:12];
-	ApplyStyle(view, STYLE_DEFAULT, widgets.find_child_by_attribute("WidgetStyle", "styleID", "32"));
+	ApplyStyle(view, STYLE_DEFAULT, widgets.find_child_by_attribute("WidgetStyle", "styleID", "32"), overrideStyle, overrides);
 	[view message:SCI_STYLECLEARALL];
 	for (auto style : widgets.children("WidgetStyle"))
 	{
@@ -1108,11 +1202,26 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 		if (index > STYLE_DEFAULT && index <= STYLE_LASTPREDEFINED)
 			ApplyStyle(view, index, style);
 	}
-	auto selected = widgets.find_child_by_attribute("WidgetStyle", "name", "Selected text colour");
-	if (auto color = Color(selected.attribute("bgColor")))
-		[view message:SCI_SETSELBACK wParam:1 lParam:*color];
-	else
-		[view message:SCI_SETSELBACK wParam:0 lParam:0];
+	auto widgetColor = [&](const char *name, bool background) -> std::optional<int> {
+		return WidgetThemeColor(widgets, name, background);
+	};
+	auto element = [&](int id, std::optional<int> color) {
+		if (color)
+			[view message:SCI_SETELEMENTCOLOUR wParam:id lParam:0xff000000U | *color];
+		else
+			[view message:SCI_RESETELEMENTCOLOUR wParam:id];
+	};
+	const auto selection = widgetColor("Selected text colour", true);
+	element(SC_ELEMENT_SELECTION_BACK, selection);
+	element(SC_ELEMENT_SELECTION_INACTIVE_BACK, selection);
+	const auto multiSelection = widgetColor("Multi-selected text color", true);
+	element(SC_ELEMENT_SELECTION_ADDITIONAL_BACK, multiSelection ? multiSelection : selection);
+	element(SC_ELEMENT_SELECTION_INACTIVE_ADDITIONAL_BACK, multiSelection ? multiSelection : selection);
+	const auto selectionText = [[self setting:@"selectedTextForeground" fallback:@NO] boolValue] ?
+		widgetColor("Selected text colour", false) : std::nullopt;
+	for (int id : {SC_ELEMENT_SELECTION_TEXT, SC_ELEMENT_SELECTION_INACTIVE_TEXT,
+		SC_ELEMENT_SELECTION_ADDITIONAL_TEXT, SC_ELEMENT_SELECTION_INACTIVE_ADDITIONAL_TEXT})
+		element(id, selectionText);
 	auto currentLine = widgets.find_child_by_attribute("WidgetStyle", "name", "Current line background colour");
 	if (auto color = Color(currentLine.attribute("bgColor")))
 	{
@@ -1121,26 +1230,35 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	}
 	else
 		[view message:SCI_SETCARETLINEVISIBLE wParam:0];
-	[view message:SCI_SETCARETFORE wParam:[view message:SCI_STYLEGETFORE wParam:STYLE_DEFAULT]];
-	auto foldMargin = widgets.find_child_by_attribute("WidgetStyle", "name", "Fold margin");
-	if (auto color = Color(foldMargin.attribute("bgColor")))
-		[view message:SCI_SETFOLDMARGINCOLOUR wParam:1 lParam:*color];
-	else
-		[view message:SCI_SETFOLDMARGINCOLOUR wParam:0 lParam:0];
-	if (auto color = Color(foldMargin.attribute("fgColor")))
-		[view message:SCI_SETFOLDMARGINHICOLOUR wParam:1 lParam:*color];
-	else
-		[view message:SCI_SETFOLDMARGINHICOLOUR wParam:0 lParam:0];
-	auto whitespace = widgets.find_child_by_attribute("WidgetStyle", "name", "White space symbol");
-	if (auto color = Color(whitespace.attribute("fgColor")))
-		[view message:SCI_SETWHITESPACEFORE wParam:1 lParam:*color];
-	else
-		[view message:SCI_SETWHITESPACEFORE wParam:0 lParam:0];
+	const auto defaultCaret = static_cast<int>([view message:SCI_STYLEGETFORE wParam:STYLE_DEFAULT]);
+	element(SC_ELEMENT_CARET, widgetColor("Caret colour", false).value_or(defaultCaret));
+	element(SC_ELEMENT_CARET_ADDITIONAL, widgetColor("Multi-edit carets color", false).value_or(defaultCaret));
+	const auto margin = widgetColor("Line number margin", true).value_or(
+		static_cast<int>([view message:SCI_STYLEGETBACK wParam:STYLE_DEFAULT]));
+	[view message:SCI_SETMARGINTYPEN wParam:1 lParam:SC_MARGIN_COLOUR];
+	[view message:SCI_SETMARGINBACKN wParam:1 lParam:widgetColor("Bookmark margin", true).value_or(margin)];
+	[view message:SCI_SETMARGINTYPEN wParam:3 lParam:SC_MARGIN_COLOUR];
+	[view message:SCI_SETMARGINBACKN wParam:3 lParam:widgetColor("Change History margin", true).value_or(margin)];
+	ApplyFoldTheme(view, widgets, self.usesDarkColors);
+	const auto whitespace = widgetColor("White space symbol", false);
+	[view message:SCI_SETWHITESPACEFORE wParam:whitespace.has_value() lParam:whitespace.value_or(0)];
+	const auto eolColor = widgetColor("EOL custom color", false);
+	const auto eolMode = [[self setting:@"eolRepresentation" fallback:@1] integerValue];
+	const auto appearance = (eolMode & 1 ? SC_REPRESENTATION_BLOB : SC_REPRESENTATION_PLAIN) |
+		((eolMode & 2) && eolColor ? SC_REPRESENTATION_COLOUR : 0);
+	for (const char *sequence : {"\r", "\n"})
+	{
+		const auto key = reinterpret_cast<uptr_t>(sequence);
+		if (eolColor)
+			[view message:SCI_SETREPRESENTATIONCOLOUR wParam:key lParam:0xff000000U | *eolColor];
+		[view message:SCI_SETREPRESENTATIONAPPEARANCE wParam:key lParam:appearance];
+	}
 	const char *changes[] = {"Change History revert origin", "Change History saved", "Change History modified",
 		"Change History revert modified"};
+	const int changeColors[] = {0x70afaf, 0x44aa44, 0x22aaff, 0x70aadd};
 	for (int i = 0; i < std::size(changes); ++i)
-		if (auto color = Color(widgets.find_child_by_attribute("WidgetStyle", "name", changes[i]).attribute("bgColor")))
-			[view message:SCI_MARKERSETBACK wParam:SC_MARKNUM_HISTORY_REVERTED_TO_ORIGIN + i lParam:*color];
+		[view message:SCI_MARKERSETBACK wParam:SC_MARKNUM_HISTORY_REVERTED_TO_ORIGIN + i
+			lParam:widgetColor(changes[i], true).value_or(changeColors[i])];
 
 	auto definitions = _userLanguages.child("NotepadPlus");
 	pugi::xml_node userLanguage;
@@ -1165,7 +1283,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	{
 		if (highlight)
 		{
-			ConfigureUDL(view, userLanguage);
+			ConfigureUDL(view, userLanguage, overrideStyle, overrides);
 			[view message:SCI_COLOURISE wParam:0 lParam:-1];
 		}
 		else
@@ -1205,7 +1323,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	{
 		const int index = style.attribute("styleID").as_int(-1);
 		if (index >= 0 && index <= STYLE_MAX)
-			ApplyStyle(view, index, style);
+			ApplyStyle(view, index, style, overrideStyle, overrides);
 	}
 	if (highlight)
 		[view message:SCI_COLOURISE wParam:0 lParam:-1];

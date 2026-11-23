@@ -20,6 +20,17 @@ static void Label(NSView *view, NSString *name, CGFloat y)
 	Place(view, [NSTextField labelWithString:SettingsLabel(name)], 0, y, 154);
 }
 
+@interface PreferenceSectionPicker : NSObject
+@property(nonatomic, weak) NSTabView *tabs;
+@end
+
+@implementation PreferenceSectionPicker
+- (void)select:(NSPopUpButton *)sender
+{
+	[self.tabs selectTabViewItemAtIndex:sender.indexOfSelectedItem];
+}
+@end
+
 void EditorShowPreferences(void)
 {
 	EditorResources *resources = EditorResources.shared;
@@ -30,6 +41,7 @@ void EditorShowPreferences(void)
 	[window addButtonWithTitle:localized(@"native-apply", @"Apply")];
 	[window addButtonWithTitle:localized(@"native-cancel", @"Cancel")];
 	NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(0, 0, 520, 306)];
+	tabs.tabViewType = NSNoTabsNoBorder;
 	NSMutableDictionary<NSString *, NSControl *> *controls = [NSMutableDictionary dictionary];
 	auto tab = ^NSView *(NSString *key, NSString *title) {
 		NSTabViewItem *item = [[NSTabViewItem alloc] initWithIdentifier:key];
@@ -82,6 +94,23 @@ void EditorShowPreferences(void)
 		@[@"whitespace", @"Show spaces and tabs", @NO], @[@"showEOL", @"Show end-of-line characters", @NO],
 		@[@"showWrapSymbol", @"Show wrap symbols", @NO], @[@"scrollBeyondLastLine", @"Scroll beyond the last line", @NO]], 220);
 	choice(display, @"toolbarStyle", @"Toolbar icons", @[@"Regular (small)", @"Regular (large)", @"Filled (small)", @"Filled (large)", @"Classic"], 0, 18);
+	checks(display, @[@[@"selectedTextForeground", @"Use the theme’s selected text color", @NO]], 50);
+	NSView *guides = tab(@"pref-guides", @"Editor guides");
+	choice(guides, @"currentLineMode", @"Current line", @[@"Off", @"Highlight", @"Outline"], 0, 232);
+	field(guides, @"currentLineFrameWidth", @"Outline width", @"1", 194);
+	choice(guides, @"wrapIndent", @"Wrapped line indent", @[@"Default", @"Aligned", @"Indented"], 0, 156);
+	field(guides, @"edgeColumns", @"Vertical ruler columns", @"", 118);
+	checks(guides, @[@[@"edgeBackground", @"Shade beyond a single ruler", @NO]], 78);
+	choice(guides, @"eolRepresentation", @"End-of-line markers", @[@"Plain text", @"Boxed", @"Plain text with theme color",
+		@"Boxed with theme color"], 1, 39);
+	NSView *styleOverride = tab(@"pref-styleOverride", @"Global style override");
+	checks(styleOverride, @[@[@"styleOverrideForeground", @"Force foreground color for all styles", @NO],
+		@[@"styleOverrideBackground", @"Force background color for all styles", @NO],
+		@[@"styleOverrideFont", @"Force font choice for all styles", @NO],
+		@[@"styleOverrideSize", @"Force font size choice for all styles", @NO],
+		@[@"styleOverrideBold", @"Force bold choice for all styles", @NO],
+		@[@"styleOverrideItalic", @"Force italic choice for all styles", @NO],
+		@[@"styleOverrideUnderline", @"Force underline choice for all styles", @NO]], 248);
 
 	NSView *files = tab(@"pref-files", @"Files and tabs");
 	checks(files, @[@[@"autoReload", @"Reload unchanged buffers automatically", @NO],
@@ -97,6 +126,8 @@ void EditorShowPreferences(void)
 	checks(tabOptions, @[@[@"mruTabSwitcher", @"Switch recent documents with Control-Tab", @YES],
 		@[@"tabPreview", @"Preview an inactive tab on hover", @NO], @[@"verticalTabs", @"Show tabs on the left", @NO],
 		@[@"multilineTabs", @"Wrap tabs to multiple rows", @NO]], 220);
+	field(tabOptions, @"caretWidth", @"Caret width", @"1", 78);
+	field(tabOptions, @"caretBlink", @"Caret blink period (ms)", @"500", 44);
 
 	NSView *large = tab(@"pref-largeFiles", @"Large files");
 	checks(large, @[@[@"limitLargeFiles", @"Skip syntax highlighting for large files", @NO],
@@ -123,7 +154,9 @@ void EditorShowPreferences(void)
 		return;
 	NSMutableDictionary *settings = [NSMutableDictionary dictionary];
 	NSDictionary<NSString *, NSArray<NSNumber *> *> *ranges =
-		@{@"tabWidth": @[@1, @32], @"autocompleteMinimum": @[@1, @9], @"checkpointMilliseconds": @[@250, @600000], @"largeFileMegabytes": @[@1, @4096]};
+		@{@"tabWidth": @[@1, @32], @"autocompleteMinimum": @[@1, @9], @"checkpointMilliseconds": @[@250, @600000],
+			@"largeFileMegabytes": @[@1, @4096], @"caretWidth": @[@0, @20], @"caretBlink": @[@0, @5000],
+			@"currentLineFrameWidth": @[@1, @6]};
 	for (NSString *name in controls)
 	{
 		NSControl *control = controls[name];

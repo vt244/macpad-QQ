@@ -109,11 +109,6 @@ static NSString *Inline(NSString *value)
 	[EditorResources.shared styleSearchResults:_results];
 	[_results message:SCI_SETCARETLINEBACK wParam:[_results message:SCI_STYLEGETBACK wParam:6]];
 	[_results message:SCI_SETCARETLINEVISIBLE wParam:1];
-	for (int marker = SC_MARKNUM_FOLDEREND; marker <= SC_MARKNUM_FOLDEROPEN; ++marker)
-	{
-		[_results message:SCI_MARKERSETFORE wParam:marker lParam:EditorResources.shared.usesDarkColors ? 0x282828 : 0xffffff];
-		[_results message:SCI_MARKERSETBACK wParam:marker lParam:EditorResources.shared.usesDarkColors ? 0xa0a0a0 : 0x727272];
-	}
 }
 
 - (void)setReports:(NSArray<EditorSearchReport *> *)reports

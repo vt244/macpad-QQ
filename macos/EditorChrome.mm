@@ -354,6 +354,7 @@ static EditorTabStrip *TabStrip(BOOL other)
 	NSColor *_activeTabText;
 	NSColor *_inactiveTabText;
 	NSColor *_activeIndicatorColor;
+	NSColor *_unfocusedIndicatorColor;
 }
 
 - (instancetype)initWithDocument:(EditorDocument *)document commands:(NSArray<NSToolbarItem *> *)commands
@@ -619,7 +620,8 @@ static EditorTabStrip *TabStrip(BOOL other)
 		{
 			activeTab = tab;
 			NSView *indicator = ColoredView();
-			indicator.layer.backgroundColor = _activeIndicatorColor.CGColor;
+			indicator.layer.backgroundColor = (controller.focusedDocument == document ? _activeIndicatorColor :
+				_unfocusedIndicatorColor).CGColor;
 			[tab addSubview:indicator];
 			[NSLayoutConstraint activateConstraints:@[
 				[indicator.topAnchor constraintEqualToAnchor:tab.topAnchor],
@@ -743,12 +745,13 @@ static EditorTabStrip *TabStrip(BOOL other)
 	_tabScroll.layer.backgroundColor = _otherTabScroll.layer.backgroundColor = background.CGColor;
 	_edgeColor = [NSColor colorWithWhite:dark ? 0.30 : 0.76 alpha:1];
 	_activeTabColor = [NSColor colorWithWhite:dark ? 0.22 : 1 alpha:1];
-	_inactiveTabColor = dark ? [NSColor colorWithWhite:0.19 alpha:1] :
-		[resources widgetColor:@"Inactive tabs" background:YES] ?: [NSColor colorWithWhite:0.83 alpha:1];
-	_activeTabText = dark ? NSColor.whiteColor :
-		[resources widgetColor:@"Active tab text" background:NO] ?: NSColor.blackColor;
-	_inactiveTabText = dark ? [NSColor colorWithWhite:0.75 alpha:1] : NSColor.darkGrayColor;
+	_inactiveTabColor = [resources widgetColor:@"Inactive tabs" background:YES] ?:
+		[NSColor colorWithWhite:dark ? 0.19 : 0.83 alpha:1];
+	_activeTabText = [resources widgetColor:@"Active tab text" background:NO] ?: (dark ? NSColor.whiteColor : NSColor.blackColor);
+	_inactiveTabText = [resources widgetColor:@"Inactive tabs" background:NO] ?:
+		(dark ? [NSColor colorWithWhite:0.75 alpha:1] : NSColor.darkGrayColor);
 	_activeIndicatorColor = [resources widgetColor:@"Active tab focused indicator" background:NO] ?: NSColor.systemOrangeColor;
+	_unfocusedIndicatorColor = [resources widgetColor:@"Active tab unfocused indicator" background:NO] ?: _edgeColor;
 	for (NSView *separator in _separators)
 		separator.layer.backgroundColor = _edgeColor.CGColor;
 	for (NSTextField *label in _statusLabels)

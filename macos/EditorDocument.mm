@@ -1700,6 +1700,45 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	return YES;
 }
 
+static sptr_t GuideColor(NSColor *color, sptr_t fallback)
+{
+	NSColor *rgb = [color colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+	return rgb ? (lround(rgb.redComponent * 255) | (lround(rgb.greenComponent * 255) << 8) |
+		(lround(rgb.blueComponent * 255) << 16)) : fallback;
+}
+
+static void ApplyEditorGuides(ScintillaView *view)
+{
+	EditorResources *resources = EditorResources.shared;
+	NSInteger mode = [[resources setting:@"currentLineMode" fallback:@0] integerValue];
+	[view message:SCI_SETCARETLINEBACK wParam:GuideColor([resources widgetColor:@"Current line background colour" background:YES], 0xFFF0E8)];
+	[view message:SCI_SETCARETLINEVISIBLE wParam:mode != 0];
+	[view message:SCI_SETCARETLINEFRAME wParam:mode == 2 ? std::clamp([[resources setting:@"currentLineFrameWidth" fallback:@1] integerValue], 1L, 6L) : 0];
+	[view message:SCI_SETWRAPINDENTMODE wParam:std::clamp([[resources setting:@"wrapIndent" fallback:@0] integerValue], 0L, 2L)];
+	NSString *columns = [resources setting:@"edgeColumns" fallback:@""];
+	NSMutableIndexSet *rulers = [NSMutableIndexSet indexSet];
+	for (NSString *value in [columns componentsSeparatedByCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" ,;\t\n"]])
+	{
+		NSScanner *scanner = [NSScanner scannerWithString:value];
+		NSInteger index;
+		if ([scanner scanInteger:&index] && scanner.isAtEnd && index > 0 && index <= 4096)
+			[rulers addIndex:index];
+	}
+	sptr_t color = GuideColor([resources widgetColor:@"Edge colour" background:NO], 0xD0D0D0);
+	[view message:SCI_MULTIEDGECLEARALL];
+	[view message:SCI_SETEDGECOLOUR wParam:color];
+	if (rulers.count == 1)
+	{
+		[view message:SCI_SETEDGECOLUMN wParam:rulers.firstIndex];
+		[view message:SCI_SETEDGEMODE wParam:[[resources setting:@"edgeBackground" fallback:@NO] boolValue] ? EDGE_BACKGROUND : EDGE_LINE];
+	}
+	else
+	{
+		[rulers enumerateIndexesUsingBlock:^(NSUInteger index, BOOL *stop) { [view message:SCI_MULTIEDGEADDLINE wParam:index lParam:color]; }];
+		[view message:SCI_SETEDGEMODE wParam:rulers.count ? EDGE_MULTILINE : EDGE_NONE];
+	}
+}
+
 static void ApplyPreferencesToView(ScintillaView *view)
 {
 	EditorResources *resources = EditorResources.shared;
@@ -1718,6 +1757,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[view message:SCI_SETINDENTATIONGUIDES wParam:enabled(@"indentGuide", NO) ? SC_IV_REAL : SC_IV_NONE];
 	[view message:SCI_SETVIEWWS wParam:enabled(@"whitespace", NO) ? SCWS_VISIBLEALWAYS : SCWS_INVISIBLE];
 	[view message:SCI_SETVIEWEOL wParam:enabled(@"showEOL", NO)];
+	[view message:SCI_SETCARETWIDTH wParam:std::clamp([[resources setting:@"caretWidth" fallback:@1] integerValue], 0L, 20L)];
+	[view message:SCI_SETCARETPERIOD wParam:std::clamp([[resources setting:@"caretBlink" fallback:@500] integerValue], 0L, 5000L)];
+	ApplyEditorGuides(view);
 }
 
 - (void)refreshDockPlacements
@@ -2684,6 +2726,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			syntaxHighlighting:!large identifier:nullptr];
 		[_clone message:SCI_SETMARGINWIDTHN wParam:2 lParam:[_clone message:SCI_GETLEXER] <= SCLEX_NULL ? 0 : 14];
 	}
+	ApplyEditorGuides(_editor);
+	if (_clone)
+		ApplyEditorGuides(_clone);
 	if (large && [[EditorResources.shared setting:@"largeFileDisableWrap" fallback:@NO] boolValue])
 	{
 		for (ScintillaView *view in _clone ? @[_editor, _clone] : @[_editor])
@@ -2710,6 +2755,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[_chrome refreshColors];
 	[_resultsView refreshTheme];
 	self.windowControllers.firstObject.window.appearance = _chrome.appearance;
+	_searchPanel.appearance = _chrome.appearance;
 	[self updateStatus];
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	if (controller.focusedDocument == self)
