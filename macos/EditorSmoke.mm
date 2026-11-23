@@ -18,6 +18,7 @@
 #import "EditorPlugins.h"
 #import "EditorPluginCatalog.h"
 #import "EditorProjectPanel.h"
+#import "EditorPrinting.h"
 #import "EditorResources.h"
 #import "EditorRun.h"
 #import "EditorSettings.h"
@@ -44,6 +45,67 @@ static NSView *ViewMatching(NSView *view, BOOL (^match)(NSView *))
 		if (NSView *result = ViewMatching(child, match))
 			return result;
 	return nil;
+}
+
+static NSView *ViewWithIdentifier(NSWindow *window, NSString *identifier)
+{
+	return ViewMatching(window.contentView, ^BOOL(NSView *view) {
+		return [view.accessibilityIdentifier isEqual:identifier];
+	});
+}
+
+static bool CheckLiveLabelsAndContrast(EditorDocument *document, EditorDocument *other)
+{
+	EditorResources *resources = EditorResources.shared;
+	NSURL *originalTranslation = resources.selectedTranslation;
+	NSURL *originalTheme = resources.selectedTheme;
+	auto selectLanguage = ^(NSURL *url) {
+		NSMenuItem *item = [NSMenuItem new];
+		item.representedObject = url;
+		[NSApp sendAction:NSSelectorFromString(@"selectTranslation:") to:NSApp.delegate from:item];
+	};
+	selectLanguage(nil);
+	[document toggleDocumentList:nil];
+	NSWindow *window = document.windowControllers.firstObject.window;
+	NSTableView *table = (NSTableView *)ViewWithIdentifier(window, @"open-documents");
+	NSButton *findTool = nil;
+	for (NSButton *button in document.chrome.toolbarButtons)
+		if ([[button valueForKeyPath:@"command.itemIdentifier"] isEqual:@"find"])
+			findTool = button;
+	[document findText:nil];
+	NSWindow *findPanel = window.childWindows.lastObject;
+	NSComboBox *query = (NSComboBox *)ViewWithIdentifier(findPanel, @"find-text");
+	NSButton *count = (NSButton *)ViewMatching(findPanel.contentView, ^BOOL(NSView *view) {
+		return [view isKindOfClass:NSButton.class] && [(NSButton *)view tag] == 10;
+	});
+	query.stringValue = @"пример";
+	[count performClick:nil];
+	BOOL singular = ViewMatching(findPanel.contentView, ^BOOL(NSView *view) {
+		return [view isKindOfClass:NSTextField.class] && [[(NSTextField *)view stringValue] isEqualToString:@"1 match"];
+	}) != nil;
+	query.stringValue = @"pending query";
+	selectLanguage(originalTranslation);
+	BOOL localized = [[findTool accessibilityLabel] hasPrefix:@"Найти"] &&
+		[[table tableColumnWithIdentifier:@"document"].title isEqualToString:@"Имя"] &&
+		[[query accessibilityLabel] hasPrefix:@"Найти"] && [query.stringValue isEqualToString:@"pending query"] &&
+		window.childWindows.lastObject == findPanel;
+	[findPanel close];
+	[document toggleDocumentList:nil];
+
+	[resources chooseTheme:resources.themes[@"DarkModeDefault.xml"]];
+	[document applyTheme];
+	auto foregroundOf = ^NSColor *(EditorDocument *tab) {
+		NSButton *button = (NSButton *)ViewMatching(document.chrome.primaryTabs, ^BOOL(NSView *view) {
+			return [view isKindOfClass:NSButton.class] && [[(NSButton *)view title] isEqualToString:tab.displayName];
+		});
+		return button.attributedTitle.length ? [button.attributedTitle attribute:NSForegroundColorAttributeName atIndex:0 effectiveRange:nullptr] : nil;
+	};
+	BOOL contrast = [foregroundOf(document) isEqual:NSColor.whiteColor] && [foregroundOf(other) isEqual:NSColor.blackColor];
+	[resources chooseTheme:originalTheme];
+	[document applyTheme];
+	return Check(singular, "show the English singular match count") &&
+		Check(localized, "relabel the existing toolbar, document list and Find dialog without losing the query") &&
+		Check(contrast, "use high-contrast text on active and inactive tabs in the default dark theme");
 }
 
 static bool CheckDocumentDock(EditorDocument *document)
@@ -408,6 +470,11 @@ static bool CheckSettingsAndLaunch(EditorDocument *document)
 		[[resources userLanguageXML:@"Smoke Custom Language"] containsString:@"smoke2"],
 		"create, edit and export a compatible user language"))
 		return false;
+	NSString *copy = [xml stringByReplacingOccurrencesOfString:@"Smoke Custom Language" withString:@"Smoke Copy"];
+	if (!Check([resources saveUserLanguageXML:copy replacing:nil error:nullptr] &&
+		[resources removeUserLanguage:@"Smoke Copy" error:nullptr] && ![resources userLanguageXML:@"Smoke Copy"] &&
+		[resources userLanguageXML:@"Smoke Custom Language"], "copy and remove a UDL without changing the original"))
+		return false;
 	NSMenu *menu = [NSMenu new];
 	NSMenuItem *item = [menu addItemWithTitle:@"Run Fixture" action:@selector(executeSavedRunCommand:) keyEquivalent:@""];
 	item.representedObject = @"Fixture";
@@ -529,6 +596,10 @@ static bool CheckSearchAndConfigurationParity(EditorDocumentController *controll
 		"<GUIConfig name='Backup' action='1'/>"
 		"<GUIConfig name='searchEngine' searchEngineChoice='0' searchEngineCustom='https://example.com/?q=$(CURRENT_WORD)'/>"
 		"<GUIConfig name='largeFileRestriction' fileSizeMB='512' isEnabled='no'/>"
+		"<GUIConfig name='Searching' inSelectionAutocheckThreshold='3' fillFindWhatThreshold='4' monospacedFontFindDlg='yes'/>"
+		"<GUIConfig name='SaveAllConfirm'>no</GUIConfig>"
+		"<GUIConfig name='ScintillaPrimaryView' eolMode='2'/>"
+		"<GUIConfig name='globalOverride' fg='yes'/>"
 		"<GUIConfig name='DockingManager' rightWidth='315'>"
 		"<PluginDlg pluginName='Notepad++::InternalFunction' id='44084' curr='1' prev='0' isVisible='yes'/>"
 		"</GUIConfig></GUIConfigs></NotepadPlus>";
@@ -539,10 +610,31 @@ static bool CheckSearchAndConfigurationParity(EditorDocumentController *controll
 	NSDictionary *dockLayout = [resources setting:@"windowsDockLayout" fallback:@{}];
 	if (!Check([editor message:SCI_GETTABWIDTH] == 9 && [dockLayout[@"panes"][@"44084"][@"width"] isEqual:@315] &&
 		[[resources setting:@"largeFileMegabytes" fallback:@0] isEqual:@512] &&
+		[[resources setting:@"inSelectionAutocheckThreshold" fallback:@0] isEqual:@3] &&
+		[[resources setting:@"fillFindWhatThreshold" fallback:@0] isEqual:@4] &&
+		[[resources setting:@"monospacedFontFindDlg" fallback:@NO] boolValue] &&
+		![[resources setting:@"saveAllConfirm" fallback:@YES] boolValue] &&
+		[editor message:SCI_STYLEGETFORE wParam:STYLE_DEFAULT] == 0x80ffff &&
+		[editor message:SCI_GETREPRESENTATIONAPPEARANCE wParam:reinterpret_cast<uptr_t>("\r")] == SC_REPRESENTATION_COLOUR &&
+		static_cast<uint32_t>([editor message:SCI_GETREPRESENTATIONCOLOUR wParam:reinterpret_cast<uptr_t>("\n")]) == 0xffdadada &&
 		[[resources setting:@"searchEngineCustom" fallback:@""] containsString:@"$(CURRENT_WORD)"] &&
 		[[NSString stringWithContentsOfURL:[resources.profile URLByAppendingPathComponent:@"imported-config.xml"]
 			encoding:NSUTF8StringEncoding error:nullptr] isEqual:xml], "apply imported preferences and retain the original XML"))
 		return false;
+	editor.string = @"ё猫😀éz";
+	[editor message:SCI_SETSEL wParam:0 lParam:9];
+	[document findText:nil];
+	NSWindow *findWindow = document.editor.window.childWindows.lastObject;
+	NSComboBox *findField = (NSComboBox *)ViewWithIdentifier(findWindow, @"find-text");
+	NSButton *inSelection = (NSButton *)ViewWithIdentifier(findWindow, @"find-in-selection");
+	if (!Check([findField.stringValue isEqual:@"ё猫😀"] && findField.font.isFixedPitch && inSelection.state == NSControlStateValueOn,
+		"apply Find preferences in Unicode characters"))
+		return false;
+	[editor message:SCI_SETSEL wParam:0 lParam:[editor message:SCI_GETLENGTH]];
+	[document findText:nil];
+	if (!Check([findField.stringValue isEqual:@"ё猫😀"], "keep the query when selected text exceeds the autofill limit"))
+		return false;
+	[findWindow close];
 	NSURL *file = [test URLByAppendingPathComponent:@"backup-fixture.txt"];
 	editor.string = @"new contents";
 	[resources setSetting:@"" forName:@"backupDirectory"];
@@ -551,7 +643,9 @@ static bool CheckSearchAndConfigurationParity(EditorDocumentController *controll
 		[document writeSafelyToURL:file ofType:controller.defaultType forSaveOperation:NSSaveOperation error:&error];
 	NSString *copy = [NSString stringWithContentsOfURL:[file URLByAppendingPathExtension:@"bak"]
 		encoding:NSUTF8StringEncoding error:nullptr];
-	[resources setSettings:@{@"tabWidth": @(width), @"backupMode": @(backup), @"backupDirectory": directory}];
+	[resources setSettings:@{@"tabWidth": @(width), @"backupMode": @(backup), @"backupDirectory": directory,
+		@"styleOverrideForeground": @NO, @"saveAllConfirm": @YES, @"monospacedFontFindDlg": @NO,
+		@"inSelectionAutocheckThreshold": @1024, @"fillFindWhatThreshold": @1024, @"eolRepresentation": @1}];
 	return Check(saved && [copy isEqualToString:@"before"], "write a backup of the old bytes before saving");
 }
 
@@ -672,6 +766,177 @@ static bool CheckTools(NSURL *test)
 		"keep paths as individual arguments in quoted and unquoted Run placeholders");
 }
 
+static bool CheckExtendedPort(NSURL *test, EditorDocumentController *controller)
+{
+	EditorResources *resources = EditorResources.shared;
+	NSFileManager *files = NSFileManager.defaultManager;
+	NSError *error = nil;
+	NSString *russian = @"Это проверка определения кодировки. В редакторе можно открыть старый русский текст и сохранить его без искажений.";
+	NSData *legacy = [russian dataUsingEncoding:NSWindowsCP1251StringEncoding];
+	NSStringEncoding detected = 0;
+	if (!Check([DecodeEditorText(legacy, &detected, nullptr) isEqualToString:russian] && detected == NSWindowsCP1251StringEncoding,
+		"detect a legacy Cyrillic encoding and retain its bytes"))
+		return false;
+	[resources setSetting:@NO forName:@"detectEncoding"];
+	DecodeEditorText(legacy, &detected, nullptr);
+	[resources setSetting:@YES forName:@"detectEncoding"];
+	if (!Check(detected == NSWindowsCP1252StringEncoding, "honor the encoding detection preference"))
+		return false;
+	NSURL *directory = [test URLByAppendingPathComponent:@"launch" isDirectory:YES];
+	NSURL *nested = [directory URLByAppendingPathComponent:@"nested" isDirectory:YES];
+	NSURL *top = [directory URLByAppendingPathComponent:@"first.py"];
+	NSURL *bottom = [nested URLByAppendingPathComponent:@"second.py"];
+	if (!Check([files createDirectoryAtURL:nested withIntermediateDirectories:YES attributes:nil error:&error] &&
+		[@"aé\n" writeToURL:top atomically:YES encoding:NSUTF8StringEncoding error:&error] &&
+		[@"# nested" writeToURL:bottom atomically:YES encoding:NSUTF8StringEncoding error:&error], "create fixtures for wildcard paths"))
+		return false;
+	NSString *pattern = [directory.path stringByAppendingPathComponent:@"*.py"];
+	EditorLaunchOptions *recursive = [[EditorLaunchOptions alloc] initWithArguments:@[@"-multiInst", @"-r", @"-quickPrint", pattern]];
+	EditorLaunchOptions *flat = [[EditorLaunchOptions alloc] initWithArguments:@[pattern]];
+	if (!Check(recursive.multiInstance && recursive.quickPrint && recursive.expandedPaths.count == 2 &&
+		[flat.expandedPaths isEqualToArray:@[top]], "expand recursive and flat wildcards"))
+		return false;
+	NSURL *mapping = [resources.profile URLByAppendingPathComponent:@"windowsPathMappings.plist"];
+	if (!Check([@{@"C:": directory.path, @"//server/share": nested.path} writeToURL:mapping error:&error] &&
+		[[resources localURLForWindowsPath:@"c:\\first.py"] isEqual:top] &&
+		[[resources localURLForWindowsPath:@"\\\\server\\share\\second.py"] isEqual:bottom] &&
+		![resources localURLForWindowsPath:@"C:\\..\\outside.txt"], "map Windows drive and UNC paths"))
+		return false;
+
+	NSURL *shortcutFile = [test URLByAppendingPathComponent:@"extended-shortcuts.xml"];
+	NSString *xml = @"<NotepadPlus><InternalCommands><Shortcut id='41006' Ctrl='yes' Key='74'/></InternalCommands>"
+		"<UserDefinedCommands><Command name='Imported' Ctrl='yes' Key='75'>printf test</Command></UserDefinedCommands>"
+		"<Macros><Macro name='Sort Fixture'><Action type='2' message='0' wParam='42059' lParam='0' sParam=''/></Macro></Macros>"
+		"<ScintillaKeys><ScintKey ScintID='2300' Ctrl='yes' Key='78'><NextKey Alt='yes' Key='78'/></ScintKey></ScintillaKeys></NotepadPlus>";
+	NSUInteger skipped = 0;
+	NSEvent *key = [NSEvent keyEventWithType:NSEventTypeKeyDown location:NSZeroPoint modifierFlags:NSEventModifierFlagOption
+		timestamp:0 windowNumber:0 context:nil characters:@"n" charactersIgnoringModifiers:@"n" isARepeat:NO keyCode:45];
+	if (!Check([xml writeToURL:shortcutFile atomically:YES encoding:NSUTF8StringEncoding error:&error] &&
+		EditorImportShortcutConfiguration(shortcutFile, NSApp.mainMenu, &skipped, &error) && !skipped &&
+		[[resources setting:@"runCommands" fallback:@{}][@"Imported"] isEqualToString:@"printf test"] &&
+		EditorScintillaCommandForEvent(key) == SCI_LINEDOWN, "import a menu binding, a stored Run command and an alternate Scintilla shortcut"))
+		return false;
+	NSTimer *editShortcut = [NSTimer timerWithTimeInterval:0.05 repeats:NO block:^(NSTimer *timer) {
+		NSWindow *window = NSApp.modalWindow;
+		NSPopUpButton *commands = (NSPopUpButton *)ViewWithIdentifier(window, @"shortcut-command");
+		NSString *category = [resources label:@"settings-Scintilla commands" fallback:@"Scintilla commands"];
+		NSString *command = [resources label:@"settings-Line Down" fallback:@"Line Down"];
+		[commands selectItemWithTitle:[NSString stringWithFormat:@"%@ › %@", category, command]];
+		[NSApp sendAction:commands.action to:commands.target from:commands];
+		NSPopUpButton *bindings = (NSPopUpButton *)ViewWithIdentifier(window, @"shortcut-binding");
+		if (bindings.numberOfItems != 2)
+		{
+			[NSApp stopModalWithCode:NSAlertSecondButtonReturn];
+			return;
+		}
+		NSTextField *field = (NSTextField *)ViewWithIdentifier(window, @"shortcut-key");
+		[window makeFirstResponder:nil];
+		field.stringValue = @"F19";
+		NSButton *add = (NSButton *)ViewWithIdentifier(window, @"shortcut-add");
+		[NSApp sendAction:add.action to:add.target from:add];
+		[window makeFirstResponder:nil];
+		field.stringValue = @"F18";
+		[NSApp stopModalWithCode:NSAlertFirstButtonReturn];
+	}];
+	[NSRunLoop.currentRunLoop addTimer:editShortcut forMode:NSModalPanelRunLoopMode];
+	const BOOL editedShortcut = EditorShowShortcutMapper(NSApp.mainMenu);
+	[editShortcut invalidate];
+	NSDictionary *lineDown = [resources setting:@"shortcuts" fallback:@{}][@"scintilla/2300"];
+	if (!Check(editedShortcut && [lineDown[@"key"] isEqual:[NSString stringWithFormat:@"%C", (unichar)NSF19FunctionKey]] &&
+		[lineDown[@"alternatives"] count] == 2 && EditorScintillaCommandForEvent(key) == SCI_LINEDOWN,
+		"edit the primary shortcut and add another while preserving the imported alternate"))
+		return false;
+
+	EditorPlugins *host = [[EditorPlugins alloc] initWithDirectory:[test URLByAppendingPathComponent:@"plugins-v3"]];
+	EditorDocument *document = [controller makeDocumentWithContentsOfURL:top ofType:controller.defaultType error:&error];
+	if (!Check(document != nil, "open the v3 plugin fixture"))
+		return false;
+	[controller addDocument:document];
+	[document makeWindowControllers];
+	[document showWindows];
+	EditorDocument *draft = [controller makeUntitledDocumentOfType:controller.defaultType error:&error];
+	[controller addDocument:draft];
+	[draft makeWindowControllers];
+	[draft.editor setStringProperty:SCI_SETTEXT parameter:0 value:@"z\na\n"];
+	NSMenuItem *macro = [NSMenuItem new];
+	macro.representedObject = [EditorMacroLibrary.shared.macros filteredArrayUsingPredicate:
+		[NSPredicate predicateWithFormat:@"name == %@", @"Sort Fixture"]].firstObject;
+	[draft playSavedMacro:macro];
+	BOOL sortOK = Check([draft.editor.string isEqualToString:@"a\nz\n"], "replay an imported line sorting macro");
+	[controller reorderTabs:@[draft, document]];
+	sortOK = Check(controller.tabDocuments.firstObject == draft, "apply the chosen tab order") && sortOK;
+	[draft close];
+	__block BOOL saved = NO;
+	[document saveToURL:top ofType:controller.defaultType forSaveOperation:NSSaveOperation completionHandler:^(NSError *failure) {
+		saved = failure == nil;
+	}];
+	NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:2];
+	while (!saved && deadline.timeIntervalSinceNow > 0)
+		[NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+	NSMenu *plugins = [NSMenu new];
+	[host populateMenu:plugins];
+	NSMenuItem *entry = [[plugins itemWithTitle:@"Native ABI v3"].submenu itemWithTitle:@"Verify v3"];
+	const BOOL plugInOK = Check(saved && [entry.representedObject isEqual:@"plugin/test.native-plugin/verify"] &&
+		[plugins itemWithTitle:@"Original ABI v3"].submenu.numberOfItems == 1 && [host toolbarItems].count == 1 &&
+		[[host toolbarItems].firstObject.itemIdentifier isEqual:entry.representedObject] &&
+		[host performCommand:entry inDocument:document] && [document.editor.string hasPrefix:@"OKé"],
+		"register toolbar buttons, reserve decorations and deliver extended v3 events without breaking range callbacks");
+	xml = @"<NotepadPlus><PluginCommands><PluginCommand moduleName='NativeFixture.dll' internalID='7' Ctrl='yes' Key='74'/></PluginCommands></NotepadPlus>";
+	BOOL pluginKeys = Check([xml writeToURL:shortcutFile atomically:YES encoding:NSUTF8StringEncoding error:&error] &&
+		EditorImportShortcutConfiguration(shortcutFile, [NSMenu new], &skipped, &error) && !skipped,
+		"retain a Windows plugin shortcut until its native command is present");
+	EditorApplyShortcuts(plugins);
+	pluginKeys = Check([entry.keyEquivalent isEqualToString:@"j"] && entry.keyEquivalentModifierMask == NSEventModifierFlagCommand,
+		"apply the imported plugin shortcut") && pluginKeys;
+	[resources setSettings:@{@"printLineNumbers": @YES, @"printColorMode": @(SC_PRINT_COLOURONWHITE), @"printHeaderLeft": @"$(FILE_NAME)"}];
+	NSPrintOperation *printing = EditorPrintOperation(document, @{});
+	NSTextView *text = (NSTextView *)printing.view;
+	BOOL printOK = Check([text.string hasPrefix:@"1  OKé"] && [text.pageHeader.string hasPrefix:@"first.py"] &&
+		[text.textStorage attribute:NSForegroundColorAttributeName atIndex:3 effectiveRange:nullptr] != nil,
+		"build a styled print view with line numbers and an expanded header");
+	NSURL *pdf = [test URLByAppendingPathComponent:@"printed.pdf"];
+	NSPrintOperation *pdfJob = EditorPrintOperation(document, @{NSPrintJobDisposition: NSPrintSaveJob, NSPrintJobSavingURL: pdf});
+	pdfJob.showsPrintPanel = NO;
+	pdfJob.showsProgressPanel = NO;
+	BOOL rendered = [pdfJob runOperation];
+	NSData *pdfBytes = [NSData dataWithContentsOfURL:pdf];
+	printOK = Check(rendered && pdfBytes.length > 5 && memcmp(pdfBytes.bytes, "%PDF-", 5) == 0,
+		"render the print job to PDF") && printOK;
+	[resources setSettings:@{@"printFormFeedBreak": @YES, @"printHeaderFontSize": @15}];
+	[document.editor setStringProperty:SCI_SETTEXT parameter:0 value:@"First page\f\nSecond page"];
+	NSURL *splitPDF = [test URLByAppendingPathComponent:@"page-break.pdf"];
+	NSPrintOperation *splitJob = EditorPrintOperation(document, @{NSPrintJobDisposition: NSPrintSaveJob, NSPrintJobSavingURL: splitPDF});
+	splitJob.showsPrintPanel = NO;
+	splitJob.showsProgressPanel = NO;
+	BOOL split = [splitJob runOperation];
+	CGPDFDocumentRef pages = split ? CGPDFDocumentCreateWithURL((__bridge CFURLRef)splitPDF) : nullptr;
+	NSFont *header = [((NSTextView *)splitJob.view).pageHeader attribute:NSFontAttributeName atIndex:0 effectiveRange:nullptr];
+	printOK = Check(pages && CGPDFDocumentGetNumberOfPages(pages) == 2 && header.pointSize == 15,
+		"force a second PDF page at form feed and apply the header font") && printOK;
+	if (pages)
+		CGPDFDocumentRelease(pages);
+	[resources chooseTranslation:resources.translations[@"french.xml"]];
+	BOOL localized = Check([EditorUIString(@"Filter commands") isEqualToString:@"Filtrer les commandes"], "load additional native labels for a non-Russian locale");
+	[document close];
+	EditorLaunchOptions *previous = controller.launchOptions;
+	EditorLaunchOptions *locked = [[EditorLaunchOptions alloc] initWithArguments:
+		@[@"-fullReadOnlySavingForbidden", @"-monitoringMode", @"-x", @"-45", @"-y24", @"-titleAdd=Fixture"]];
+	controller.launchOptions = locked;
+	EditorDocument *newlyOpened = [controller makeDocumentWithContentsOfURL:top ofType:controller.defaultType error:&error];
+	[controller addDocument:newlyOpened];
+	[newlyOpened makeWindowControllers];
+	NSUInteger readOnly = [newlyOpened.editor message:SCI_GETREADONLY];
+	NSURL *forbiddenPath = [test URLByAppendingPathComponent:@"forbidden.txt"];
+	BOOL blocked = ![newlyOpened writeSafelyToURL:forbiddenPath ofType:controller.defaultType forSaveOperation:NSSaveAsOperation error:&error];
+	BOOL launchOK = Check(locked.leftPosition.integerValue == -45 && locked.topPosition.integerValue == 24 &&
+		[newlyOpened.windowControllers.firstObject.window.title hasSuffix:@"Fixture"] &&
+		newlyOpened.isMonitoring && readOnly && blocked && ![files fileExistsAtPath:forbiddenPath.path],
+		"apply launch coordinates, title, monitoring, read-only and save restrictions to subsequently opened files");
+	[newlyOpened close];
+	controller.launchOptions = previous;
+	return plugInOK && pluginKeys && printOK && localized && sortOK && launchOK;
+}
+
 static bool CheckCharacterSet(NSURL *test, EditorDocumentController *controller)
 {
 	NSString *text = @"Привет, редактор!\r\n";
@@ -756,6 +1021,38 @@ void RunWorkspaceLifecycleTest(BOOL restore)
 		[document.editor message:SCI_SETSEL wParam:0 lParam:7];
 	}
 	[NSApp terminate:nil];
+}
+
+@interface NSObject (FinderServiceSmoke)
+- (void)openFinderSelection:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)error;
+@end
+
+static bool CheckFinderService(NSURL *test, EditorDocumentController *controller)
+{
+	NSURL *first = [test URLByAppendingPathComponent:@"Finder service пример.txt"];
+	NSURL *second = [test URLByAppendingPathComponent:@"Finder service second.txt"];
+	if (!Check([@"first" writeToURL:first atomically:YES encoding:NSUTF8StringEncoding error:nullptr] &&
+		[@"second" writeToURL:second atomically:YES encoding:NSUTF8StringEncoding error:nullptr], "prepare Finder service files"))
+		return false;
+	NSPasteboard *input = [NSPasteboard pasteboardWithUniqueName];
+	NSString *error = nil;
+	[input writeObjects:@[test, [NSURL URLWithString:@"https://example.invalid/"]]];
+	[NSApp.servicesProvider openFinderSelection:input userData:nil error:&error];
+	const BOOL refused = error.length > 0;
+	error = nil;
+	[input clearContents];
+	[input writeObjects:@[first, second, first]];
+	[NSApp.servicesProvider openFinderSelection:input userData:nil error:&error];
+	[input releaseGlobally];
+	NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:2];
+	while ((! [controller documentForURL:first] || ![controller documentForURL:second]) && deadline.timeIntervalSinceNow > 0)
+		[NSRunLoop.currentRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+	EditorDocument *a = (EditorDocument *)[controller documentForURL:first];
+	EditorDocument *b = (EditorDocument *)[controller documentForURL:second];
+	const BOOL opened = !error && [a.editor.string isEqualToString:@"first"] && [b.editor.string isEqualToString:@"second"];
+	[a close];
+	[b close];
+	return Check(refused && opened, "open multiple local files through the Finder service and reject folders and non-file URLs");
 }
 
 int RunSmokeTest(void)
@@ -856,8 +1153,8 @@ int RunSmokeTest(void)
 	[document makeWindowControllers];
 	NSArray<NSToolbarItemIdentifier> *toolbarItems = [document.chrome.toolbarButtons valueForKeyPath:@"command.itemIdentifier"];
 	if (!Check([toolbarItems containsObject:@"save"] && [toolbarItems containsObject:@"findrep"] &&
-		[toolbarItems containsObject:@"saveall"] && [toolbarItems containsObject:@"allChars"],
-		"show file and search commands in the editor toolbar"))
+		[toolbarItems containsObject:@"saveall"] && [toolbarItems containsObject:@"allChars"] && ![toolbarItems containsObject:@"zoomIn"],
+		"show file and search commands and honor toolbarButtonsConf.xml"))
 		return 1;
 	[document showWindows];
 	EditorDocument *second = [controller makeUntitledDocumentOfType:controller.defaultType error:&error];
@@ -865,6 +1162,31 @@ int RunSmokeTest(void)
 		return 1;
 	[controller addDocument:second];
 	[second makeWindowControllers];
+	if (!CheckLiveLabelsAndContrast(document, second))
+		return 1;
+	NSMenuItem *setReadOnly = [[NSMenuItem alloc] initWithTitle:@"" action:@selector(setAllDocumentsReadOnly:) keyEquivalent:@""];
+	setReadOnly.tag = 42102;
+	[controller setAllDocumentsReadOnly:setReadOnly];
+	if (!Check([document.editor message:SCI_GETREADONLY] && [second.editor message:SCI_GETREADONLY],
+		"set read-only on two open documents"))
+		return 1;
+	setReadOnly.tag = 42103;
+	[controller setAllDocumentsReadOnly:setReadOnly];
+	if (!Check(![document.editor message:SCI_GETREADONLY] && ![second.editor message:SCI_GETREADONLY],
+		"clear read-only on two open documents"))
+		return 1;
+	[second.editor setStringProperty:SCI_REPLACESEL parameter:0 value:@"unsaved"];
+	__block BOOL confirmedSaveAll = NO;
+	NSTimer *declineSaveAll = [NSTimer timerWithTimeInterval:0.05 repeats:NO block:^(NSTimer *timer) {
+		confirmedSaveAll = NSApp.modalWindow != nil;
+		[NSApp stopModalWithCode:NSAlertSecondButtonReturn];
+	}];
+	[NSRunLoop.currentRunLoop addTimer:declineSaveAll forMode:NSModalPanelRunLoopMode];
+	[controller saveAllDocuments:nil];
+	[declineSaveAll invalidate];
+	if (!Check(confirmedSaveAll && second.isDocumentEdited, "cancel Save All without saving a changed document"))
+		return 1;
+	[second.editor message:SCI_UNDO];
 	[controller refreshDocumentTabs];
 	NSString *closeLabel = [NSString stringWithFormat:[resources label:@"native-closeNamedTab" fallback:@"Close %@"], second.displayName];
 	NSButton *closeInactive = (NSButton *)ViewMatching(document.chrome.primaryTabs, ^BOOL(NSView *view) {
@@ -1149,7 +1471,7 @@ int RunSmokeTest(void)
 	[controller addDocument:macroDocument];
 	[macroDocument makeWindowControllers];
 	[macroDocument showWindows];
-	NSMenu *macroMenu = [NSApp.mainMenu itemWithTitle:@"Macro"].submenu;
+	NSMenu *macroMenu = [NSApp.mainMenu itemWithTitle:[resources label:@"macro" fallback:@"Macro"]].submenu;
 	[macroMenu update];
 	NSMenu *importedMenu = [macroMenu itemWithTitle:@"Smoke folder"].submenu;
 	NSMenuItem *savedMacroItem = [importedMenu itemWithTitle:@"Insert from XML"];
@@ -1262,6 +1584,9 @@ int RunSmokeTest(void)
 	if (!Check([workspace startAtDirectory:recoveryDirectory] && ![otherInstance startAtDirectory:recoveryDirectory],
 		"prevent another instance from overwriting the same recovery workspace"))
 		return 1;
+	if (!CheckExtendedPort(test, controller) || !CheckFinderService(test, controller))
+		return 1;
+	puts("Passed: toolbar XML, localized dialogs, shortcuts import, Windows path mappings, print-to-PDF and plugin ABI v3.");
 	puts("Passed: dockable panels, tab transfers and split rotation, editing commands, monitoring, search and history, settings, XML, macros, terminal options, Run, native plugins and catalog updates.");
 	return 0;
 }
