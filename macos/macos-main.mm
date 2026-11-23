@@ -357,6 +357,7 @@ static void AddCharacterSets(NSMenu *menu)
 	AddItem(file, Label(@"41014", @"Reload from Disk"), @selector(revertDocumentToSaved:), @"");
 	[file addItem:NSMenuItem.separatorItem];
 	AddItem(file, Label(@"41010", @"Print…"), @selector(printDocument:), @"p");
+	AddItem(file, Label(@"1001", @"Print Now"), @selector(printNow:), @"");
 	[file addItem:NSMenuItem.separatorItem];
 	AddItem(file, Label(@"41012", @"Load Session…"), @selector(loadSession:), @"", self);
 	AddItem(file, Label(@"41013", @"Save Session…"), @selector(saveSession:), @"", self);

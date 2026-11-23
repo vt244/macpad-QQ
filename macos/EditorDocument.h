@@ -81,6 +81,7 @@
 - (IBAction)toggleLineNumbers:(id)sender;
 - (IBAction)toggleDocumentReadOnly:(id)sender;
 - (IBAction)toggleUDLPanel:(id)sender;
+- (IBAction)printNow:(id)sender;
 @end
 
 @interface EditorDocumentController : NSDocumentController

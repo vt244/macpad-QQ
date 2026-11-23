@@ -784,6 +784,8 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		{"TabBar", "hide", @"hideTabBar"}, {"TabBar", "closeButton", @"tabCloseButtons"},
 		{"TabBar", "doubleClick2Close", @"doubleClickClosesTab"},
 		{"TabBar", "dragAndDrop", @"dragTabs"},
+		{"Print", "lineNumber", @"printLineNumbers"},
+		{"Print", "formFeedPageBreak", @"printFormFeedBreak"},
 		{"TabBar", "vertical", @"verticalTabs"}, {"TabBar", "multiLine", @"multilineTabs"},
 		{"MISC", "docPeekOnTab", @"tabPreview"},
 		{"largeFileRestriction", "isEnabled", @"limitLargeFiles"},
@@ -853,6 +855,33 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 			const std::string_view method = value.value();
 			settings[@"wrapIndent"] = @(method == "aligned" ? 1 : method == "indent" ? 2 : 0);
 		}
+	}
+	if (auto printing = config("Print"))
+	{
+		if (auto mode = printing.attribute("printOption"))
+			settings[@"printColorMode"] = @(std::clamp(mode.as_int(2), 0, 3));
+		const struct { const char *attribute; NSString *setting; } strings[] = {
+			{"headerLeft", @"printHeaderLeft"}, {"headerMiddle", @"printHeaderMiddle"}, {"headerRight", @"printHeaderRight"},
+			{"footerLeft", @"printFooterLeft"}, {"footerMiddle", @"printFooterMiddle"}, {"footerRight", @"printFooterRight"},
+			{"headerFontName", @"printHeaderFontName"}, {"footerFontName", @"printFooterFontName"},
+		};
+		for (const auto &entry : strings)
+			if (auto field = printing.attribute(entry.attribute))
+				settings[entry.setting] = String(field.value());
+		const struct { const char *attribute; NSString *setting; } margins[] = {
+			{"margeLeft", @"printMarginLeft"}, {"margeTop", @"printMarginTop"},
+			{"margeRight", @"printMarginRight"}, {"margeBottom", @"printMarginBottom"},
+		};
+		for (const auto &entry : margins)
+			if (auto field = printing.attribute(entry.attribute))
+				settings[entry.setting] = @(std::clamp(field.as_int(), 0, 100));
+		const struct { const char *attribute; NSString *setting; int limit; } fonts[] = {
+			{"headerFontSize", @"printHeaderFontSize", 72}, {"footerFontSize", @"printFooterFontSize", 72},
+			{"headerFontStyle", @"printHeaderFontStyle", 3}, {"footerFontStyle", @"printFooterFontStyle", 3},
+		};
+		for (const auto &entry : fonts)
+			if (auto field = printing.attribute(entry.attribute); field && (entry.limit == 3 || field.as_int() > 0))
+				settings[entry.setting] = @(std::clamp(field.as_int(), 0, entry.limit));
 	}
 	if (auto action = config("auto-completion").attribute("autoCAction"))
 		settings[@"autocomplete"] = @(action.as_int() != 0);

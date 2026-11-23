@@ -15,6 +15,7 @@
 #import "EditorMacros.h"
 #import "EditorProjectPanel.h"
 #import "EditorPlugins.h"
+#import "EditorPrinting.h"
 #import "EditorResources.h"
 #import "EditorSettings.h"
 #import "EditorText.h"
@@ -2852,12 +2853,14 @@ static void ApplyPreferencesToView(ScintillaView *view)
 
 - (NSPrintOperation *)printOperationWithSettings:(NSDictionary<NSPrintInfoAttributeKey, id> *)settings error:(NSError **)error
 {
-	NSPrintInfo *info = [self.printInfo copy];
-	[info.dictionary addEntriesFromDictionary:settings];
-	NSTextView *text = [[NSTextView alloc] initWithFrame:NSMakeRect(0, 0, NSWidth(info.imageablePageBounds), 100)];
-	text.string = _editor.string ?: @"";
-	text.font = [NSFont monospacedSystemFontOfSize:10 weight:NSFontWeightRegular];
-	return [NSPrintOperation printOperationWithView:text printInfo:info];
+	return EditorPrintOperation(self, settings);
+}
+
+- (IBAction)printNow:(id)sender
+{
+	NSPrintOperation *operation = EditorPrintOperation(self, @{});
+	operation.showsPrintPanel = NO;
+	[operation runOperation];
 }
 
 - (BOOL)validateMenuItem:(NSMenuItem *)item

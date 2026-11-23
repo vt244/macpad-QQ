@@ -50,6 +50,8 @@ app and bundles it with matching source and SHA-256 checksums.
 - Reopen legacy text with its original encoding from **Encoding → Character Set**.
 - Follow log files with **View → Monitoring (tail -f)**. Configure detection of external changes in **Settings → Preferences**.
 - Record and replay editing, search and replace actions from the **Macro** menu. **Import Macros…** reads compatible actions from `shortcuts.xml`. Assign keys to macros and named **Run** commands in **Settings → Shortcut Mapper**.
+- Set print colors, line numbers, margins and header or footer text under **Settings → Preferences → Printing**.
+- Use **Print Layout** in Preferences for header and footer fonts and form-feed page breaks. **File → Print Now** uses the selected printer.
 - Open **Language → Toggle User Language Panel** to edit, copy or remove definitions in a dockable panel.
 - Generate checksums from **Tools**, run macOS commands and save or open XML sessions.
 - Reopen the working session, including unsaved drafts, after quitting or restarting.

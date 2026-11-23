@@ -165,19 +165,59 @@ void EditorShowPreferences(void)
 	field(backup, @"backupDirectory", @"Backup folder (optional)", @"", 87);
 	field(backup, @"checkpointMilliseconds", @"Recovery interval (ms)", @"1000", 51);
 
-	window.accessoryView = tabs;
+	NSView *printing = tab(@"pref-print", @"Printing");
+	choice(printing, @"printColorMode", @"Color mode", @[@"Editor colors", @"Invert colors", @"Black on white", @"Colors without background"], SC_PRINT_BLACKONWHITE, 242);
+	checks(printing, @[@[@"printLineNumbers", @"Print line numbers", @NO]], 216);
+	NSArray *directions = @[@"Left", @"Middle", @"Right"];
+	NSArray *headerTitles = @[@"Left header", @"Center header", @"Right header"];
+	NSArray *footerTitles = @[@"Left footer", @"Center footer", @"Right footer"];
+	for (NSUInteger i = 0; i < directions.count; ++i)
+	{
+		field(printing, [@"printHeader" stringByAppendingString:directions[i]], headerTitles[i], @"", 190 - i * 24);
+		field(printing, [@"printFooter" stringByAppendingString:directions[i]], footerTitles[i], @"", 118 - i * 24);
+	}
+	field(printing, @"printMargins", @"Margins in mm (left, top, right, bottom)",
+		[NSString stringWithFormat:@"%@, %@, %@, %@", [resources setting:@"printMarginLeft" fallback:@18],
+			[resources setting:@"printMarginTop" fallback:@18], [resources setting:@"printMarginRight" fallback:@18],
+			[resources setting:@"printMarginBottom" fallback:@18]], 22);
+	NSView *printLayout = tab(@"pref-print-layout", @"Print layout");
+	checks(printLayout, @[@[@"printFormFeedBreak", @"Print form feed as a page break", @NO]], 236);
+	field(printLayout, @"printHeaderFontName", @"Header font", @"", 194);
+	field(printLayout, @"printHeaderFontSize", @"Header font size", @"9", 162);
+	field(printLayout, @"printFooterFontName", @"Footer font", @"", 114);
+	field(printLayout, @"printFooterFontSize", @"Footer font size", @"9", 82);
+
+	NSView *accessory = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 520, 350)];
+	[accessory addSubview:tabs];
+	NSPopUpButton *sections = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
+	[sections addItemsWithTitles:[tabs.tabViewItems valueForKey:@"label"]];
+	[sections setAccessibilityLabel:localized(@"pref-category", @"Preferences category")];
+	__attribute__((objc_precise_lifetime)) PreferenceSectionPicker *picker = [PreferenceSectionPicker new];
+	picker.tabs = tabs;
+	sections.target = picker;
+	sections.action = @selector(select:);
+	Place(accessory, sections, 12, 316, 290, 26);
+	window.accessoryView = accessory;
 	if ([window runModal] != NSAlertFirstButtonReturn)
 		return;
 	NSMutableDictionary *settings = [NSMutableDictionary dictionary];
 	NSDictionary<NSString *, NSArray<NSNumber *> *> *ranges =
 		@{@"tabWidth": @[@1, @32], @"autocompleteMinimum": @[@1, @9], @"checkpointMilliseconds": @[@250, @600000],
 			@"largeFileMegabytes": @[@1, @4096], @"caretWidth": @[@0, @20], @"caretBlink": @[@0, @5000],
-			@"currentLineFrameWidth": @[@1, @6],
+			@"printHeaderFontSize": @[@1, @72], @"printFooterFontSize": @[@1, @72], @"currentLineFrameWidth": @[@1, @6],
 			@"inSelectionAutocheckThreshold": @[@0, @1024], @"fillFindWhatThreshold": @[@1, @16383]};
 	for (NSString *name in controls)
 	{
 		NSControl *control = controls[name];
-		if ([control isKindOfClass:NSButton.class] && ![control isKindOfClass:NSPopUpButton.class])
+		if ([name isEqualToString:@"printMargins"])
+		{
+			NSArray *values = [control.stringValue componentsSeparatedByString:@","];
+			NSArray *keys = @[@"printMarginLeft", @"printMarginTop", @"printMarginRight", @"printMarginBottom"];
+			if (values.count == keys.count)
+				for (NSUInteger i = 0; i < keys.count; ++i)
+					settings[keys[i]] = @(MAX(0, MIN(100, [values[i] doubleValue])));
+		}
+		else if ([control isKindOfClass:NSButton.class] && ![control isKindOfClass:NSPopUpButton.class])
 			settings[name] = @(((NSButton *)control).state == NSControlStateValueOn);
 		else if ([control isKindOfClass:NSPopUpButton.class])
 			settings[name] = @(((NSPopUpButton *)control).indexOfSelectedItem);
