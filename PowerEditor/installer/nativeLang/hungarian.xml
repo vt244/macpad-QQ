@@ -41,7 +41,7 @@
 					<Item subMenuId="edit-onSelection" name="A ki&amp;jelölt szövegrész alapján"/>
 					<Item subMenuId="edit-multiSelectALL" name="Többszörös ki&amp;jelölés az ÖSSZES egyezővel"/>
 					<Item subMenuId="edit-multiSelectNext" name="Többszörös ki&amp;jelölés a következő egyezővel"/>
-					<Item subMenuId="edit-readonlyInNotepad++" name="Csak olvashat&amp;ó a macpad++-ban"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="Csak olvashat&amp;ó a macpadqq-ban"/>
 					<Item subMenuId="search-changeHistory" name="Mó&amp;dosítási előzmények"/>
 					<Item subMenuId="search-markAll" name="Az ö&amp;sszes elem kiemelése"/>
 					<Item subMenuId="search-markOne" name="A jele&amp;nlegi elem kiemelése"/>
@@ -369,17 +369,17 @@
 					<Item id="46016" name="Nincs (hagyományos szöveg)"/>
 					<Item id="46250" name="&amp;Felhasználói nyelvek beállítása…"/>
 					<Item id="46300" name="&amp;A felhasználói nyelvek mappája…"/>
-					<Item id="46301" name="A &amp;macpad++ felhasználóinyelv-gyűjteménye"/>
+					<Item id="46301" name="A &amp;macpadqq felhasználóinyelv-gyűjteménye"/>
 					<Item id="46180" name="Felhasználói nyelv"/>
-					<Item id="47000" name="A macpad++ &amp;névjegye"/>
+					<Item id="47000" name="A macpadqq &amp;névjegye"/>
 					<Item id="47010" name="&amp;Parancssori paraméterek…"/>
-					<Item id="47001" name="A macpad++ &amp;honlapja"/>
-					<Item id="47002" name="A macpad++ p&amp;rojekt weboldala"/>
-					<Item id="47003" name="A macpad++ &amp;online Felhasználói kézikönyve"/>
-					<Item id="47004" name="A macpad++ &amp;közössége (fórum)"/>
+					<Item id="47001" name="A macpadqq &amp;honlapja"/>
+					<Item id="47002" name="A macpadqq p&amp;rojekt weboldala"/>
+					<Item id="47003" name="A macpadqq &amp;online Felhasználói kézikönyve"/>
+					<Item id="47004" name="A macpadqq &amp;közössége (fórum)"/>
 					<Item id="47012" name="H&amp;ibakeresési adatok…"/>
 					<Item id="47005" name="&amp;További bővítmények"/>
-					<Item id="47006" name="A macpad++ &amp;frissítése"/>
+					<Item id="47006" name="A macpadqq &amp;frissítése"/>
 					<Item id="47009" name="A frissítés pro&amp;xybeállításai…"/>
 					<Item id="48005" name="&amp;Bővítmények importálása…"/>
 					<Item id="48006" name="&amp;Stílustémák importálása…"/>
@@ -450,7 +450,7 @@
 				<Item CMDID="41016" name="Lomtárba helyezés"/>
 				<Item CMDID="41014" name="Újratöltés"/>
 				<Item CMDID="41010" name="Nyomtatás…"/>
-				<Item CMDID="42028" name="Csak olvasható a macpad++-ban"/>
+				<Item CMDID="42028" name="Csak olvasható a macpadqq-ban"/>
 				<Item CMDID="42033" name="Csak olvasható attribútum a Windowsban"/>
 				<Item CMDID="2" name="Másolás a vágólapra"/>
 				<Item CMDID="42029" name="Teljes elérési út másolása"/>
@@ -975,7 +975,7 @@
 					<Item id="6132" name="&amp;A jobb oldali parancsikonok (＋ ▼ ✕) elrejtése"/>
 					<Item id="6133" name="Állapotsor"/>
 					<Item id="6134" name="El&amp;rejtés"/>
-					<Item id="7165" name="Párbeszédablak-betűtípus (macpad++-újraindítás után)"/>
+					<Item id="7165" name="Párbeszédablak-betűtípus (macpadqq-újraindítás után)"/>
 					<Item id="7166" name="&amp;Méret:"/>
 					<Item id="7168" name="Né&amp;v:"/>
 				</Global>
@@ -1145,7 +1145,7 @@
 				</DefaultDir>
 
 				<FileAssoc title="Fájltársítások">
-					<Item id="4008" name="A beállításhoz, kérjük, zárja be a macpad++-t, majd rendszergazdaként indítsa újra"/>
+					<Item id="4008" name="A beállításhoz, kérjük, zárja be a macpadqq-t, majd rendszergazdaként indítsa újra"/>
 					<Item id="4009" name="&amp;Elérhető kiterjesztések:"/>
 					<Item id="4010" name="&amp;Társított kiterjesztések:"/>
 				</FileAssoc>
@@ -1231,7 +1231,7 @@
 				</Print>
 
 				<Searching title="Keresés">
-					<Item id="6902" name="&amp;Állandó szélességű betűtípus használata a „Keresés” panelben (macpad++-újraindítást igényel)"/>
+					<Item id="6902" name="&amp;Állandó szélességű betűtípus használata a „Keresés” panelben (macpadqq-újraindítást igényel)"/>
 					<Item id="6903" name="A „K&amp;eresés” panel megnyitva tartása a „Keresés eredményei” ablakba adott találatok esetén"/>
 					<Item id="6906" name="„Ke&amp;resés eredményei” ablak: talált soronként csak egy bejegyzés mutatása (kompakt megjelenítés)"/>
 					<Item id="6907" name="A „Keresés” párbeszédpanel meghívásakor"/>
@@ -1294,11 +1294,11 @@
 				</AutoCompletion>
 
 				<MultiInstance title="Példányszámok és dátumok">
-					<Item id="6151" name="A macpad++ többpéldányos beállításai *"/>
+					<Item id="6151" name="A macpadqq többpéldányos beállításai *"/>
 					<Item id="6152" name="M&amp;unkamenet-megnyitás új példányban (ill. automatikus -mentés kilépéskor)"/>
 					<Item id="6153" name="&amp;Mindig többpéldányos mód használata"/>
 					<Item id="6154" name="&amp;Alapértelmezett (egyetlen példány futtatása)"/>
-					<Item id="6155" name="* A módosítások érvénybe léptetéséhez a macpad++ újraindítása szükséges"/>
+					<Item id="6155" name="* A módosítások érvénybe léptetéséhez a macpadqq újraindítása szükséges"/>
 					<Item id="6171" name="A dátum- és időbeillesztés testreszabása"/>
 					<Item id="6175" name="A &amp;dátum-idő sorrend megfordítása (rövid és hosszú formátumok esetén)"/>
 					<Item id="6172" name="&amp;Egyéni formátum:"/>
@@ -1381,8 +1381,8 @@
 					</ComboBox>
 					<ComboBox id="6364">
 						<Element name="Kikapcsolva"/>
-						<Element name="Engedélyezve macpad++-indításkor"/>
-						<Element name="Engedélyezve macpad++-bezáráskor"/>
+						<Element name="Engedélyezve macpadqq-indításkor"/>
+						<Element name="Engedélyezve macpadqq-bezáráskor"/>
 					</ComboBox>
 					<Item id="6308" name="az értesítési területre"/>
 					<Item id="6363" name="renderelési mód"/>
@@ -1470,7 +1470,7 @@ Ebben az esetben a „Gépház” párbeszédpanel „Egyéb” szakasza alatt k
 				<Item id="7" name="&amp;Nem"/>
 				<Item id="4" name="Igen, &amp;mindig"/>
 			</DoSaveAll><!-- HowToReproduce: Check the 'Enable Save All confirm dialog' checkbox in Preference->MISC, now click 'Save all' -->
-			<NetworkPathWarning title="macpad++-munkamenet betöltése" title2="Kattintható „file://”-hivatkozás" title3="A toolbarButtonsConf.xml betöltése" title4="A projektpanel XML-fájljának betöltése">
+			<NetworkPathWarning title="macpadqq-munkamenet betöltése" title2="Kattintható „file://”-hivatkozás" title3="A toolbarButtonsConf.xml betöltése" title4="A projektpanel XML-fájljának betöltése">
 				<Item id="1771" name="Figyelmeztetés hálózati elérési úttal kapcsolatban:
 
 $STR_REPLACE$
@@ -1489,8 +1489,8 @@ Mindenképpen betölti?"/>
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ is a place holder, don't translate it -->
-			<ContextMenuXmlEditWarning title="Felugró menü szerkesztése" message="A contextMenu.xml fájl szerkesztésével a macpad++ helyi menüje módosítható.
-A fájl mentése után a módosítások érvénybe léptetéséhez a macpad++ újraindítása szükséges."/>
+			<ContextMenuXmlEditWarning title="Felugró menü szerkesztése" message="A contextMenu.xml fájl szerkesztésével a macpadqq helyi menüje módosítható.
+A fájl mentése után a módosítások érvénybe léptetéséhez a macpadqq újraindítása szükséges."/>
 			<SaveCurrentModifWarning title="A módosítások mentése javasolt" message="Javasoljuk a jelenlegi módosítások mentését.
 Az elmentett módosítások nem vonhatók vissza.
 
@@ -1500,9 +1500,9 @@ Az elmentett módosítások nem vonhatók vissza.
 
 Biztosan folytatja?"/><!-- HowToReproduce: when you openned file is modified and saved, then you are changing file encoding. -->
 			<CannotMoveDoc title="Áthelyezés új alkalmazáspéldányba" message="A dokumentum módosítva lett. Kérjük, mentse el, majd próbálja újra"/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
-			<DocReloadWarning title="A fájl újratöltése" message="Biztosan újratölti az aktuális fájlt? Ezzel elvesznek a macpad++-ban végzett módosítások"/>
+			<DocReloadWarning title="A fájl újratöltése" message="Biztosan újratölti az aktuális fájlt? Ezzel elvesznek a macpadqq-ban végzett módosítások"/>
 			<FileLockedWarning title="Sikertelen mentés" message="Kérjük, ellenőrizze, hogy a fájl nincs-e megnyitva másik alkalmazásban"/>
-			<FileAlreadyOpenedInNpp title="Sikertelen mentés" message="A fájl már meg van nyitva a macpad++-ban"/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
+			<FileAlreadyOpenedInNpp title="Sikertelen mentés" message="A fájl már meg van nyitva a macpadqq-ban"/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
 			<RenameTabTemporaryNameAlreadyInUse title="Sikertelen átnevezés" message="A megadott név már használatban van egy másik fülön"/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
 			<RenameTabTemporaryNameIsEmpty title="Sikertelen átnevezés" message="A megadott név nem lehet üres, illetve nem tartalmazhat csak szóköz(öke)t vagy tabulátor(oka)t"/><!-- HowToReproduce: Rename the tab of an untitled document and provide an empty string or only some white speces. -->
 			<DeleteFileFailed title="Sikertelen törlés" message="A fájl törlése sikertelen"/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
@@ -1514,7 +1514,7 @@ vagy pedig a megadott mappához írási jogosultság szükséges.
 A felhőben tárolandó beállításai törlődnek. Kérjük, állítson be megfelelő értéket a „Gépház”-ban"/>
 			<FilePathNotFoundWarning title="Elérési út megnyitása" message="A megnyitni kívánt elérési út nem létezik"/>
 			<SessionFileInvalidError title="Sikertelen munkamenet-betöltés" message="A munkamenetfájl sérült vagy érvénytelen"/><!-- HowToReproduce: Save current session via menu "File -> Save Session...", use another editor to modify the session you saved to make it an invalid xml file. Then load this invalid session via menu "File -> Load Session...". -->
-			<DroppingFolderAsProjectModeWarning title="Érvénytelen művelet" message="A macpad++-ra vagy csak fájlokat, vagy csak mappákat ejthet (mindkettőt nem), mivel a „fogd és vidd” műveletre projektmód van beállítva.
+			<DroppingFolderAsProjectModeWarning title="Érvénytelen művelet" message="A macpadqq-ra vagy csak fájlokat, vagy csak mappákat ejthet (mindkettőt nem), mivel a „fogd és vidd” műveletre projektmód van beállítva.
 A művelet végrehajtásához a „Gépház” párbeszédpanel „Alapértelmezett mappa” szakaszában az „Egy mappa »fogd és vidd« ejtésekor a fájlok megnyitása…” lehetőség engedélyezése szükséges"/>
 			<SortingError title="Rendezési hiba" message="Nem hajtható végre számszerű rendezés a(z) $INT_REPLACE$. sor miatt"/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
 			<SortLocaleMultiple title="Nem történt rendezés" message="Nem támogatott a többszörös kijelöléssel történő rendezés"/><!-- HowToReproduce: Make a multiple selection and choose Edit | Line Operations | Sort Lines In Locale Order. -->
@@ -1538,7 +1538,7 @@ Megtartja a fájlt a szerkesztőben?"/>
 			<DoDeleteOrNot title="Fájl törlése" message="A(z) „$STR_REPLACE$” fájl
 át lesz helyezve a Lomtárba, ez a dokumentum pedig bezáródik.
 Biztosan folytatja?"/>
-			<NoBackupDoSaveFile title="Mentés" message="A biztonságimentés-fájl nem található (macpad++-on kívülről törölve).
+			<NoBackupDoSaveFile title="Mentés" message="A biztonságimentés-fájl nem található (macpadqq-on kívülről törölve).
 Mentés nélkül az adatok el fognak veszni.
 El szeretné menteni a(z) „$STR_REPLACE$” fájlt?"/>
 			<DoReloadOrNot title="Újratöltés" message="„$STR_REPLACE$”
@@ -1548,13 +1548,13 @@ Szeretné újratölteni?"/>
 			<DoReloadOrNotAndLooseChange title="Újratöltés" message="„$STR_REPLACE$”
 
 Ezt a fájlt módosította egy másik alkalmazás.
-Szeretné újratölteni, és elvetni a macpad++-ban végzett módosításokat?"/>
+Szeretné újratölteni, és elvetni a macpadqq-ban végzett módosításokat?"/>
 			<PrehistoricSystemDetected title="Őskori rendszer észlelve" message="Úgy tűnik, hogy még mindig egy őskori rendszert használ. Sajnáljuk, de ez a funkció csak modern operációs rendszereken működik."/><!-- HowToReproduce: Launch "Document Map" under Windows XP. -->
-			<XpUpdaterProblem title="macpad++-frissítés" message="A macpad++ frissítőrendszere (a Windows XP elavult biztonsági rétege miatt) nem kompatibilis az XP-vel.
-Meglátogatja a macpad++ weboldalát a legújabb verzió letöltéséhez?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
+			<XpUpdaterProblem title="macpadqq-frissítés" message="A macpadqq frissítőrendszere (a Windows XP elavult biztonsági rétege miatt) nem kompatibilis az XP-vel.
+Meglátogatja a macpadqq weboldalát a legújabb verzió letöltéséhez?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
 			<DocTooDirtyToMonitor title="Fájlfelügyeleti probléma" message="A dokumentum módosítva lett. Kérjük, mentse el a módosításokat, mielőtt felügyeli a fájlt"/>
 			<DocNoExistToMonitor title="Fájlfelügyeleti probléma" message="A fájl felügyeletéhez léteznie kell annak"/>
-			<FileTooBigToOpen title="Fájlméretprobléma" message="A fájl túl nagy ahhoz, hogy a macpad++ megnyithassa azt"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
+			<FileTooBigToOpen title="Fájlméretprobléma" message="A fájl túl nagy ahhoz, hogy a macpadqq megnyithassa azt"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
 			<FileLoadingException title="Kivétel hibakódja: $STR_REPLACE$" message="Hiba történt a fájl betöltésekor!"/>
 			<WantToOpenHugeFile title="Figyelmeztetés nagyméretű fájl megnyitására" message="Egy 2 GB-nál is nagyobb fájl megnyitása több percbe is telhet.
 Biztosan megnyitja?"/>
@@ -1597,22 +1597,22 @@ kérjük, adjon meg más elnevezést"/>
 			<SCMapperDoDeleteOrNot title="Billentyűparancs" message="Biztosan eltávolítja ezt a billentyűparancsot?"/>
 			<FindCharRangeValueError title="Értéktartomány-probléma" message="Kérjük, egy 0 és 255 közötti értéket adjon meg"/> <!-- HowToReproduce: Search menu, then Find characters in range, select Custom range, enter 999 in either edit box, press Find. -->
 			<OpenInAdminMode title="Sikertelen mentés" message="A fájl mentése sikertelen volt; lehet, hogy védett.
-El szeretné indítani a macpad++-t rendszergazdaként?"/>
+El szeretné indítani a macpadqq-t rendszergazdaként?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Sikertelen mentés" message="A fájl mentése sikertelen volt; lehet, hogy védett.
-El szeretné indítani a macpad++-t rendszergazdaként?"/>
-			<OpenInAdminModeFailed title="A rendszergazdaként futtatás sikertelen" message="A macpad++ nem futtatható rendszergazdaként."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
+El szeretné indítani a macpadqq-t rendszergazdaként?"/>
+			<OpenInAdminModeFailed title="A rendszergazdaként futtatás sikertelen" message="A macpadqq nem futtatható rendszergazdaként."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
 			<ViewInBrowser title="A jelenlegi fájl megnyitása böngészőben" message="Az alkalmazás nem található a rendszerben"/>
-			<ExitToUpdatePlugins title="A macpad++ bezárása következik" message="Ha az IGEN-re kattint, a műveletek folytatásához Ön kilép a macpad++-ból.
-A műveletek elvégzése után a macpad++ újraindul.
+			<ExitToUpdatePlugins title="A macpadqq bezárása következik" message="Ha az IGEN-re kattint, a műveletek folytatásához Ön kilép a macpadqq-ból.
+A műveletek elvégzése után a macpadqq újraindul.
 Szeretné folytatni?"/>
-			<NeedToRestartToLoadPlugins title="A macpad++ újraindítást igényel" message="A telepített bővítmények betöltéséhez a macpad++ újraindítása szükséges"/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
-			<ChangeHistoryEnabledWarning title="A macpad++ újraindítást igényel" message="A változáselőzmények megjelenítéséhez a macpad++ újraindítása szükséges"/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
-			<WindowsSessionExit title="macpad++ - kilépés a Windows-munkamenetből" message="A Windows-munkamenet hamarosan leáll, de néhány adat nincs mentve. Szeretne most kilépni a macpad++ alkalmazásból?"/>
+			<NeedToRestartToLoadPlugins title="A macpadqq újraindítást igényel" message="A telepített bővítmények betöltéséhez a macpadqq újraindítása szükséges"/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
+			<ChangeHistoryEnabledWarning title="A macpadqq újraindítást igényel" message="A változáselőzmények megjelenítéséhez a macpadqq újraindítása szükséges"/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
+			<WindowsSessionExit title="macpadqq - kilépés a Windows-munkamenetből" message="A Windows-munkamenet hamarosan leáll, de néhány adat nincs mentve. Szeretne most kilépni a macpadqq alkalmazásból?"/>
 			<LanguageMenuCompactWarning title="Kompakt „Nyelv” menü" message="Ez a beállítás a következő indításkor lép érvénybe"/><!-- HowToReproduce: toggle "Make language menu compact" via Preferences dialog "Language/Language Menu. -->
 			<SwitchUnsavedThemeWarning title="A(z) „$STR_REPLACE$” stílus módosítása" message="A nem mentett módosítások el lesznek vetve!
 Szeretné menteni a módosításokat témaváltás előtt?"/><!-- HowToReproduce: In the Style Configurator dialog change some theme and switch to other theme without saving. -->
 			<FullReadOnlySavingForbidden title="Sikertelen mentés" message="Nem menthető el a fájl.
-A macpad++ az összes dokumentumot csak olvashatóként kezeli, ami megakadályozza a fájl mentését"/>
+A macpadqq az összes dokumentumot csak olvashatóként kezeli, ami megakadályozza a fájl mentését"/>
 			<NotEnoughRoom4Saving title="Sikertelen mentés" message="Nem sikerült menteni a fájlt.
 Úgy tűnik, nincs elég hely a lemezen a fájl mentéséhez. A fájl nem lett elmentve."/>
 			<FileInaccessibleUserSession title="A fájl(ok) elérése sikertelen" message="Nem érhető el egy vagy több fájl a kézzel mentett munkamenetben: „$STR_REPLACE$”. Ezek ugyanakkor megnyithatók helykitöltő üres és csak olvasható dokumentumokként.
@@ -1625,8 +1625,8 @@ MEGJEGYZÉS: ha úgy dönt, hogy nem hoz létre helykitöltő dokumentumokat, es
 Létre szeretné hozni ezeket a helykitöltőket?
 
 MEGJEGYZÉS: ha úgy dönt, hogy nem hoz létre helykitöltő dokumentumokat, esetleg később bezárja őket, munkamenete MÓDOSÍTVA LESZ KILÉPÉSKOR! Javasoljuk, hogy mielőbb készítsen biztonsági mentést a „session.xml” fájlról."/>
-			<RTLvsDirectWrite title="Nem használható a „jobbról balra” szövegirány" message="A „jobbról balra” (RTL) szövegirány nem kompatibilis a DirectWrite móddal. Kérjük, kapcsolja ki a DirectWrite-ot a „Gépház” párbeszédpanel „Egyéb” szakaszában, és indítsa újra a macpad++-t."/>
-			<FileMemoryAllocationFailed title="Kivétel: sikertelen memóriakiosztás a fájloknak" message="Valószínűleg nincs elegendő szabad memória a macpad++ által betöltendő fájlok számára."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
+			<RTLvsDirectWrite title="Nem használható a „jobbról balra” szövegirány" message="A „jobbról balra” (RTL) szövegirány nem kompatibilis a DirectWrite móddal. Kérjük, kapcsolja ki a DirectWrite-ot a „Gépház” párbeszédpanel „Egyéb” szakaszában, és indítsa újra a macpadqq-t."/>
+			<FileMemoryAllocationFailed title="Kivétel: sikertelen memóriakiosztás a fájloknak" message="Valószínűleg nincs elegendő szabad memória a macpadqq által betöltendő fájlok számára."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
 			<FindRegexBackwardDisabled title="Reguláris kifejezéssel nem használható a visszafelé történő keresés" message="A feltételezhető váratlan eredmények miatt alapértelmezetten nem érhető el a reguláris visszafelé keresés. Visszafelé történő kereséshez a „Keresés” párbeszédpanelt megnyitva válassza a „Hagyományos” vagy a „Kiterjesztett” keresési módot a „Reguláris kifejezés” lehetőség helyett.
 Nyomja meg az OK gombot a „Keresés” párbeszédpanel megnyitásához vagy aktívvá tételéhez.
 
@@ -1634,18 +1634,18 @@ Ha szüksége van a visszafelé történő reguláris keresésre, a Felhasznál�
 			<PrintError title="0" message="Nem indítható el a dokumentum nyomtatása"/><!-- Use title="0" to use Windows OS default translated "Error" title. -->
 			<FindAutoChangeOfInSelectionWarning title="Keresési figyelmeztetés" message="Az „A kijelölésben” jelölőnégyzet állapota automatikusan módosítva lett.
 Kérjük, a művelet végrehajtása előtt ellenőrizze a keresési feltételeket"/> <!-- HowToReproduce: https://github.com/notepad-plus-plus/notepad-plus-plus/issues/14897#issuecomment-2564316224 -->
-			<Need2Restart2ShowMenuShortcuts title="A macpad++ újraindítása szükséges" message="Újra kell indítani a macpad++-t a jobb oldali parancsikonok megjelenítéséhez"/>
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="A fájl csak olvasható attribútumának megváltoztatása sikertelen" message="Kérjük, futtassa a macpad++-t rendszergazdaként a fájl attribútumának módosításához"/>
+			<Need2Restart2ShowMenuShortcuts title="A macpadqq újraindítása szükséges" message="Újra kell indítani a macpadqq-t a jobb oldali parancsikonok megjelenítéséhez"/>
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="A fájl csak olvasható attribútumának megváltoztatása sikertelen" message="Kérjük, futtassa a macpadqq-t rendszergazdaként a fájl attribútumának módosításához"/>
 			<ReadOnlyFileCannotBeSaved title="Sikertelen mentés – A fájl csak olvasható" message="„$STR_REPLACE$”
 A fájl csak olvasható, emiatt nem menthető el.
 Kérjük, törölje a dokumentum csak olvasható beállítását, majd mentse el a fájlt."/>
 			<ShortcutsXmlHMACMissing title="Biztonsági figyelmeztetés" message="A config.xml fájlból hiányoznak a shortcuts.xml biztonsági adatai.
 
-Biztonsági okokból a macpad++ ellenőrzi a shortcuts.xml integritását. Egyéni parancsai futtatásához, kérjük, tekintse át a megnyitott shortcuts.xml fájlt. Ha a fájl tartalmát rendben találja, válassza a „Futtatás” menüből az „A shortcuts.xml érvényesítése” lehetőséget a megerősítéshez."/>
+Biztonsági okokból a macpadqq ellenőrzi a shortcuts.xml integritását. Egyéni parancsai futtatásához, kérjük, tekintse át a megnyitott shortcuts.xml fájlt. Ha a fájl tartalmát rendben találja, válassza a „Futtatás” menüből az „A shortcuts.xml érvényesítése” lehetőséget a megerősítéshez."/>
 			<ShortcutsXmlTampered title="Biztonsági figyelmeztetés" message="Úgy tűnik, hogy a shortcuts.xml fájl kézzel lett módosítva.
 
 Biztonsági okokból, kérjük, tekintse át a megnyitott shortcuts.xml fájlt. Ha a fájl tartalmát rendben találja, válassza a „Futtatás” menüből az „A shortcuts.xml érvényesítése” lehetőséget a megerősítéshez."/>
-			<SymlinkLoadingWarning title="Figyelem: a szimbolikus linkek betöltése a macpad++ lefagyásához vezethet" message="A szimbolikus linkek betöltésének engedélyezése a „Mappa munkaterületként” panelen azt eredményezheti, hogy a macpad++ végtelen ciklusba kerül és lefagy.
+			<SymlinkLoadingWarning title="Figyelem: a szimbolikus linkek betöltése a macpadqq lefagyásához vezethet" message="A szimbolikus linkek betöltésének engedélyezése a „Mappa munkaterületként” panelen azt eredményezheti, hogy a macpadqq végtelen ciklusba kerül és lefagy.
 Ez akkor fordulhat elő, ha a könyvtár szimbolikus linkjei a szülőmappákra mutatnak, vagy körkörös hivatkozásokat képeznek.
 Csak akkor folytassa, ha tisztában van a kockázatokkal."/>
 		</MessageBox>
@@ -1757,7 +1757,7 @@ Csak akkor folytassa, ha tisztában van a kockázatokkal."/>
 		</ProjectManager>
 		<MiscStrings>
 			<!-- $INT_REPLACE$  and $STR_REPLACE$ are a place holders, don't translate these place holders -->
-			<word-chars-list-tip value="A beállítás lehetővé teszi, hogy az aktuális szóegységkarakterek mellé további karaktereket vegyen fel, melyeket a macpad++ dupla kattintással történő kijelölés, ill. keresés esetén (ha a „Teljes szóegyezés” be van jelölve) egyetlen szó részeiként vesz figyelembe"/><!-- HowToReproduce: In "Delimiter" section of Preferences dialog, hover your mouse on the "?" button. -->
+			<word-chars-list-tip value="A beállítás lehetővé teszi, hogy az aktuális szóegységkarakterek mellé további karaktereket vegyen fel, melyeket a macpadqq dupla kattintással történő kijelölés, ill. keresés esetén (ha a „Teljes szóegyezés” be van jelölve) egyetlen szó részeiként vesz figyelembe"/><!-- HowToReproduce: In "Delimiter" section of Preferences dialog, hover your mouse on the "?" button. -->
 
 			<!-- Don't translate "(&quot;EOL custom color&quot;)" -->
 			<eol-custom-color-tip value="Ugrás a „Stílusbeállítások” párbeszédpanelhez a sorvégződések alapértelmezett egyéni színeinek („EOL custom color”) beállításához"/>
@@ -1768,13 +1768,13 @@ Csak akkor folytassa, ha tisztában van a kockázatokkal."/>
 			<word-chars-list-warning-end value=" (is) tartalmaz!"/><!-- HowToReproduce: In "Delimiter" section of Preferences dialog, check "Add your character as part of word\r(don't choose it unless you know what you're doing)", then type a white-space in the text field. -->
 			<backup-select-folder value="A biztonsági mentések mappája"/><!-- HowToReproduce: Settings > Preferences > Backup > [...] -->
 			<cloud-invalid-warning value="Kérjük, adjon meg érvényes elérési utat"/>
-			<cloud-restart-warning value="Kérjük, az érvénybe léptetéshez ne felejtse újraindítani a macpad++-t"/>
-			<cloud-select-folder value="Mappa kiválasztása a macpad++ beállításainak tárolásához"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
+			<cloud-restart-warning value="Kérjük, az érvénybe léptetéshez ne felejtse újraindítani a macpadqq-t"/>
+			<cloud-select-folder value="Mappa kiválasztása a macpadqq beállításainak tárolásához"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
 			<default-open-save-select-folder value="Alapértelmezett mappa kiválasztása"/><!-- HowToReproduce: Settings > Preferences > Default Directory > [...] -->
 			<shift-change-direction-tip value="Shift + Enter billentyűkombinációval az ellenkező irányban kereshet"/>
 			<two-find-buttons-tip value="Kétgombos keresés"/>
 			<confirm-replace-in-all-open-docs-tip value="Megerősítés kérése a „Csere a megnyitott dokumentumokban” művelet végrehajtása előtt"/>
-			<replace-and-stop-tip value="Bekapcsolva a csere után a macpad++ nem ugrik a következő előfordulásra"/>
+			<replace-and-stop-tip value="Bekapcsolva a csere után a macpadqq nem ugrik a következő előfordulásra"/>
 			<find-in-files-filter-tip value="Keresés a cpp-, cxx-, h-, hxx- és hpp-fájlokban:
 *.cpp *.cxx *.h *.hxx *.hpp
 
@@ -1934,7 +1934,7 @@ Ha a „Haladó szintű” módot választja, de nem a fenti nyelvek fájljait s
 
 			<!-- Don't translate "Global override" and "Default Style" -->
 			<global-override-tip value="A „Global override”-lehetőségek itt történő bekapcsolása minden nyelv stílusát felülírja az adott beállítással. Ha bizonytalan, valószínűleg a „Default Style” beállításait szeretné használni"/>
-			<scintillaRenderingTechnology-tip value="Javíthatja a különleges karakterek megjelenítését, vagy megoldhat egyes grafikai problémákat – a módosítások érvénybe léptetéséhez a macpad++ újraindítása szükséges"/>
+			<scintillaRenderingTechnology-tip value="Javíthatja a különleges karakterek megjelenítését, vagy megoldhat egyes grafikai problémákat – a módosítások érvénybe léptetéséhez a macpadqq újraindítása szükséges"/>
 
 			<!-- Due to the limited space on the status bar, if the translations for 'length' & 'lines' are much longer than the English words, please leave them in English instead of translating them. -->
 			<statusbar-length-lines value="Hossz: $STR_REPLACE1$    Sorok: $STR_REPLACE2$"/>
@@ -1947,12 +1947,12 @@ Ha a „Haladó szintű” módot választja, de nem a fenti nyelvek fájljait s
 			<statusbar-Sel value="Kij.: "/>
 			<statusbar-Sel-number value="Kij."/>
 			<toolbar-accent-tip value="A beállítással az eszköztár ikonjaira a Windows kiemelőszíne alkalmazható. A kiemelőszín egy, a Windows gombjaiban, szegélyeiben és a Start menüben az elemek hangsúlyozására használt szín. A módosításhoz kattintson a ⚙ Beállítások » Személyre szabás » Színek lehetőségre, majd válassza ki a kívánt Kiemelőszínt"/>
-			<len-limit-exceeded-tip value="Karakterkorlát túllépve: előfordulhat, hogy a felvett szöveg meghaladja a megengedett hosszúságot, emiatt lehet, hogy rövidítve lesz, valamint a levágott részt nem menti a macpad++ a következő munkamenethez"/>
-			<max-len-on-search-tip value="Előfordulhat, hogy a felvett szöveg meghaladja a megengedett hosszúságot, emiatt lehet, hogy rövidítve lesz, valamint a levágott részt nem menti a macpad++ a következő munkamenethez"/>
+			<len-limit-exceeded-tip value="Karakterkorlát túllépve: előfordulhat, hogy a felvett szöveg meghaladja a megengedett hosszúságot, emiatt lehet, hogy rövidítve lesz, valamint a levágott részt nem menti a macpadqq a következő munkamenethez"/>
+			<max-len-on-search-tip value="Előfordulhat, hogy a felvett szöveg meghaladja a megengedett hosszúságot, emiatt lehet, hogy rövidítve lesz, valamint a levágott részt nem menti a macpadqq a következő munkamenethez"/>
 			<max-len-on-save-tip value="A felvett szöveg rendkívül hosszú, emiatt előfordulhat, hogy nem lehet teljesen menteni a következő munkamenethez"/>
 			<goto-setting-tip value="Keresés a beállítások között"/>
 			<tabbar-tabcompactlabellen-tip value="A terjedelmes lapnevek hosszának korlátozása. A megadott érték alkalmazásához nyomjon Entert. Értéktartomány: 1–257 karakter (a 0 kikapcsolja a levágást)"/>
-			<networkpathwarning-serverwhitelist-tip value="Az aktuális fájl szerverének hozzáadása a macpad++ serverWhiteList.xml fájljához.
+			<networkpathwarning-serverwhitelist-tip value="Az aktuális fájl szerverének hozzáadása a macpadqq serverWhiteList.xml fájljához.
 
 További információkért kattintson a gombra az online Felhasználói kézikönyv kapcsolódó szakaszának megnyitásához"/>
 		</MiscStrings>

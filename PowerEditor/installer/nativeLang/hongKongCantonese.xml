@@ -42,7 +42,7 @@
 					<Item subMenuId="edit-onSelection" name="處理揀選範圍(&amp;O)"/>
 					<Item subMenuId="edit-multiSelectALL" name="多重選擇：全部"/><!-- #new v8.6.0 -->
 					<Item subMenuId="edit-multiSelectNext" name="多重選擇：下個"/><!-- #new v8.6.0 -->
-					<Item subMenuId="edit-readonlyInNotepad++" name="喺 macpad++ set 做唯讀"/><!-- #new #next -->
+					<Item subMenuId="edit-readonlyInNotepad++" name="喺 macpadqq set 做唯讀"/><!-- #new #next -->
 					<Item subMenuId="search-changeHistory" name="修改紀錄"/><!-- #new v8.5.5 -->
 					<Item subMenuId="search-markAll" name="成份文件咁做標記(&amp;A)"/>
 					<Item subMenuId="search-markOne" name="標記一次(&amp;O)"/><!-- #new v7.9.6 -->
@@ -402,19 +402,19 @@
 					<Item id="46016" name="冇（齋字）"/><!-- #new v8.7.0 -->
 					<Item id="46250" name="定義你嘅程式語言..."/>
 					<Item id="46300" name="打開自訂程式語言嘅資料夾..."/>
-					<Item id="46301" name="macpad++ 自訂程式語言收藏庫"/><!-- #new v8.1.9.3 -->
+					<Item id="46301" name="macpadqq 自訂程式語言收藏庫"/><!-- #new v8.1.9.3 -->
 					<Item id="46180" name="通用使用者設定"/>
 
 					<!-- type: Help menu -->
-					<Item id="47000" name="關於 macpad++"/>
+					<Item id="47000" name="關於 macpadqq"/>
 					<Item id="47010" name="Command line 參數..."/>
-					<Item id="47001" name="macpad++ 官方網站"/>
-					<Item id="47002" name="macpad++ 開發源碼網站"/>
-					<Item id="47003" name="macpad++ 網上用戶手冊"/>
-					<Item id="47004" name="macpad++ 社群論壇"/>
+					<Item id="47001" name="macpadqq 官方網站"/>
+					<Item id="47002" name="macpadqq 開發源碼網站"/>
+					<Item id="47003" name="macpadqq 網上用戶手冊"/>
+					<Item id="47004" name="macpadqq 社群論壇"/>
 					<Item id="47012" name="除錯資訊 (debug info)..."/>
 					<Item id="47005" name="搵外掛"/>
-					<Item id="47006" name="更新 macpad++"/>
+					<Item id="47006" name="更新 macpadqq"/>
 					<Item id="47009" name="設定更新程式嘅代理伺服器..."/>
 
 					<!-- type: Settings menu (cont'd) -->
@@ -505,7 +505,7 @@
 				<Item CMDID="41016" name="掉去垃圾桶"/><!-- #new v8.4.8 -->
 				<Item CMDID="41014" name="喺磁碟重新 load 過"/><!-- #new v8.4.8 -->
 				<Item CMDID="41010" name="Print 出嚟..."/><!-- #new v8.4.8 -->
-				<Item CMDID="42028" name="喺 macpad++ set 做唯讀"/><!-- #new v8.4.8 -->
+				<Item CMDID="42028" name="喺 macpadqq set 做唯讀"/><!-- #new v8.4.8 -->
 				<Item CMDID="42033" name="將檔案屬性 set 做唯讀"/><!-- #new v8.4.8 -->
 				<Item CMDID="2" name="抄去剪貼簿"/><!-- #new v8.4.8 -->
 				<Item CMDID="42029" name="抄低個檔案路徑"/><!-- #new v8.4.8 -->
@@ -1220,7 +1220,7 @@
 				</DefaultDir>
 
 				<FileAssoc title="檔案關聯">
-					<Item id="4008" name="想改下面啲設定，麻煩你閂咗個 macpad++，然後「以系統管理員身份執行」重新打開 macpad++。"/>
+					<Item id="4008" name="想改下面啲設定，麻煩你閂咗個 macpadqq，然後「以系統管理員身份執行」重新打開 macpadqq。"/>
 					<Item id="4009" name="支援嘅副檔名："/>
 					<Item id="4010" name="登記咗嘅副檔名："/>
 				</FileAssoc>
@@ -1311,7 +1311,7 @@
 				</Print>
 
 				<Searching title="搵嘢">
-					<Item id="6902" name="搵／取代對話框啲字用等寬字型（需要重開 macpad++）"/>
+					<Item id="6902" name="搵／取代對話框啲字用等寬字型（需要重開 macpadqq）"/>
 					<Item id="6903" name="搵完嘢，保持開著個對話框"/>
 					<Item id="6904" name="喺所有打開咗嘅文件執行取代之前，要先做確認"/>
 					<Item id="6905" name="取代完唔好跳去另一個關鍵字"/><!-- #new v7.9.6 -->
@@ -1380,7 +1380,7 @@
 					<Item id="6152" name="打開工作階段嗰陣時，開新嘅程式個體（閂佢會自動 save）"/>
 					<Item id="6153" name="幾時都以多重程式個體模式運作"/>
 					<Item id="6154" name="預設（單一程式個體）"/>
-					<Item id="6155" name="* 改過上面嘅設定，要重開 macpad++ 先至會生效"/>
+					<Item id="6155" name="* 改過上面嘅設定，要重開 macpadqq 先至會生效"/>
 					<Item id="6171" name="自訂日期時間插入功能"/><!-- #new v8.1.5 -->
 					<Item id="6175" name="將日期同埋時間調轉（插入完整/簡短日期時間功能）"/><!-- #new v8.1.5 -->
 					<Item id="6172" name="自訂格式："/><!-- #new v8.1.5 -->
@@ -1463,8 +1463,8 @@
 					</ComboBox>
 					<ComboBox id="6364"><!-- #new v8.8.2 -->
 						<Element name="唔搞"/><!-- #new v8.8.2 -->
-						<Element name="啟動 macpad++ 嗰陣"/><!-- #new v8.8.2 -->
-						<Element name="閂 macpad++ 嗰陣"/><!-- #new v8.8.2 -->
+						<Element name="啟動 macpadqq 嗰陣"/><!-- #new v8.8.2 -->
+						<Element name="閂 macpadqq 嗰陣"/><!-- #new v8.8.2 -->
 					</ComboBox>
 					<Item id="6308" name="系統匣"/>
 					<Item id="6363" name="渲染模式"/><!-- #new v8.7.8 -->
@@ -1473,11 +1473,11 @@
 					<Item id="6313" name="靜靜雞喺背景更新"/>
 					<Item id="6325" name="更新後轆去最後一行"/>
 					<Item id="6322" name="工作階段檔案副檔名："/>
-					<Item id="6323" name="自動更新 macpad++"/><!-- #legacy v8.8.1 -->
+					<Item id="6323" name="自動更新 macpadqq"/><!-- #legacy v8.8.1 -->
 					<Item id="6324" name="文件切換器（Ctrl + Tab 掣）"/>
 					<Item id="6331" name="標題列淨係顯示檔案名"/>
 					<Item id="6334" name="自動偵測檔案編碼"/>
-					<Item id="6349" name="使用 DirectWrite（可以令特殊字符呈現得好啲，需要重開 macpad++）"/><!-- #legacy v8.7.7 -->
+					<Item id="6349" name="使用 DirectWrite（可以令特殊字符呈現得好啲，需要重開 macpadqq）"/><!-- #legacy v8.7.7 -->
 					<Item id="6337" name="資料夾工作區檔案副檔名："/>
 					<Item id="6114" name="啟用"/>
 					<Item id="6117" name="啟用 MRU 行為功能"/>
@@ -1569,8 +1569,8 @@
 
 		<MessageBox>
 			<!-- $INT_REPLACE$ 同埋 $STR_REPLACE$ 係 placeholders 嚟，唔好改啊嗱 -->
-			<ContextMenuXmlEditWarning title="編輯快顯功能表" message="編輯 contextMenu.xml 可以修改 macpad++ 嘅快顯功能表。
-改完記得重新啟動 macpad++，咁先至會生效。"/>
+			<ContextMenuXmlEditWarning title="編輯快顯功能表" message="編輯 contextMenu.xml 可以修改 macpadqq 嘅快顯功能表。
+改完記得重新啟動 macpadqq，咁先至會生效。"/>
 			<SaveCurrentModifWarning title="Save 而家嘅改動" message="你必須要 save 低而家嘅改動。
 留意返，save 咗就冇得復原。
 
@@ -1579,10 +1579,10 @@
 留意返，save 咗就冇得復原。
 
 仲繼唔繼續？"/>
-			<CannotMoveDoc title="搬去新嘅 macpad++ 個體" message="份文件有嘢改過，save 咗佢再試吓啦。"/>
+			<CannotMoveDoc title="搬去新嘅 macpadqq 個體" message="份文件有嘢改過，save 咗佢再試吓啦。"/>
 			<DocReloadWarning title="喺磁碟重新 load 過" message="留意返！改過嘅嘢會冇晒，係咪真係要再 load 過呢個檔案？"/>
 			<FileLockedWarning title="儲存失敗" message="麻煩你檢查吓，係咪有其它應用程式開咗呢個檔案。"/>
-			<FileAlreadyOpenedInNpp title="" message="已經喺 macpad++ 度開咗呢個檔案。"/>
+			<FileAlreadyOpenedInNpp title="" message="已經喺 macpadqq 度開咗呢個檔案。"/>
 			<RenameTabTemporaryNameAlreadyInUse title="改唔到名" message="你改呢個名已經喺另一個分頁度用緊。"/><!-- #new v7.9.2 -->
 			<RenameTabTemporaryNameIsEmpty title="改唔到名" message="改名唔好吉，淨係空格同埋 tab 都唔得。"/><!-- #new v8.5.5 -->
 			<DeleteFileFailed title="掉去垃圾桶" message="剷唔走個檔案。"/>
@@ -1626,10 +1626,10 @@ $STR_REPLACE$
 			<DoReloadOrNotAndLooseChange title="Reload" message="「$STR_REPLACE$」
 
 已經畀另一個程式改過嘢。
-Reload 會放棄你喺 macpad++ 改過嘅嘢，咁仲繼唔繼續呢？"/>
+Reload 會放棄你喺 macpadqq 改過嘅嘢，咁仲繼唔繼續呢？"/>
 			<PrehistoricSystemDetected title="系統太舊" message="似乎你個系統太舊啦喂，呢個功能唔 work，真係唔好意思。"/>
-			<XpUpdaterProblem title="更新 macpad++" message="由於 Windows XP 嘅安全機制太過舊，更新程式唔再兼容 XP 系統啦。
-要唔要去 macpad++ 網站，下載最新嘅版本呢？"/>
+			<XpUpdaterProblem title="更新 macpadqq" message="由於 Windows XP 嘅安全機制太過舊，更新程式唔再兼容 XP 系統啦。
+要唔要去 macpadqq 網站，下載最新嘅版本呢？"/>
 			<DocTooDirtyToMonitor title="監控問題" message="份文件污糟咗，麻煩 save 咗佢先至再監視。"/>
 			<DocNoExistToMonitor title="監控問題" message="份文件已經唔存在喇，冇辦法進行監視。"/>
 			<FileTooBigToOpen title="檔案太大" message="檔案太大開唔到。"/>
@@ -1674,28 +1674,28 @@ Reload 會放棄你喺 macpad++ 改過嘅嘢，咁仲繼唔繼續呢？"/>
 			<SCMapperDoDeleteOrNot title="剷除快捷鍵" message="係咪真係要咁做"/>
 			<FindCharRangeValueError title="輸入值範圍錯誤" message="你輸入嘅數值應該要介乎 0 到 255 之間先至啱。"/>
 			<OpenInAdminMode title="Save 唔到" message="Save 唔到，可能係因為個檔案喺保護狀態。
-想唔想用系統管理員身份重新打開 macpad++？"/>
+想唔想用系統管理員身份重新打開 macpadqq？"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Save 唔到" message="Save 唔到，可能係因為個檔案喺保護狀態。
-想唔想用系統管理員身份重新打開 macpad++？"/>
-			<OpenInAdminModeFailed title="系統管理員身份都開唔到" message="macpad++ 冇法子用系統管理員身份打開"/>
+想唔想用系統管理員身份重新打開 macpadqq？"/>
+			<OpenInAdminModeFailed title="系統管理員身份都開唔到" message="macpadqq 冇法子用系統管理員身份打開"/>
 			<ViewInBrowser title="喺瀏覽器度睇呢個檔案" message="喺系統裏面搵唔到應用程式"/>
-			<ExitToUpdatePlugins title="即將會閂 macpad++" message="係嘅話，macpad++ 會自己摺埋，然後安裝更新或者剷走啲外掛。
-搞掂晒安裝程序，macpad++ 就會重新啟動。
+			<ExitToUpdatePlugins title="即將會閂 macpadqq" message="係嘅話，macpadqq 會自己摺埋，然後安裝更新或者剷走啲外掛。
+搞掂晒安裝程序，macpadqq 就會重新啟動。
 係咪繼續？"/>
-			<NeedToRestartToLoadPlugins title="重新啟動 macpad++" message="你必須重新啟動 macpad++ 先至可以 load 啲外掛。"/>
-			<ChangeHistoryEnabledWarning title="重新啟動 macpad++" message="你必須重新啟動 macpad++ 先至會顯示修改紀錄。"/><!-- #new v8.4.6 -->
-			<WindowsSessionExit title="macpad++ - Windows 工作階段結束" message="Windows 工作階段即將結束，但係你有啲資料未 save，係咪真係就咁閂埋 macpad++ 佢？"/><!-- #new v8.4.8 -->
+			<NeedToRestartToLoadPlugins title="重新啟動 macpadqq" message="你必須重新啟動 macpadqq 先至可以 load 啲外掛。"/>
+			<ChangeHistoryEnabledWarning title="重新啟動 macpadqq" message="你必須重新啟動 macpadqq 先至會顯示修改紀錄。"/><!-- #new v8.4.6 -->
+			<WindowsSessionExit title="macpadqq - Windows 工作階段結束" message="Windows 工作階段即將結束，但係你有啲資料未 save，係咪真係就咁閂埋 macpadqq 佢？"/><!-- #new v8.4.8 -->
 			<LanguageMenuCompactWarning title="簡化程式語言 menu" message="呢個選項會喺下次開程式嗰陣搞。"/><!-- #new v8.5 -->
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="未 save 喎！咁樣會捨棄晒啲改過嘅設定。
 換主題之前使唔使 save 咗佢先啊？"/><!-- #new v8.5 -->
-			<MacroAndRunCmdlWarning title="Macro 同埋執行指令嘅兼容度" message="你 save 喺 macpad++ v8.5.2（或之前）嗰啲 macro 同埋執行指令，未必兼容到而家嘅版本。
+			<MacroAndRunCmdlWarning title="Macro 同埋執行指令嘅兼容度" message="你 save 喺 macpadqq v8.5.2（或之前）嗰啲 macro 同埋執行指令，未必兼容到而家嘅版本。
 麻煩你先測試吓，有需要就修改。
 
-又或者，你可以先將 macpad++ 降級去 v8.5.2，回復舊有嘅資料用著先：
-macpad++ 將你舊嗰份「shortcuts.xml」備份咗去「shortcuts.xml.v8.5.2.backup」。
+又或者，你可以先將 macpadqq 降級去 v8.5.2，回復舊有嘅資料用著先：
+macpadqq 將你舊嗰份「shortcuts.xml」備份咗去「shortcuts.xml.v8.5.2.backup」。
 將「shortcuts.xml.v8.5.2.backup」改名做「shortcuts.xml」，咁就可以回復你啲舊指令嘞。"/><!-- #new v8.5.3 -->
 			<FullReadOnlySavingForbidden title="Save 唔到" message="Save 唔到。
-macpad++ 嘅「全唯讀下禁止 saving 模式」唔畀 save。"/><!-- #new #next -->
+macpadqq 嘅「全唯讀下禁止 saving 模式」唔畀 save。"/><!-- #new #next -->
 			<NotEnoughRoom4Saving title="Save 唔到" message="Save 唔到。
 似乎係磁碟唔夠位，留意返你嘅檔案係冇save到嘅。"/><!-- #new v8.5.8 -->
 			<FileInaccessibleUserSession title="檔案讀唔到" message="你想 save 嘅工作階段有檔案讀唔到，包括：
@@ -1710,8 +1710,8 @@ $STR_REPLACE$
 
 留意：如果選擇唔保留呢啲文件，又或者之後閂埋佢哋，你嘅「工作階段檔案」就會喺閂程式嗰陣作出修改！
 建議：立即備份你嘅「session.xml」。"/><!-- #new v8.6.0 -->
-			<RTLvsDirectWrite title="文字方向轉唔到右至左" message="DirectWrite 模式唔兼容右至左文字方向，你可以喺「偏好設定」→「雜項」將「使用 DirectWrite 模式」熄咗佢，然後重新啟動 macpad++。"/><!-- #new v8.6.0 -->
-			<FileMemoryAllocationFailed title="Exception: 檔案嘅記憶體配置失敗" message="睇嚟記憶體嘅連續空間唔夠，搞到 macpad++ load 唔到個檔案。"/><!-- #new v8.6.1 -->
+			<RTLvsDirectWrite title="文字方向轉唔到右至左" message="DirectWrite 模式唔兼容右至左文字方向，你可以喺「偏好設定」→「雜項」將「使用 DirectWrite 模式」熄咗佢，然後重新啟動 macpadqq。"/><!-- #new v8.6.0 -->
+			<FileMemoryAllocationFailed title="Exception: 檔案嘅記憶體配置失敗" message="睇嚟記憶體嘅連續空間唔夠，搞到 macpadqq load 唔到個檔案。"/><!-- #new v8.6.1 -->
 			<FindRegexBackwardDisabled title="規則運算式返唔到轉頭啊" message="為咗避開一啲意外，規則運算式預設係唔用得「▲ 搵上一個」嘅，如果你真係想向上搵，打開「搵」對話框，用返一般或者加強模式。
 咁 OK 掣可以跳去「搵」對話框。
 
@@ -1719,8 +1719,8 @@ $STR_REPLACE$
 			<PrintError title="0" message="開唔到打印文件。"/><!-- #new v8.7.0 -->
 			<FindAutoChangeOfInSelectionWarning title="搵嘢警告" message="自動改咗「限揀選範圍」個選擇。
 搵嘢之前麻煩 check 清楚啲選項。"/><!-- #new v8.7.6 -->
-			<Need2Restart2ShowMenuShortcuts title="重開 macpad++" message="需要重開 macpad++ 先至會顯示到 menu bar 右邊嗰幾個快捷鍵。"/><!-- #new v8.7.6 -->
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="檔案屬性轉唔到唯讀" message="個檔案需要管理員權限先至轉得到，如果一定要喺 macpad++ 改檔案屬性，唯有「以系統管理員身份執行」macpad++。"/><!-- #new v8.8.2 -->
+			<Need2Restart2ShowMenuShortcuts title="重開 macpadqq" message="需要重開 macpadqq 先至會顯示到 menu bar 右邊嗰幾個快捷鍵。"/><!-- #new v8.7.6 -->
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="檔案屬性轉唔到唯讀" message="個檔案需要管理員權限先至轉得到，如果一定要喺 macpadqq 改檔案屬性，唯有「以系統管理員身份執行」macpadqq。"/><!-- #new v8.8.2 -->
 		</MessageBox>
 		<ClipboardHistory>
 			<PanelTitle name="剪貼簿記錄"/>
@@ -1840,8 +1840,8 @@ $STR_REPLACE$
 			<word-chars-list-warning-end value="。"/>
 			<backup-select-folder value="揀個備份資料夾"/><!-- #new v8.2.1 -->
 			<cloud-invalid-warning value="路徑無效。"/>
-			<cloud-restart-warning value="麻煩重新啟動 macpad++ 令改動嘅嘢生效。"/>
-			<cloud-select-folder value="揀返個資料夾，畀 macpad++ 讀取/寫入設定。"/>
+			<cloud-restart-warning value="麻煩重新啟動 macpadqq 令改動嘅嘢生效。"/>
+			<cloud-select-folder value="揀返個資料夾，畀 macpadqq 讀取/寫入設定。"/>
 			<default-open-save-select-folder value="揀個預設資料夾"/><!-- #new v8.2.1 -->
 			<shift-change-direction-tip value="用「Shift + Enter」掣嚟反方向咁搵"/>
 			<two-find-buttons-tip value="用上、落兩個掣代替「搵下一個」"/>
@@ -1962,7 +1962,7 @@ $STR_REPLACE$
 			<contextMenu-styleOneToken value="標記一次"/><!-- #new v8.2.1 -->
 			<contextMenu-clearStyle value="清除風格標記"/><!-- #new v8.2.1 -->
 			<contextMenu-PluginCommands value="外掛指令"/><!-- #new v8.2.1 -->
-			<largeFileRestriction-tip value="開大型檔案嗰陣，某啲功能可能會軟件令性能降低，macpad++ 會將就吓自動閂咁啲，你可以喺呢度做設定。
+			<largeFileRestriction-tip value="開大型檔案嗰陣，某啲功能可能會軟件令性能降低，macpadqq 會將就吓自動閂咁啲，你可以喺呢度做設定。
 
 注意：
 1. 改過呢啲設定之後，要將啲大檔案閂咗佢再重新開過，咁先至會正常。
@@ -2009,7 +2009,7 @@ C、C++、Java、C#、Objective-C、PHP、JavaScript、JSP、CSS、Perl、Rust�
 			<!-- Don't translate "Global override" and "Default Style" -->
 			<global-override-tip value="啟用呢啲「Global override」選項將會覆蓋所有語言嘅樣式參數，如果「覆蓋」唔係你想要嘅嘢，你可能想試吓去改「Default Style」"/><!-- #new v8.7.1 -->
 
-			<scintillaRenderingTechnology-tip value="可能對渲染一啲特別字元有幫助，亦可能解決一啲成像問題，需要重開 macpad++ 先至會生效"/><!-- #new v8.7.8 -->
+			<scintillaRenderingTechnology-tip value="可能對渲染一啲特別字元有幫助，亦可能解決一啲成像問題，需要重開 macpadqq 先至會生效"/><!-- #new v8.7.8 -->
 
 			<!-- Due to the limited space on the status bar, if the translations for 'length' & 'lines' are much longer than the English words, please leave them in English instead of translating them. -->
 			<statusbar-length-lines value="長度：$STR_REPLACE1$    行數：$STR_REPLACE2$"/><!-- #new v8.8.0 -->

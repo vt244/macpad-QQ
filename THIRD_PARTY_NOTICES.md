@@ -1,8 +1,8 @@
-# macpad++ licensing and attribution
+# macpadqq licensing and attribution
 
-macpad++ is an independent fork of Notepad++ by Don Ho and contributors.
+macpadqq is an independent fork of Notepad++ by Don Ho and contributors.
 The fork was modified in November 2026 to add the native macOS editor, its
-build and packaging scripts, and macpad++ branding. The editor is distributed
+build and packaging scripts, and macpadqq branding. The editor is distributed
 under GNU GPL version 3. The original license and copyright notices remain
 in the source and the application bundle. [LICENSE](LICENSE)
 
@@ -14,7 +14,7 @@ in the source and the application bundle. [LICENSE](LICENSE)
 | Lexilla | Neil Hodgson and contributors. [Lexilla license](lexilla/License.txt) |
 | Boost.Regex | [Boost Software License 1.0](licenses/Boost-1.0.txt) |
 | pugixml | Arseny Kapoulkine and contributors. [MIT license](PowerEditor/src/pugixml/LICENSE.md) |
-| uchardet | Mozilla Universal Charset Detector and contributors. The source offers MPL 1.1, GPL 2.0 or later, or LGPL 2.1 or later. macpad++ uses the GPL option. [GPL 2.0](licenses/GPL-2.0.txt) |
+| uchardet | Mozilla Universal Charset Detector and contributors. The source offers MPL 1.1, GPL 2.0 or later, or LGPL 2.1 or later. macpadqq uses the GPL option. [GPL 2.0](licenses/GPL-2.0.txt) |
 | Markdown language definitions | Edditoria and contributors. [MIT license](licenses/markdown-plus-plus.txt) |
 | Toolbar and tab icons | Original editor artwork in the source tree. [GPLv3](LICENSE) |
 | Localizations and language data | Original contributors' notices remain in the resource files, including the bundled Function List and Auto-Completion XML. |

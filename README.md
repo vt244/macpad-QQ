@@ -1,33 +1,33 @@
-# macpad++
+# macpadqq
 
-<a href="docs/assets/macpad-logo.png"><img src="docs/assets/macpad-logo.png" width="220" alt="macpad++ logo. Open the full-resolution 1254 × 1254 PNG."></a>
+<a href="docs/assets/macpadqq-logo.png"><img src="docs/assets/macpadqq-logo.png" width="220" alt="macpadqq logo. Open the full-resolution 1254 × 1254 PNG."></a>
 
-macpad++ is a native macOS code and text editor. It is an independent fork of
+macpadqq is a native macOS code and text editor. It is an independent fork of
 Notepad++, originally created by Don Ho and developed by its contributors.
 The macOS port uses AppKit for the interface, Scintilla Cocoa for editing,
 and Lexilla for syntax highlighting. [Upstream project](https://github.com/notepad-plus-plus/notepad-plus-plus)
 
-![macpad++ showing a Python file with syntax highlighting, two tabs, the document list, and the function list](docs/assets/macpad-screenshot.png)
+![macpadqq showing a Python file with syntax highlighting, two tabs, the document list, and the function list](docs/assets/macpadqq-screenshot.png)
 
 ## Install on macOS
 
 The current version is `0.1-beta`.
 
-macpad++ runs natively on Apple silicon and Intel Macs with macOS 13 or later.
+macpadqq runs natively on Apple silicon and Intel Macs with macOS 13 or later.
 It reads existing XML themes, translations and user-defined languages.
 Plugins use the [macOS plugin API](macos/MacpadPlugin.h). Windows DLLs need
-to be ported and rebuilt to run inside macpad++.
+to be ported and rebuilt to run inside macpadqq.
 
-Check [GitHub Releases](https://github.com/vt244/macpad-plus-plus/releases)
-for a build for your Mac. Choose `macpad++-macOS-arm64.zip` for Apple silicon
-or `macpad++-macOS.zip` if a universal build is available. Download the matching
-`SHA256SUMS`, verify the archive, then unpack it and move `macpad++.app` to Applications.
+Check [GitHub Releases](https://github.com/vt244/macpad-QQ/releases)
+for a build for your Mac. Choose `macpadqq-macOS-arm64.zip` for Apple silicon
+or `macpadqq-macOS.zip` if a universal build is available. Download the matching
+`SHA256SUMS`, verify the archive, then unpack it and move `macpadqq.app` to Applications.
 
 ```sh
-shasum -a 256 macpad++-macOS-arm64.zip
+shasum -a 256 macpadqq-macOS-arm64.zip
 ```
 
-For a universal build, substitute `macpad++-macOS.zip` in the command.
+For a universal build, substitute `macpadqq-macOS.zip` in the command.
 Compare the output with the matching entry in `SHA256SUMS`.
 
 ## Build from source
@@ -37,7 +37,7 @@ later, then run these commands from the repository root.
 
 ```sh
 macos/build-app.sh
-open 'dist/macpad++.app'
+open 'dist/macpadqq.app'
 ```
 
 Local and CI builds use ad hoc signing. The macOS workflow tests the native
@@ -65,22 +65,23 @@ app and bundles it with matching source and SHA-256 checksums.
 - Reopen the working session, including unsaved drafts, after quitting or restarting.
 - Import existing XML themes, translations and user-defined languages.
 
-Open files from **File → Open** or from Finder with **Open With → macpad++**.
-You can also select one or more files in Finder and choose **Open in macpad++**
+Open files from **File → Open** or from Finder with **Open With → macpadqq**.
+You can also select one or more files in Finder and choose **Open in macpadqq**
 from the context menu’s **Services** section. If the action is hidden, enable
 it under **System Settings → Keyboard → Keyboard Shortcuts → Services**.
 Use the executable directly to open a file from the terminal at a specific line and column.
 
 ```sh
-'dist/macpad++.app/Contents/MacOS/macpad++' -n20 -c4 -lpython example.py
-'dist/macpad++.app/Contents/MacOS/macpad++' -multiInst -r 'src/*.py'
+'dist/macpadqq.app/Contents/MacOS/macpadqq' -n20 -c4 -lpython example.py
+'dist/macpadqq.app/Contents/MacOS/macpadqq' -multiInst -r 'src/*.py'
 ```
 
 [Compatibility and current limitations](SUPPORTED_SYSTEM.md)
 
-## Customize macpad++
+## Customize macpadqq
 
-The profile folder is `~/Library/Application Support/macpad++/profile/`.
+New installations use `~/Library/Application Support/macpadqq/profile/`.
+Upgrades continue to use the existing profile if no macpadqq profile exists.
 
 | Resource | Where to install it | Where to use it |
 | --- | --- | --- |
@@ -104,4 +105,4 @@ The fork preserves upstream copyright notices. Third-party components, themes
 and artwork have their own attribution and distribution considerations.
 [GPLv3](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-[Project repository](https://github.com/vt244/macpad-plus-plus) · [Contributing](CONTRIBUTING.md)
+[Project repository](https://github.com/vt244/macpad-QQ) · [Contributing](CONTRIBUTING.md)

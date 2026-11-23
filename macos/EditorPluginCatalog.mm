@@ -84,7 +84,7 @@ static void ReadURL(NSURL *url, NSUInteger limit, void (^completion)(NSData *, N
 		return;
 	}
 	NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestReloadIgnoringLocalCacheData timeoutInterval:30];
-	[request setValue:@"macpad++" forHTTPHeaderField:@"User-Agent"];
+	[request setValue:@"macpadqq" forHTTPHeaderField:@"User-Agent"];
 	NSURLSessionDataTask *task = [NSURLSession.sharedSession dataTaskWithRequest:request completionHandler:
 		^(NSData *data, NSURLResponse *response, NSError *error) {
 			BOOL success = !error && AllowedURL(response.URL, NO) &&
@@ -157,7 +157,7 @@ static void Install(EditorPlugins *plugins, EditorPluginPackage *package, BOOL u
 		[resources setSetting:versions forName:@"catalogPluginVersions"];
 		NSAlert *complete = [NSAlert new];
 		complete.messageText = [NSString stringWithFormat:@"%@ %@ installed", package.name, package.version];
-		complete.informativeText = EditorUIString(@"Restart macpad++ to load this version.");
+		complete.informativeText = EditorUIString(@"Restart macpadqq to load this version.");
 		[complete runModal];
 	});
 }

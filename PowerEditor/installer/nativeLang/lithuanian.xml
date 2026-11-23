@@ -283,15 +283,15 @@
 					<Item id="46001" name="Stilių redaktorius..."/>
 					<Item id="46250" name="Apibrėžti savo kalbą..."/>
 					<Item id="46180" name="Vartotojo apibrėžta"/>
-					<Item id="47000" name="Apie macpad++..."/>
+					<Item id="47000" name="Apie macpadqq..."/>
 					<Item id="47010" name="Komandų eilutės parametrai..."/>
-					<Item id="47001" name="macpad++ tinklapis"/>
-					<Item id="47002" name="macpad++ projekto puslapis"/>
+					<Item id="47001" name="macpadqq tinklapis"/>
+					<Item id="47002" name="macpadqq projekto puslapis"/>
 					<Item id="47003" name="Dokumentacija internete"/>
 					<Item id="47004" name="Forumas"/>
 					<Item id="47012" name="Derinimo informacija..."/>
 					<Item id="47005" name="Daugiau priedų"/>
-					<Item id="47006" name="Atnaujinti macpad++"/>
+					<Item id="47006" name="Atnaujinti macpadqq"/>
 					<Item id="47009" name="Nustatyti įgaliotąjį serverį..."/>
 					<Item id="48005" name="Importuoti priedą(us) ..."/>
 					<Item id="48006" name="Importuoti temą(as) ..."/>
@@ -842,10 +842,10 @@
 
 				<MultiInstance title="Programos langai">
 					<Item id="6151" name="Programos langų nustatymai"/>
-					<Item id="6152" name="Atidayti sesiją naujame macpad++ lange"/>
+					<Item id="6152" name="Atidayti sesiją naujame macpadqq lange"/>
 					<Item id="6153" name="Daugelio programos langų režimas"/>
 					<Item id="6154" name="Pagal nutylėjimą (vieno lango režimas)"/>
-					<Item id="6155" name="* Nustatymų pakeitimai reikalauja paleisti macpad++ iš naujo"/>
+					<Item id="6155" name="* Nustatymų pakeitimai reikalauja paleisti macpadqq iš naujo"/>
 				</MultiInstance>
 
 				<Delimiter title="Skirtukas">
@@ -884,7 +884,7 @@
 					<Item id="6319" name="Įgalinti"/>
 					<Item id="6320" name="Nepabrauktas"/>
 					<Item id="6322" name="Sesijos failo išplėtimas:"/>
-					<Item id="6323" name="Įgalinti macpad++ automatinį naujinimą"/>
+					<Item id="6323" name="Įgalinti macpadqq automatinį naujinimą"/>
 					<Item id="6324" name="Dokumentų perjungimas (Ctrl+TAB)"/>
 					<Item id="6331" name="Rodyti tik failo pavadinimą antraštės juostoje"/>
 					<Item id="6334" name="Automatiškai aptikti koduotę"/>
@@ -941,10 +941,10 @@
 			</FindInFinder>
 		</Dialog>
 		<MessageBox><!-- $INT_REPLACE$ saugo bylos vietą, jo neversti -->
-			<ContextMenuXmlEditWarning title="Kontekstinio meniu keitimas" message="contextMenu.xml redagavimas leidžia keisti macpad++ išklylantį kontekstinį meniu.
-Jūs turite perkrauti macpad++ tam, kad pakeitimas contextMenu.xml būtų veiksmingas."/>
+			<ContextMenuXmlEditWarning title="Kontekstinio meniu keitimas" message="contextMenu.xml redagavimas leidžia keisti macpadqq išklylantį kontekstinį meniu.
+Jūs turite perkrauti macpadqq tam, kad pakeitimas contextMenu.xml būtų veiksmingas."/>
 			<NppHelpAbsentWarning title="Failas neegzistuoja" message="
-neegzistuoja. Prašome ją įkelti iš macpad++ puslapio."/>
+neegzistuoja. Prašome ją įkelti iš macpadqq puslapio."/>
 			<SaveCurrentModifWarning title="Išsaugoti dabartinius pakeitimus" message="Jūs turite išsaugoti dabartinius pakeitimus.
 Visi išsaugoti pakeitimai bus negrįžtami.
 
@@ -953,10 +953,10 @@ Ar norite tęsti?"/>
 Visi išsaugoti pakeitimai bus negrįžtami.
 
 Ar norite tęsti??"/>
-			<CannotMoveDoc title="Pereiti prie naujo macpad++ programos lango" message="Dokumentas yra pakeistas, išsaugokite ir mėginkite dar kartą."/>
-			<DocReloadWarning title="Įkėlimas iš naujo" message="Ar jūs tikrai norite iš naujo įkelti dabartinę bylą ir prarasti visus pakeitimus atliktus su macpad++?"/>
+			<CannotMoveDoc title="Pereiti prie naujo macpadqq programos lango" message="Dokumentas yra pakeistas, išsaugokite ir mėginkite dar kartą."/>
+			<DocReloadWarning title="Įkėlimas iš naujo" message="Ar jūs tikrai norite iš naujo įkelti dabartinę bylą ir prarasti visus pakeitimus atliktus su macpadqq?"/>
 			<FileLockedWarning title="Nepavyko išsaugoti" message="Prašome patikrinti ar šis failas nėra atidaryta kitoje programoje"/>
-			<FileAlreadyOpenedInNpp title="" message="Failas jau yra atidarytas su macpad++."/>
+			<FileAlreadyOpenedInNpp title="" message="Failas jau yra atidarytas su macpadqq."/>
 			<DeleteFileFailed title="Failo šalinimas" message="Nepavyko pašalinti failo"/>
             
 			<NbFileToOpenImportantWarning title="Atidaromų failų kiekis yra per didelis" message="Atidaromų failų skaičius: $INT_REPLACE$.
@@ -987,13 +987,13 @@ Ar norite jį įkelti iš naujo?"/>
 			<DoReloadOrNotAndLooseChange title="Įkėlimas iš naujo" message="&quot;$STR_REPLACE$&quot;
 
 Šis failas buvo pakeistas kitoje programoje.
-Ar norite jį įkelti iš naujo ir prarasti pakeitimus atliktus su macpad++?"/>
+Ar norite jį įkelti iš naujo ir prarasti pakeitimus atliktus su macpadqq?"/>
 			<PrehistoricSystemDetected title="Aptikta sena sistema" message="Naudojate seną sistemą. Ši savybė veikia tik naujesnėse sistemose."/>
-			<XpUpdaterProblem title="macpad++ atnaujinimas" message="macpad++ atnaujinimas negalimas XP sistemoje dėl mažo saugumo lygio.
-Ar norite parsisiųsti naujausią versiją iš macpad++ puslapio?"/>
+			<XpUpdaterProblem title="macpadqq atnaujinimas" message="macpadqq atnaujinimas negalimas XP sistemoje dėl mažo saugumo lygio.
+Ar norite parsisiųsti naujausią versiją iš macpadqq puslapio?"/>
 			<DocTooDirtyToMonitor title="Nuolatinio stebėjimo klaida" message="Dokumentas turi pakeitimų. Išsaugokite juos prieš įjungdami nuolatinį stebėjimą."/>
 			<DocNoExistToMonitor title="Nuolatinio stebėjimo klaida" message="Failas turi egzistuoti."/>
-			<FileTooBigToOpen title="Failo dydžio problema" message="Failas yra per didelis ir negali būti atidarytas su macpad++"/>
+			<FileTooBigToOpen title="Failo dydžio problema" message="Failas yra per didelis ir negali būti atidarytas su macpadqq"/>
 			<CreateNewFileOrNot title="Naujas failas" message="&quot;$STR_REPLACE$&quot; neegzistuoja. Ar jį sukurti?"/>
 			<CreateNewFileError title="Naujas failas" message="Nepavyko sukurti failo &quot;$STR_REPLACE$&quot;."/>
 			<OpenFileError title="Klaida" message="Nepavyko atidaryti failo &quot;$STR_REPLACE$&quot;."/>
@@ -1025,10 +1025,10 @@ pakeiskite jį kitu."/>
 			<SCMapperDoDeleteOrNot title="Sparčiojo klavišo šalinimas" message="Ar norite pašalintį spartųjį klavišą?"/>
 			<FindCharRangeValueError title="Ženklų sekos klaida" message="Leidžiama reikšmės yra tarp 0 ir 255."/>
 			<OpenInAdminMode title="Išsaugojimo klaida" message="Failo nepavyko išsaugoti, gali trūkti teisių.
-Ar norite paleisti macpad++ administratoriaus teisėmis?"/>
+Ar norite paleisti macpadqq administratoriaus teisėmis?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Išsaugojimo klaida" message="Failo nepavyko išsaugoti, gali trūkti teisių.
-Ar norite paleisti macpad++ administratoriaus teisėmis?"/>
-			<OpenInAdminModeFailed title="macpad++ paleidimo klaida" message="macpad++ negali būti paleistas administratoriaus teisėmis."/>
+Ar norite paleisti macpadqq administratoriaus teisėmis?"/>
+			<OpenInAdminModeFailed title="macpadqq paleidimo klaida" message="macpadqq negali būti paleistas administratoriaus teisėmis."/>
 		</MessageBox>
 		<ClipboardHistory>
 			<PanelTitle name="Mainų srities istorija"/>
@@ -1126,7 +1126,7 @@ Ar norite paleisti macpad++ administratoriaus teisėmis?"/>
 			<word-chars-list-tab-warning value="$INT_REPLACE$ tabuliatorius(iai)"/>
 			<word-chars-list-warning-end value="  ženklų sąraše."/>
 			<cloud-invalid-warning value="Neteisingas kelias."/>
-			<cloud-restart-warning value="Norėdami pritaikyti pakeitimus, paleiskite macpad++ iš naujo."/>
+			<cloud-restart-warning value="Norėdami pritaikyti pakeitimus, paleiskite macpadqq iš naujo."/>
 			<cloud-select-folder value="Pasirinkite katalogą kuriame bus saugomi debesijos nustatymai"/>
 			<shift-change-direction-tip value="Naudokite Shift+Enter paieškai atvirkštine kryptimi"/>
 			<two-find-buttons-tip value="2 paieškos mygtukų režimas"/>

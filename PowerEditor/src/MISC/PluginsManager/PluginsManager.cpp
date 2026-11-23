@@ -50,7 +50,7 @@
 
 using namespace std;
 
-const wchar_t * USERMSG = L" is not compatible with the current version of macpad++.\n\n\
+const wchar_t * USERMSG = L" is not compatible with the current version of macpadqq.\n\n\
 Do you want to remove this plugin from the plugins directory to prevent this message from the next launch?";
 
 static WORD getBinaryArchitectureType(const wchar_t *filePath)
@@ -140,7 +140,7 @@ int PluginsManager::loadPluginFromPath(const wchar_t *pluginFilePath)
 
 		pi->_pFuncIsUnicode = reinterpret_cast<PFUNCISUNICODE>(::GetProcAddress(pi->_hLib, "isUnicode"));
 		if (!pi->_pFuncIsUnicode || !pi->_pFuncIsUnicode())
-			throw wstring(L"This ANSI plugin is not compatible with your Unicode macpad++.");
+			throw wstring(L"This ANSI plugin is not compatible with your Unicode macpadqq.");
 
 		pi->_pFuncSetInfo = reinterpret_cast<PFUNCSETINFO>(::GetProcAddress(pi->_hLib, "setInfo"));
 
@@ -346,8 +346,8 @@ bool PluginsManager::loadPlugins(const wchar_t* dir, const PluginViewList* plugi
 	// get plugin folder
 	if (hFindFolder != INVALID_HANDLE_VALUE && (foundData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 	{
-		const wchar_t* incompatibleWarning = L"%s's version %s is not compatible to this version of macpad++ (v%s).\r\nAs a result the plugin cannot be loaded.";
-		const wchar_t* incompatibleWarningWithSolution = L"%s's version %s is not compatible to this version of macpad++ (v%s).\r\nAs a result the plugin cannot be loaded.\r\n\r\nGo to Updates section and update your plugin to %s for solving the compatibility issue.";
+		const wchar_t* incompatibleWarning = L"%s's version %s is not compatible to this version of macpadqq (v%s).\r\nAs a result the plugin cannot be loaded.";
+		const wchar_t* incompatibleWarningWithSolution = L"%s's version %s is not compatible to this version of macpadqq (v%s).\r\nAs a result the plugin cannot be loaded.\r\n\r\nGo to Updates section and update your plugin to %s for solving the compatibility issue.";
 
 		wstring foundFileName = foundData.cFileName;
 		// "Config" holds settings, not plugins; "disabled" holds deactivated plugins moved by

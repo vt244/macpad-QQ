@@ -14,7 +14,7 @@ cmake -S macos -B .tmp/native-build -DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 '-DCMAKE_OSX_ARCHITECTURES=arm64;x86_64'
 cmake --build .tmp/native-build --parallel "$jobs"
 
-app="$work/macpad++.app"
+app="$work/macpadqq.app"
 resources="$app/Contents/Resources"
 mkdir -p "$app/Contents/MacOS" "$resources/licenses"
 
@@ -48,7 +48,7 @@ cp PowerEditor/src/icons/dark/tabbar/{unsaved,readonly,monitoring,pinTabButton_p
 for cursor in mac_cursor_busy mac_cursor_flipped; do
 	sips -s format tiff "scintilla/cocoa/res/$cursor.png" --out "$resources/$cursor.tiff" >/dev/null
 done
-cp '.tmp/native-build/macpad++' "$app/Contents/MacOS/"
+cp '.tmp/native-build/macpadqq' "$app/Contents/MacOS/"
 cp PowerEditor/src/{langs.model.xml,stylers.model.xml} "$resources/"
 cp -R PowerEditor/installer/nativeLang "$resources/localization"
 cp -R macos/native-labels "$resources/"
@@ -72,13 +72,13 @@ cp PowerEditor/src/pugixml/LICENSE.md "$resources/licenses/pugixml.txt"
 /usr/bin/codesign --force --sign - "$app"
 /usr/bin/codesign --verify --strict "$app"
 
-if [[ -e "dist/macpad++.app" ]]; then
-	mv "dist/macpad++.app" "$work/previous.app"
+if [[ -e "dist/macpadqq.app" ]]; then
+	mv "dist/macpadqq.app" "$work/previous.app"
 fi
 if ! mv "$app" dist/; then
 	if [[ -e "$work/previous.app" ]]; then
-		mv "$work/previous.app" "dist/macpad++.app"
+		mv "$work/previous.app" "dist/macpadqq.app"
 	fi
 	exit 1
 fi
-echo "$root/dist/macpad++.app"
+echo "$root/dist/macpadqq.app"

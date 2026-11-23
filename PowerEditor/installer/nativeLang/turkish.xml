@@ -41,7 +41,7 @@
 					<Item subMenuId="edit-onSelection" name="Seçilen Üzerinde"/>
 					<Item subMenuId="edit-multiSelectALL" name="Çoklu-Seç TÜMÜ"/>
 					<Item subMenuId="edit-multiSelectNext" name="Çoklu-Seç Sonraki"/>
-					<Item subMenuId="edit-readonlyInNotepad++" name="macpad++ üzerinde Salt Okunur"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="macpadqq üzerinde Salt Okunur"/>
 					<Item subMenuId="search-changeHistory" name="Değişim Geçmişi"/>
 					<Item subMenuId="search-markAll" name="Eşleşen Tüm İşaretleri Stillendir"/>
 					<Item subMenuId="search-markOne" name="Eşleşen İşareti Stillendir"/>
@@ -368,14 +368,14 @@
 					<Item id="46016" name="Hiçbiri (Normal Yazı)"/>
 					<Item id="46250" name="Dil &amp;Tanımla"/>
 					<Item id="46300" name="Kullanıcı Tanımlı Dil Klasörünü Aç..."/>
-					<Item id="46301" name="macpad++ Kullanıcı Tanımlı Diller Koleksiyonu"/>
+					<Item id="46301" name="macpadqq Kullanıcı Tanımlı Diller Koleksiyonu"/>
 					<Item id="46180" name="Tanımlı Dili &amp;Kullan"/>
-					<Item id="47000" name="macpad++ &amp;Hakkında"/>
+					<Item id="47000" name="macpadqq &amp;Hakkında"/>
 					<Item id="47010" name="Komut Satırı Değişkenleri…"/>
-					<Item id="47001" name="macpad++ &amp;Ana Sayfası"/>
-					<Item id="47002" name="macpad++ Proje Sayfası"/>
-					<Item id="47003" name="macpad++ Çevrimiçi Kullanıcı Kılavuzu"/>
-					<Item id="47004" name="macpad++ Topluluğu (Forum)"/>
+					<Item id="47001" name="macpadqq &amp;Ana Sayfası"/>
+					<Item id="47002" name="macpadqq Proje Sayfası"/>
+					<Item id="47003" name="macpadqq Çevrimiçi Kullanıcı Kılavuzu"/>
+					<Item id="47004" name="macpadqq Topluluğu (Forum)"/>
 					<Item id="47012" name="Derleme Bilgileri…"/>
 					<Item id="47005" name="Eklenti Merkezi"/>
 					<Item id="47006" name="&amp;Güncellemeleri Denetle"/>
@@ -449,7 +449,7 @@
 				<Item CMDID="41016" name="Çöp Kutusuna Taşı"/>
 				<Item CMDID="41014" name="Yeniden Yükle"/>
 				<Item CMDID="41010" name="Yazdır..."/>
-				<Item CMDID="42028" name="macpad++ Üzerinde Salt Okunur"/>
+				<Item CMDID="42028" name="macpadqq Üzerinde Salt Okunur"/>
 				<Item CMDID="42033" name="Windows Üzerinde Salt Okunur Özniteliği"/>
 				<Item CMDID="2" name="Panoya Kopyala"/>
 				<Item CMDID="42029" name="Tam Dosya Yolunu Kopyala"/>
@@ -1147,7 +1147,7 @@
 				</DefaultDir>
 
 				<FileAssoc title="Dosya İlişkilendirmeleri">
-					<Item id="4008" name="Bu özelliği kullanmak için, macpad++'ı kapatıp yönetici olarak tekrar açın."/>
+					<Item id="4008" name="Bu özelliği kullanmak için, macpadqq'ı kapatıp yönetici olarak tekrar açın."/>
 					<Item id="4009" name="Desteklenen uzantılar:"/>
 					<Item id="4010" name="Kaydedilen uzantılar:"/>
 				</FileAssoc>
@@ -1233,7 +1233,7 @@
 				</Print>
 				
 				<Searching title="Arama">
-					<Item id="6902" name="Bul penceresinde sabit genişlikli yazıtipi kullan (macpad++ yeniden başlatılmalıdır)"/>
+					<Item id="6902" name="Bul penceresinde sabit genişlikli yazıtipi kullan (macpadqq yeniden başlatılmalıdır)"/>
 					<Item id="6903" name="Bul penceresi, arama sonuçlar penceresine yönlendirdiğinde açık kalsın"/>
 					<Item id="6904" name="Tüm Açılmış Pencerelerde Tümünü Değiştirmeyi Onayla"/>
 					<Item id="6905" name="Değiştir: Sonraki eşleşmeye geçme"/>
@@ -1302,7 +1302,7 @@
 					<Item id="6152" name="Yeni bir örnekte oturum aç (ve kapanınca oturumu otomatik kaydet)"/>
 					<Item id="6153" name="Her zaman çoklu örnek modunda"/>
 					<Item id="6154" name="Varsayılan (tekli örnek)"/>
-					<Item id="6155" name="* Bu ayarın değiştirilmesi macpad++'ın yeniden başlatılmasını gerektirir."/>
+					<Item id="6155" name="* Bu ayarın değiştirilmesi macpadqq'ın yeniden başlatılmasını gerektirir."/>
 					<Item id="6171" name="Özel Tarih Zamanı Yerleştir"/>
 					<Item id="6175" name="Varsayılan tarih zaman sıralamasını ters çevir (kısa &amp;&amp; uzun format)"/>
 					<Item id="6172" name="Özel Format:"/>
@@ -1385,8 +1385,8 @@
 					</ComboBox>
 					<ComboBox id="6364">
 						<Element name="Etkisizleştir"/>
-						<Element name="macpad++ başlangıcında etkinleştir"/>
-						<Element name="macpad++ kapatışında etkinleştir"/>
+						<Element name="macpadqq başlangıcında etkinleştir"/>
+						<Element name="macpadqq kapatışında etkinleştir"/>
 					</ComboBox>
 					<Item id="6308" name="Görev Çubuğu"/>
 					<Item id="6363" name="Görselleştirme Modu"/>
@@ -1473,7 +1473,7 @@ Bu pencereyi Tercihler içinden tekrar aktif edebilirsiniz."/>
 				<Item id="7" name="&amp;Hayır"/>
 				<Item id="4" name="&amp;Her zaman evet"/>
 			</DoSaveAll><!-- NasılTekrarlanır: Tercihler->Çeşitli penceresinde "Tümünü Kaydet onaylama penceresi" kutucuğunu işaretleyin, şimdi "Tümünü Kaydet" seçeneğine tıklayın -->
-			<NetworkPathWarning title="macpad++ Oturumu Yükleniyor" title2="Tıklanabilir file:// Linki">
+			<NetworkPathWarning title="macpadqq Oturumu Yükleniyor" title2="Tıklanabilir file:// Linki">
 				<Item id="1771" name="Ağ Yolu Uyarısı:
 $STR_REPLACE$
 
@@ -1491,8 +1491,8 @@ Yine de yüklensin mi?"/>
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ ve $STR_REPLACE$ birer yer tutucudur, bu yer tutucuları çevirmeyin. -->
-			<ContextMenuXmlEditWarning title="contextMenu.xml Dosyasını Düzenle" message="contextMenu.xml dosyasını düzenleyerek macpad++ sağ tık bağlam menüsü değiştirilebilir.
-Değişikliklerin etkin olması için macpad++ yeniden başlatılmalıdır."/>
+			<ContextMenuXmlEditWarning title="contextMenu.xml Dosyasını Düzenle" message="contextMenu.xml dosyasını düzenleyerek macpadqq sağ tık bağlam menüsü değiştirilebilir.
+Değişikliklerin etkin olması için macpadqq yeniden başlatılmalıdır."/>
 			<SaveCurrentModifWarning title="Geçerli Düzenlemeyi Kaydet" message="Yaptığınız değişiklikleri kaydetmelisiniz. 
 Kaydedilen değişiklikler geri alınamaz. 
 
@@ -1501,10 +1501,10 @@ Devam etmek istiyor musunuz?"/>
 Kaydedilen değişiklikler geri alınamaz. 
 
 Devam etmek istiyor musunuz?"/>
-			<CannotMoveDoc title="Yeni macpad++ Penceresine Taşı" message="Belge değiştirilmiş, kaydedip yeniden deneyin."/>
+			<CannotMoveDoc title="Yeni macpadqq Penceresine Taşı" message="Belge değiştirilmiş, kaydedip yeniden deneyin."/>
 			<DocReloadWarning title="Yeniden Yükle" message="Geçerli dosyayı yeniden yüklerseniz yaptığınız değişiklikler kaybolacak. Devam etmek istiyor musunuz?"/>
 			<FileLockedWarning title="Kaydedilemedi" message="Dosyanın başka bir yazılım tarafından kullanılmadığından emin olun."/>
-			<FileAlreadyOpenedInNpp title="Dosya Aç" message="Dosya zaten macpad++ içinde açık."/>
+			<FileAlreadyOpenedInNpp title="Dosya Aç" message="Dosya zaten macpadqq içinde açık."/>
 			<RenameTabTemporaryNameAlreadyInUse title="Yeniden Adlandırma Başarısız" message="Belirtilen ad başka bir sekmede kullanımda."/>
 			<RenameTabTemporaryNameIsEmpty title="Yeniden Adlandırma Başarısız" message="Belirtilen isim boş olamaz, ya da sadece boşluklar veya atlamalar (TAB) içeremez."/><!--  NasılTekrarlanır: İsimsiz belge sekme yeniden adlandırın ve boş bir dizi ya da biraz boşluk girin. -->
 			<DeleteFileFailed title="Dosya Sil" message="Dosya silinemedi"/>
@@ -1548,13 +1548,13 @@ Bu dosya başka bir program tarafından değiştirildi.
 Tekrar yüklemek ister misiniz?"/>
 			<DoReloadOrNotAndLooseChange title="Tekrar Yükle" message="&quot;$STR_REPLACE$&quot;
 Bu dosya başka bir program tarafından değiştirildi.
-Tekrar yükleyerek macpad++ içindeki değişiklerin kaybolmasını istiyor musunuz?"/>
+Tekrar yükleyerek macpadqq içindeki değişiklerin kaybolmasını istiyor musunuz?"/>
 			<PrehistoricSystemDetected title="Antik Sistem Bulundu" message="Görünüşe göre, halen antik bir sistem kullanıyorsunuz. Bu özellik sadece modern bir sistemde kullanılabilir, üzgünüm."/>
-			<XpUpdaterProblem title="macpad++ Güncelleyici" message="macpad++ güncelleyici XP ile uyumlu değil, çünkü XP güvenlik yapısı oldukça eski.
-macpad++ sayfasına giderek en son sürümü indirmek ister misiniz?"/>
+			<XpUpdaterProblem title="macpadqq Güncelleyici" message="macpadqq güncelleyici XP ile uyumlu değil, çünkü XP güvenlik yapısı oldukça eski.
+macpadqq sayfasına giderek en son sürümü indirmek ister misiniz?"/>
 			<DocTooDirtyToMonitor title="İzleme Sorunu" message="Belge kirli. İzlemeden önce lütfen değişikliği kaydedin."/>
 			<DocNoExistToMonitor title="İzleme Sorunu" message="İzlenmesi için dosyanın mevcut olması gerekir."/>
-			<FileTooBigToOpen title="Dosya Boyutu Sorunu" message="Dosya, macpad++ tarafından açılamayacak kadar büyük."/>
+			<FileTooBigToOpen title="Dosya Boyutu Sorunu" message="Dosya, macpadqq tarafından açılamayacak kadar büyük."/>
 			<FileLoadingException title="Exception code: $STR_REPLACE$" message="An error occurred while loading the file!"/>
 			<CreateNewFileOrNot title="Yeni Dosya Oluştur" message="&quot;$INT_REPLACE$&quot; mevcut değil. Oluşturulsun mu?."/>
 			<CreateNewFileError title="Yeni Dosya Oluştur" message="&quot;$INT_REPLACE$&quot; dosyası oluşturulamıyor."/>
@@ -1594,22 +1594,22 @@ lütfen yeni bir ad verin."/>
 			<SCMapperDoDeleteOrNot title="Emin misiniz?" message="Bu kısayolu silmek istediğinize emin misiniz?"/>
 			<FindCharRangeValueError title="Aralık Değeri Problemi" message="0 ile 255 arasında bir giriş yapmalısınız."/> <!-- NasılTekrarlanır: Ara menüsü, Aralıktaki karakterleri bul, Özel Aralık seçin, herhangi bir düzenle kutusunda 999 girin, ve Ara'ya basın. -->
 			<OpenInAdminMode title="Kayıt Başarısız" message="Dosya kaydedilemedi, korumalı olabilir.
-macpad++ı Yönetici olarak başlatmak ister misiniz?"/>
+macpadqqı Yönetici olarak başlatmak ister misiniz?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Kayıt Başarısız" message="Dosya kaydedilemedi, korumalı olabilir.
-macpad++ı Yönetici olarak başlatmak ister misiniz?"/>
-			<OpenInAdminModeFailed title="Yönetici Olarak Başlatma Başarısız" message="macpad++ Yönetici olarak başlatılamaz."/>
+macpadqqı Yönetici olarak başlatmak ister misiniz?"/>
+			<OpenInAdminModeFailed title="Yönetici Olarak Başlatma Başarısız" message="macpadqq Yönetici olarak başlatılamaz."/>
 			<ViewInBrowser title="Şimdiki Dosyayı Tarayıcıda GÖrüntüle" message="Sisteminizde uygulama bulunamadı."/>
-			<ExitToUpdatePlugins title="macpad++ kapanmak üzere" message="Eğer EVET düğmesine basarsanız macpad++ kapanacak ve işlemler devam edecek.
-macpad++ tüm işlemler bitince yeniden başlatılacak.
+			<ExitToUpdatePlugins title="macpadqq kapanmak üzere" message="Eğer EVET düğmesine basarsanız macpadqq kapanacak ve işlemler devam edecek.
+macpadqq tüm işlemler bitince yeniden başlatılacak.
 Devam edilsin mi?"/>
-			<NeedToRestartToLoadPlugins title="macpad++ yeniden başlatılmalı" message="Kurduğunuz eklentilerin yüklenmesi için macpad++ yeniden başlatılmalı."/>
-			<ChangeHistoryEnabledWarning title="macpad++ yeniden başlatılmalı" message="Değişim Geçmişini etkinleştirmek için macpad++'ı yeniden başlatılmanız gereklidir."/><!-- NasılTekrarlanır: Tercihler penceresindeki "Boşluk/Sınır/Köşe" sekmesinde bulunan "Değişim Geçmişini Göster" seçeneğindeki işareti kaldırın. -->
-			<WindowsSessionExit title="macpad++ - Windows Oturum Sonlandırması" message="Windows oturumu sonlandırılmak üzere, fakat bazı kaydedilmemiş verileriniz var. Şimdi macpad++'tan çıkmak istiyor musunuz?"/>
+			<NeedToRestartToLoadPlugins title="macpadqq yeniden başlatılmalı" message="Kurduğunuz eklentilerin yüklenmesi için macpadqq yeniden başlatılmalı."/>
+			<ChangeHistoryEnabledWarning title="macpadqq yeniden başlatılmalı" message="Değişim Geçmişini etkinleştirmek için macpadqq'ı yeniden başlatılmanız gereklidir."/><!-- NasılTekrarlanır: Tercihler penceresindeki "Boşluk/Sınır/Köşe" sekmesinde bulunan "Değişim Geçmişini Göster" seçeneğindeki işareti kaldırın. -->
+			<WindowsSessionExit title="macpadqq - Windows Oturum Sonlandırması" message="Windows oturumu sonlandırılmak üzere, fakat bazı kaydedilmemiş verileriniz var. Şimdi macpadqq'tan çıkmak istiyor musunuz?"/>
 			<LanguageMenuCompactWarning title="Kısaltılmış Dil Menüsü" message="Bu ayar, bir sonraki başlatmada değiştirilecektir."/><!-- NasılTekrarlanır: Tercihler -> Dil Menüsü altındaki "Dil Menüsünü Kısalt" ile değiştirebilirsiniz. -->
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="Kaydedilmemiş değişiklikler gözardı edilmek üzere!
 Temaları değiştirmeden önce, değişikleri kaydetmek ister misiniz?"/><!-- NasılTekrarlanır: Stil Yapılandırıcısı altında, kaydetmeden, temalar arasında geçiş yapın. -->
 			<FullReadOnlySavingForbidden title="Kayıt Başarısız" message="Dosya kaydedilemiyor.
-macpad++'ın tam salt okunurluk kaydetmek yasak modu dosyanın kaydedilmesini engelledi."/>
+macpadqq'ın tam salt okunurluk kaydetmek yasak modu dosyanın kaydedilmesini engelledi."/>
 			<NotEnoughRoom4Saving title="Kaydetme Başarısız" message="Dosya kaydetme başarısız.
 Görünüşe göre, diskinizde dosyayı kaydetmek için yeterli alan yok. Dosyanız kaydedilemedi."/>
 			<FileInaccessibleUserSession title="Dosyaya erişilemiyor" message="Elle kaydettiğiniz &quot;$STR_REPLACE$&quot; oturumunuzdaki bazı dosyalara erişilemiyor. Yer tutucular gibi boş ve salt-okunur belgeler şeklinde açılabilirler.
@@ -1622,8 +1622,8 @@ NOT: Yer tutucuları oluşturmayı seçmemeniz veya onları sonradan kapatmanız
 Bu yer tutucuları oluşturmak ister misiniz?
 
 NOT: Yer tutucuları oluşturmayı seçmemeniz veya onları sonradan kapatmanız durumunda, oturumunuz ÇIKIŞTA DÜZENLENMEYECEKTİR! &quot;session.xml&quot; dosyanızı şimdi yedeklemenizi öneririz."/>
-			<RTLvsDirectWrite title="SaSMY Çalıştırılamıyor" message="Sağdan Sola Metin Yönü, DirectWrite modu ile uyumsuz. Lütfen DirectWrite modunu Tercihler penceresi altındaki Çeşitli sekmesinden etkisizleştirin ve macpad++'ı yeniden başlatın."/>
-			<FileMemoryAllocationFailed title="İstisna: Dosya hafızası ayırma başarısız" message="Muhtemelen macpad++ tarafından yüklenen dosya için yeterli boş hafıza yok."/><!-- NasılTerkarlanır: x86 Notepad++ içinde birden fazla ve toplamda boyutu > ~700MB olan dosyalar açmaya çalışın (bilgisayarda bulunan fiziki bellek miktarına ve mevcut sistem hafıza kullanımına göre değişebilir...). -->
+			<RTLvsDirectWrite title="SaSMY Çalıştırılamıyor" message="Sağdan Sola Metin Yönü, DirectWrite modu ile uyumsuz. Lütfen DirectWrite modunu Tercihler penceresi altındaki Çeşitli sekmesinden etkisizleştirin ve macpadqq'ı yeniden başlatın."/>
+			<FileMemoryAllocationFailed title="İstisna: Dosya hafızası ayırma başarısız" message="Muhtemelen macpadqq tarafından yüklenen dosya için yeterli boş hafıza yok."/><!-- NasılTerkarlanır: x86 Notepad++ içinde birden fazla ve toplamda boyutu > ~700MB olan dosyalar açmaya çalışın (bilgisayarda bulunan fiziki bellek miktarına ve mevcut sistem hafıza kullanımına göre değişebilir...). -->
 			<FindRegexBackwardDisabled title="Düzenli ifade geriye doğru arama etkisizleştirildi" message="Varsayılan olarak, muhtemel beklenmeyen sonuçlar nedeniyle geriye doğru düzenli ifade arama etkisizdir. Geriye doğru arama yapmak için, Bul penceresini açın ve düzenli ifade yerine normal ya da genişletilmiş aramayı kullanın.
 Bul penceresini açmak için Tamam tuşuna basın veya ona odaklayın.
 			
@@ -1631,8 +1631,8 @@ Eğer geriye doğru düzenli ifade arama özelliğine ihtiyacınız varsa, kulla
 			<PrintError title="0" message="Yazıcı belgesi başlatılamıyor."/><!-- title="0" kullanarak Windows İS varsayılan "Hata" tercüme başlığını kullanabilirsiniz. -->
 			<FindAutoChangeOfInSelectionWarning title="Arama Uyarısı" message="&quot;Seçimde&quot; kutucuk değeri otomatik olarak değiştirildi.
 Bu eylemi gerçekleştirmeden önce lütfen arama durumunu doğrulayın."/> <!-- NasılTekrarlanır: https://github.com/notepad-plus-plus/notepad-plus-plus/issues/14897#issuecomment-2564316224 -->
-			<Need2Restart2ShowMenuShortcuts title="macpad++ Yeniden Başlatılmalı" message="Doğru menü kısayollarının gösterimi için macpad++ yeniden başlatılmalı."/>
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="Dosyanın Salt Okunur Özniteliği Değişimi Başarısız" message="Dosya niteliklerinin değişmesi için lütfen macpad++'ı yönetici olarak çalıştırın."/>
+			<Need2Restart2ShowMenuShortcuts title="macpadqq Yeniden Başlatılmalı" message="Doğru menü kısayollarının gösterimi için macpadqq yeniden başlatılmalı."/>
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="Dosyanın Salt Okunur Özniteliği Değişimi Başarısız" message="Dosya niteliklerinin değişmesi için lütfen macpadqq'ı yönetici olarak çalıştırın."/>
 			<ReadOnlyFileCannotBeSaved title="Kayıt Başarısız - Dosya Salt Okunur" message="&quot;$STR_REPLACE$&quot;
 Dosya salt okunur ve kaydedilemez.
 Salt okunurluğunu kaldırıp kaydedin."/>
@@ -1762,8 +1762,8 @@ Güvenlik dolayısıyla, açılan shortcuts.xml dosyasını gözden geçirin. E�
 			<word-chars-list-warning-end value="  karakter listenizde."/>
 			<backup-select-folder value="Yedekleme konumu için bir klasör seçin"/><!-- NasılTekrarlanır: Ayarlar > Tercihler > Yedekleme > [...] -->
 			<cloud-invalid-warning value="Geçersiz yol."/>
-			<cloud-restart-warning value="Etkin olması için macpad++'yı tekrar başlat."/>
-			<cloud-select-folder value="macpad++'ın ayarlarını yazıp okuyabileceği bir klasör seçin"/>
+			<cloud-restart-warning value="Etkin olması için macpadqq'yı tekrar başlat."/>
+			<cloud-select-folder value="macpadqq'ın ayarlarını yazıp okuyabileceği bir klasör seçin"/>
 			<default-open-save-select-folder value="Varsayılan dizin için bir klasör seçin"/><!-- NasılTekrarlanır: Ayarlar > Tercihler > Varsayılan Dizin > [...] -->
 			<shift-change-direction-tip value="Shift+Enter ile diğer yönde arama yapın."/>
 			<two-find-buttons-tip value="İkili Bulma Düğmesi Modu"/>
@@ -1922,7 +1922,7 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 Eğer gelişmiş modu seçerseniz fakat belirtilen dilleri düzenlemezseniz, girinti basit modda kalacaktır."/>
 			<!-- "Global override" ve "Default Style" kelimelerini değiştirme -->
 			<global-override-tip value="Burada &quot;Global override&quot; etkinleştirmek tüm dil stillerindeki parametreyi değiştirecektir. Yapmak istediğiniz ise, muhtemelen ayarlardaki &quot;Default Style&quot; seçeneğini kullanmak"/>
-			<scintillaRenderingTechnology-tip value="Özel karakterlerin gösterimini iyileştirebilir veya bazı grafik sorunlarını çözebilir, değişimleri onaylamak için macpad++'ı yeniden başlatın."/>
+			<scintillaRenderingTechnology-tip value="Özel karakterlerin gösterimini iyileştirebilir veya bazı grafik sorunlarını çözebilir, değişimleri onaylamak için macpadqq'ı yeniden başlatın."/>
 
 			<!-- Durum çubuğundaki kısıtlı alandan dolayı, eğer 'length' & 'lines' çevirileri İngilizce kelimelerden çok daha uzunsa, çevirmek yerine lütfen onları İngilizce bırakın. -->
 			<statusbar-Ln-Col value="Sat: $STR_REPLACE1$    Süt: $STR_REPLACE2$"/>

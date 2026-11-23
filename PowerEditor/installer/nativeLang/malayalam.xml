@@ -1470,7 +1470,7 @@
 				<Item id="7" name="&amp;ഇല്ല"/>
 				<Item id="4" name="എപ്പോഴും അതെ"/>
 			</DoSaveAll><!-- HowToReproduce: Check the "Enable Save All confirm dialog" checkbox in Preference->MISC, now click "Save all" -->
-			<NetworkPathWarning title="macpad++ session loading" title2="Clickable file:// link" title3="Loading toolbarButtonsConf.xml" title4="Loading Project Panel XML file">
+			<NetworkPathWarning title="macpadqq session loading" title2="Clickable file:// link" title3="Loading toolbarButtonsConf.xml" title4="Loading Project Panel XML file">
 				<Item id="1771" name="ൻഎറ്റ്വ്ർക് പാത മുന്നറിയിപ്പ്:
 
 $സ്ട്ര_ർഎപ്ലഅക്എ$
@@ -1489,8 +1489,8 @@ $സ്ട്ര_ർഎപ്ലഅക്എ$
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ and $STR_REPLACE$ are place holders, don't translate these place holders. -->
-			<ContextMenuXmlEditWarning title="contextMenu എഡിറ്റ് ചെയ്യുന്നു" message="contextMenu.xml എഡിറ്റ് ചെയ്യുന്നതിലൂടെ macpad++-ലെ പോപ്പ്-അപ്പ് കോണ്ടക്സ്റ്റ് മെനുവിൽ മാറ്റങ്ങൾ വരുത്താൻ സാധിക്കും.
-contextMenu.xml-ൽ മാറ്റങ്ങൾ വരുത്തിയ ശേഷം അവ പ്രാബല്യത്തിൽ വരുന്നതിനായി macpad++ റീസ്റ്റാർട്ട് ചെയ്യേണ്ടതുണ്ട്."/>
+			<ContextMenuXmlEditWarning title="contextMenu എഡിറ്റ് ചെയ്യുന്നു" message="contextMenu.xml എഡിറ്റ് ചെയ്യുന്നതിലൂടെ macpadqq-ലെ പോപ്പ്-അപ്പ് കോണ്ടക്സ്റ്റ് മെനുവിൽ മാറ്റങ്ങൾ വരുത്താൻ സാധിക്കും.
+contextMenu.xml-ൽ മാറ്റങ്ങൾ വരുത്തിയ ശേഷം അവ പ്രാബല്യത്തിൽ വരുന്നതിനായി macpadqq റീസ്റ്റാർട്ട് ചെയ്യേണ്ടതുണ്ട്."/>
 			<SaveCurrentModifWarning title="നിലവിലെ മാറ്റം സംരക്ഷിക്കുക" message="നിലവിലുള്ള പരിഷ്കരണങ്ങൾ നിങ്ങൾ സേവ് ചെയ്യണം.
 
 സംരക്ഷിച്ച എല്ലാ പരിഷ്കാരങ്ങളും പഴയപടിയാക്കാൻ കഴിയില്ല.
@@ -1502,10 +1502,10 @@ contextMenu.xml-ൽ മാറ്റങ്ങൾ വരുത്തിയ ശേ�
 സംരക്ഷിച്ച എല്ലാ പരിഷ്കാരങ്ങളും പഴയപടിയാക്കാൻ കഴിയില്ല.
 
 തുടരണോ?"/><!-- HowToReproduce: when you openned file is modified and saved, then you are changing file encoding. -->
-			<CannotMoveDoc title="പുതിയ macpad++ ഇൻസ്റ്റൻസിലേക്ക് മാറ്റുക" message="രേഖയിൽ മാറ്റം വരുത്തിയിട്ടുണ്ട്; അത് സേവ് ചെയ്ത ശേഷം വീണ്ടും ശ്രമിക്കുക."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
-			<DocReloadWarning title="വീണ്ടും ലോഡ് ചെയ്യുക" message="നിലവിലെ ഫയൽ റീലോഡ് ചെയ്യാനും, അതുവഴി macpad++-ൽ വരുത്തിയ മാറ്റങ്ങൾ നഷ്ടപ്പെടുത്താനും നിങ്ങൾ ആഗ്രഹിക്കുന്നുവെന്ന് ഉറപ്പാണോ?"/>
+			<CannotMoveDoc title="പുതിയ macpadqq ഇൻസ്റ്റൻസിലേക്ക് മാറ്റുക" message="രേഖയിൽ മാറ്റം വരുത്തിയിട്ടുണ്ട്; അത് സേവ് ചെയ്ത ശേഷം വീണ്ടും ശ്രമിക്കുക."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
+			<DocReloadWarning title="വീണ്ടും ലോഡ് ചെയ്യുക" message="നിലവിലെ ഫയൽ റീലോഡ് ചെയ്യാനും, അതുവഴി macpadqq-ൽ വരുത്തിയ മാറ്റങ്ങൾ നഷ്ടപ്പെടുത്താനും നിങ്ങൾ ആഗ്രഹിക്കുന്നുവെന്ന് ഉറപ്പാണോ?"/>
 			<FileLockedWarning title="സംരക്ഷണം പരാജയപ്പെട്ടു" message="ഈ ഫയൽ മറ്റൊരു പ്രോഗ്രാമിൽ തുറന്നിട്ടുണ്ടോ എന്ന് പരിശോധിക്കുക."/>
-			<FileAlreadyOpenedInNpp title="" message="ഫയൽ ഇതിനകം macpad++-ൽ തുറന്നിട്ടുണ്ട്."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
+			<FileAlreadyOpenedInNpp title="" message="ഫയൽ ഇതിനകം macpadqq-ൽ തുറന്നിട്ടുണ്ട്."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
 			<RenameTabTemporaryNameAlreadyInUse title="പേരുമാറ്റം പരാജയപ്പെട്ടു" message="നിർദ്ദിഷ്ട നാമം മറ്റൊരു ടാബിൽ ഇതിനകം ഉപയോഗത്തിലുണ്ട്."/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
 			<RenameTabTemporaryNameIsEmpty title="പേരുമാറ്റം പരാജയപ്പെട്ടു" message="നിർദ്ദിഷ്ട നാമം ശൂന്യമാകാൻ പാടില്ല; അതുപോലെ, അതിൽ സ്‌പെയ്‌സുകളോ ടാബുകളോ (TABs) മാത്രവും ഉണ്ടാകാൻ പാടില്ല."/><!-- HowToReproduce: Rename the tab of an untitled document and provide an empty string or only some white speces. -->
 			<DeleteFileFailed title="ഫയൽ നീക്കം ചെയ്യുക" message="ഫയൽ നീക്കം ചെയ്യുന്നത് പരാജയപ്പെട്ടു."/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
@@ -1548,10 +1548,10 @@ contextMenu.xml-ൽ മാറ്റങ്ങൾ വരുത്തിയ ശേ�
 			<DoReloadOrNotAndLooseChange title="വീണ്ടും ലോഡ് ചെയ്യുക" message="&quot;$STR_REPLACE$&quot;
 
 ഈ ഫയൽ മറ്റൊരു പ്രോഗ്രാം വഴി മാറ്റം വരുത്തിയിട്ടുണ്ട്.
-ഇത് വീണ്ടും ലോഡ് ചെയ്യാനും, അതുവഴി macpad++-ൽ വരുത്തിയ മാറ്റങ്ങൾ നഷ്ടപ്പെടുത്താനും നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?"/>
+ഇത് വീണ്ടും ലോഡ് ചെയ്യാനും, അതുവഴി macpadqq-ൽ വരുത്തിയ മാറ്റങ്ങൾ നഷ്ടപ്പെടുത്താനും നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?"/>
 			<PrehistoricSystemDetected title="പ്രാചീനകാലത്തെ ഒരു സംവിധാനം കണ്ടെത്തി." message="നിങ്ങൾ ഇപ്പോഴും വളരെ പഴയൊരു സംവിധാനമാണ് ഉപയോഗിക്കുന്നതെന്ന് തോന്നുന്നു. ഈ ഫീച്ചർ ആധുനിക സംവിധാനങ്ങളിൽ മാത്രമേ പ്രവർത്തിക്കൂ, ക്ഷമിക്കണം."/><!-- HowToReproduce: Launch "Document Map" under Windows XP. -->
-			<XpUpdaterProblem title="macpad++ അപ്‌ഡേറ്റർ" message="XP-യിലെ കാലഹരണപ്പെട്ട സുരക്ഷാ സംവിധാനം കാരണം, macpad++ അപ്‌ഡേറ്റർ XP-യിൽ പ്രവർത്തിക്കില്ല.
-ഏറ്റവും പുതിയ പതിപ്പ് ഡൗൺലോഡ് ചെയ്യുന്നതിനായി macpad++ പേജിലേക്ക് പോകണോ?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
+			<XpUpdaterProblem title="macpadqq അപ്‌ഡേറ്റർ" message="XP-യിലെ കാലഹരണപ്പെട്ട സുരക്ഷാ സംവിധാനം കാരണം, macpadqq അപ്‌ഡേറ്റർ XP-യിൽ പ്രവർത്തിക്കില്ല.
+ഏറ്റവും പുതിയ പതിപ്പ് ഡൗൺലോഡ് ചെയ്യുന്നതിനായി macpadqq പേജിലേക്ക് പോകണോ?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
 			<ProjectPanelRemoveFolderFromProject title="പ്രോജക്റ്റിൽ നിന്ന് ഫോൾഡർ നീക്കം ചെയ്യുക" message="എല്ലാ ഉപഇനങ്ങളും നീക്കം ചെയ്യപ്പെടും.
 ഈ ഫോൾഡർ പ്രോജക്റ്റിൽ നിന്ന് നീക്കം ചെയ്യണമെന്ന് ഉറപ്പാണോ?"/> <ProjectPanelRemoveFileFromProject title="പ്രോജക്റ്റിൽ നിന്ന് ഫയൽ നീക്കം ചെയ്യുക" message="ഈ ഫയൽ പ്രോജക്റ്റിൽ നിന്ന് നീക്കം ചെയ്യണമെന്ന് ഉറപ്പാണോ?"/> <ProjectPanelReloadError title="വർക്ക്സ്പേസ് വീണ്ടും ലോഡ് ചെയ്യുക" message="വീണ്ടും ലോഡ് ചെയ്യാനുള്ള ഫയൽ കണ്ടെത്താനായില്ല."/> <ProjectPanelReloadDirty title="വർക്ക്സ്പേസ് വീണ്ടും ലോഡ് ചെയ്യുക" message="നിലവിലെ വർക്ക്സ്പേസിൽ മാറ്റങ്ങൾ വരുത്തിയിട്ടുണ്ട്. വീണ്ടും ലോഡ് ചെയ്യുമ്പോൾ എല്ലാ മാറ്റങ്ങളും നഷ്ടപ്പെടും.
 തുടരണമെന്ന് ഉറപ്പാണോ?"/> <UDLNewNameError title="UDL പിശക്" message="ഈ പേര് മറ്റൊരു ഭാഷ ഇതിനകം ഉപയോഗിക്കുന്നുണ്ട്,
@@ -1561,12 +1561,12 @@ contextMenu.xml-ൽ മാറ്റങ്ങൾ വരുത്തിയ ശേ�
 <UDL_saveBeforeImport title="ഉപയോക്തൃ നിർവചിത ഭാഷ" message="കയറ്റുമതി ചെയ്യുന്നതിന് മുമ്പ് &quot;ഇതായി സംരക്ഷിക്കുക...&quot; ബട്ടൺ ക്ലിക്കുചെയ്ത് നിങ്ങളുടെ ഭാഷാ നിർവചനം സംരക്ഷിക്കുക."/>
 <UDL_exportSuccessful title="ഉപയോക്തൃ നിർവചിത ഭാഷ" message="കയറ്റുമതി വിജയകരമായി പൂർത്തിയായി."/>
 <UDL_exportFails title="ഉപയോക്തൃ നിർവചിത ഭാഷ" message="കയറ്റുമതി പരാജയപ്പെട്ടു."/> <SCMapperDoDeleteOrNot title="നിങ്ങൾക്ക് ഉറപ്പാണോ?" message="ഈ കുറുക്കുവഴി നീക്കം ചെയ്യണമെന്ന് ഉറപ്പാണോ?"/> <FindCharRangeValueError title="പരിധി മൂല്യത്തിലെ പ്രശ്നം" message="0 മുതൽ 255 വരെയുള്ള ഒരു മൂല്യം നൽകണം."/> <OpenInAdminMode title="സംരക്ഷണം പരാജയപ്പെട്ടു" message="ഫയൽ സംരക്ഷിക്കാൻ കഴിയുന്നില്ല; അത് സംരക്ഷിതമായിരിക്കാം.
-macpad++ അഡ്മിനിസ്ട്രേറ്റർ മോഡിൽ തുറക്കണോ?"/> <OpenInAdminModeWithoutCloseCurrent title="സംരക്ഷണം പരാജയപ്പെട്ടു" message="ഫയൽ സംരക്ഷിക്കാൻ കഴിയുന്നില്ല; അത് സംരക്ഷിതമായിരിക്കാം.
-macpad++ അഡ്മിനിസ്ട്രേറ്റർ മോഡിൽ തുറക്കണോ?"/> <OpenInAdminModeFailed title="അഡ്മിനിസ്ട്രേറ്റർ മോഡിൽ തുറക്കുന്നത് പരാജയപ്പെട്ടു" message="macpad++ അഡ്മിനിസ്ട്രേറ്റർ മോഡിൽ തുറക്കാൻ കഴിയുന്നില്ല."/> <ViewInBrowser title="നിലവിലെ ഫയൽ ബ്രൗസറിൽ കാണുക" message="നിങ്ങളുടെ സിസ്റ്റത്തിൽ അനുയോജ്യമായ ആപ്ലിക്കേഷൻ കണ്ടെത്താനായില്ല."/> <ExitToUpdatePlugins title="macpad++ അടയ്ക്കാൻ പോകുന്നു" message="അതെ എന്നതിൽ ക്ലിക്കുചെയ്താൽ, തുടർ നടപടികൾക്കായി macpad++ അടയ്ക്കും.
-എല്ലാ പ്രവർത്തനങ്ങളും പൂർത്തിയായ ശേഷം macpad++ വീണ്ടും ആരംഭിക്കും.
-തുടരണോ?"/> <NeedToRestartToLoadPlugins title="macpad++ വീണ്ടും ആരംഭിക്കേണ്ടതുണ്ട്" message="നിങ്ങൾ ഇൻസ്റ്റാൾ ചെയ്ത പ്ലഗിനുകൾ ലോഡ് ചെയ്യുന്നതിനായി macpad++ വീണ്ടും ആരംഭിക്കണം."/> <ChangeHistoryEnabledWarning title="macpad++ വീണ്ടും ആരംഭിക്കേണ്ടതുണ്ട്" message="മാറ്റങ്ങളുടെ ചരിത്രം പ്രവർത്തനക്ഷമമാക്കാൻ macpad++ വീണ്ടും ആരംഭിക്കണം."/> <WindowsSessionExit title="macpad++ - Windows സെഷൻ അവസാനിപ്പിക്കൽ" message="Windows സെഷൻ അവസാനിക്കാൻ പോകുകയാണ്, എന്നാൽ നിങ്ങൾക്ക് സംരക്ഷിക്കാത്ത ചില ഡാറ്റയുണ്ട്. macpad++ ഇപ്പോൾ അടയ്ക്കണോ?"/> <LanguageMenuCompactWarning title="ഭാഷാ മെനു ചുരുക്കുക" message="അടുത്ത തവണ macpad++ ആരംഭിക്കുമ്പോൾ ഈ ഓപ്ഷനിൽ മാറ്റം വരുത്തും."/> <SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="സംരക്ഷിക്കാത്ത മാറ്റങ്ങൾ നഷ്ടപ്പെടാൻ പോകുന്നു!
+macpadqq അഡ്മിനിസ്ട്രേറ്റർ മോഡിൽ തുറക്കണോ?"/> <OpenInAdminModeWithoutCloseCurrent title="സംരക്ഷണം പരാജയപ്പെട്ടു" message="ഫയൽ സംരക്ഷിക്കാൻ കഴിയുന്നില്ല; അത് സംരക്ഷിതമായിരിക്കാം.
+macpadqq അഡ്മിനിസ്ട്രേറ്റർ മോഡിൽ തുറക്കണോ?"/> <OpenInAdminModeFailed title="അഡ്മിനിസ്ട്രേറ്റർ മോഡിൽ തുറക്കുന്നത് പരാജയപ്പെട്ടു" message="macpadqq അഡ്മിനിസ്ട്രേറ്റർ മോഡിൽ തുറക്കാൻ കഴിയുന്നില്ല."/> <ViewInBrowser title="നിലവിലെ ഫയൽ ബ്രൗസറിൽ കാണുക" message="നിങ്ങളുടെ സിസ്റ്റത്തിൽ അനുയോജ്യമായ ആപ്ലിക്കേഷൻ കണ്ടെത്താനായില്ല."/> <ExitToUpdatePlugins title="macpadqq അടയ്ക്കാൻ പോകുന്നു" message="അതെ എന്നതിൽ ക്ലിക്കുചെയ്താൽ, തുടർ നടപടികൾക്കായി macpadqq അടയ്ക്കും.
+എല്ലാ പ്രവർത്തനങ്ങളും പൂർത്തിയായ ശേഷം macpadqq വീണ്ടും ആരംഭിക്കും.
+തുടരണോ?"/> <NeedToRestartToLoadPlugins title="macpadqq വീണ്ടും ആരംഭിക്കേണ്ടതുണ്ട്" message="നിങ്ങൾ ഇൻസ്റ്റാൾ ചെയ്ത പ്ലഗിനുകൾ ലോഡ് ചെയ്യുന്നതിനായി macpadqq വീണ്ടും ആരംഭിക്കണം."/> <ChangeHistoryEnabledWarning title="macpadqq വീണ്ടും ആരംഭിക്കേണ്ടതുണ്ട്" message="മാറ്റങ്ങളുടെ ചരിത്രം പ്രവർത്തനക്ഷമമാക്കാൻ macpadqq വീണ്ടും ആരംഭിക്കണം."/> <WindowsSessionExit title="macpadqq - Windows സെഷൻ അവസാനിപ്പിക്കൽ" message="Windows സെഷൻ അവസാനിക്കാൻ പോകുകയാണ്, എന്നാൽ നിങ്ങൾക്ക് സംരക്ഷിക്കാത്ത ചില ഡാറ്റയുണ്ട്. macpadqq ഇപ്പോൾ അടയ്ക്കണോ?"/> <LanguageMenuCompactWarning title="ഭാഷാ മെനു ചുരുക്കുക" message="അടുത്ത തവണ macpadqq ആരംഭിക്കുമ്പോൾ ഈ ഓപ്ഷനിൽ മാറ്റം വരുത്തും."/> <SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="സംരക്ഷിക്കാത്ത മാറ്റങ്ങൾ നഷ്ടപ്പെടാൻ പോകുന്നു!
 തീമുകൾ മാറ്റുന്നതിന് മുമ്പ് നിങ്ങളുടെ മാറ്റങ്ങൾ സംരക്ഷിക്കണോ?"/> <FullReadOnlySavingForbidden title="സംരക്ഷണം പരാജയപ്പെട്ടു" message="ഫയൽ സംരക്ഷിക്കാൻ കഴിയുന്നില്ല.
-macpad++-ന്റെ പൂർണ്ണമായ വായിക്കാൻ മാത്രം മോഡിലുള്ള സംരക്ഷണ നിയന്ത്രണം കാരണം ഫയൽ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല."/> <NotEnoughRoom4Saving title="സംരക്ഷണം പരാജയപ്പെട്ടു" message="ഫയൽ സംരക്ഷിക്കുന്നത് പരാജയപ്പെട്ടു.
+macpadqq-ന്റെ പൂർണ്ണമായ വായിക്കാൻ മാത്രം മോഡിലുള്ള സംരക്ഷണ നിയന്ത്രണം കാരണം ഫയൽ സംരക്ഷിക്കാൻ കഴിഞ്ഞില്ല."/> <NotEnoughRoom4Saving title="സംരക്ഷണം പരാജയപ്പെട്ടു" message="ഫയൽ സംരക്ഷിക്കുന്നത് പരാജയപ്പെട്ടു.
 ഫയൽ സംരക്ഷിക്കാൻ ഡിസ്കിൽ മതിയായ ഇടമില്ലെന്ന് തോന്നുന്നു. നിങ്ങളുടെ ഫയൽ സംരക്ഷിച്ചിട്ടില്ല."/>
 <FileInaccessibleUserSession title="ഫയൽ ലഭ്യമല്ല" message="നിങ്ങൾ സ്വമേധയാ സംരക്ഷിച്ച സെഷനിലെ &quot;$STR_REPLACE$&quot; എന്നതിൽപ്പെട്ട ചില ഫയലുകൾ ലഭ്യമല്ല. അവ ശൂന്യവും വായിക്കാൻ മാത്രം കഴിയുന്നതുമായ ഡോക്യുമെന്റുകളായി പ്ലേസ്‌ഹോൾഡറുകളായി തുറക്കാം.
 
@@ -1577,12 +1577,12 @@ macpad++-ന്റെ പൂർണ്ണമായ വായിക്കാൻ �
 
 ഈ പ്ലേസ്‌ഹോൾഡറുകൾ സൃഷ്ടിക്കണോ?
 
-ശ്രദ്ധിക്കുക: പ്ലേസ്‌ഹോൾഡറുകൾ സൃഷ്ടിക്കാതിരിക്കുകയോ പിന്നീട് അവ അടയ്ക്കുകയോ ചെയ്താൽ, പുറത്തുകടക്കുമ്പോൾ നിങ്ങളുടെ സെഷനിൽ മാറ്റം വരുത്തപ്പെടും! ഇപ്പോൾ തന്നെ നിങ്ങളുടെ &quot;session.xml&quot; ബാക്കപ്പ് ചെയ്യാൻ ഞങ്ങൾ ശുപാർശ ചെയ്യുന്നു."/> <RTLvsDirectWrite title="RTL പ്രവർത്തിപ്പിക്കാൻ കഴിയുന്നില്ല" message="RTL മോഡ് DirectWrite മോഡുമായി പൊരുത്തപ്പെടുന്നില്ല. Preferences ഡയലോഗിലെ MISC. വിഭാഗത്തിൽ നിന്ന് DirectWrite മോഡ് പ്രവർത്തനരഹിതമാക്കി macpad++ വീണ്ടും ആരംഭിക്കുക."/> <FileMemoryAllocationFailed title="ഒഴിവാക്കൽ: ഫയലിനായി മെമ്മറി അനുവദിക്കുന്നത് പരാജയപ്പെട്ടു" message="macpad++ ലോഡ് ചെയ്യുന്ന ഫയലിനായി തുടർച്ചയായ സൗജന്യ മെമ്മറി മതിയായ അളവിൽ ലഭ്യമല്ലായിരിക്കാം."/>
+ശ്രദ്ധിക്കുക: പ്ലേസ്‌ഹോൾഡറുകൾ സൃഷ്ടിക്കാതിരിക്കുകയോ പിന്നീട് അവ അടയ്ക്കുകയോ ചെയ്താൽ, പുറത്തുകടക്കുമ്പോൾ നിങ്ങളുടെ സെഷനിൽ മാറ്റം വരുത്തപ്പെടും! ഇപ്പോൾ തന്നെ നിങ്ങളുടെ &quot;session.xml&quot; ബാക്കപ്പ് ചെയ്യാൻ ഞങ്ങൾ ശുപാർശ ചെയ്യുന്നു."/> <RTLvsDirectWrite title="RTL പ്രവർത്തിപ്പിക്കാൻ കഴിയുന്നില്ല" message="RTL മോഡ് DirectWrite മോഡുമായി പൊരുത്തപ്പെടുന്നില്ല. Preferences ഡയലോഗിലെ MISC. വിഭാഗത്തിൽ നിന്ന് DirectWrite മോഡ് പ്രവർത്തനരഹിതമാക്കി macpadqq വീണ്ടും ആരംഭിക്കുക."/> <FileMemoryAllocationFailed title="ഒഴിവാക്കൽ: ഫയലിനായി മെമ്മറി അനുവദിക്കുന്നത് പരാജയപ്പെട്ടു" message="macpadqq ലോഡ് ചെയ്യുന്ന ഫയലിനായി തുടർച്ചയായ സൗജന്യ മെമ്മറി മതിയായ അളവിൽ ലഭ്യമല്ലായിരിക്കാം."/>
 <FindRegexBackwardDisabled title="Regex പിന്നോട്ടുള്ള തിരച്ചിൽ പ്രവർത്തനരഹിതമാക്കി" message="പ്രതീക്ഷിക്കാത്ത ഫലങ്ങൾ ലഭിക്കാനുള്ള സാധ്യത കാരണം, ഡിഫോൾട്ടായി പിന്നോട്ടുള്ള Regex തിരച്ചിൽ പ്രവർത്തനരഹിതമാണ്. പിന്നോട്ടുള്ള തിരച്ചിൽ നടത്താൻ Find ഡയലോഗ് തുറന്ന് Regular Expression മോഡിന് പകരം Normal അല്ലെങ്കിൽ Extended തിരച്ചിൽ മോഡ് തിരഞ്ഞെടുക്കുക.
 Find ഡയലോഗ് തുറക്കുന്നതിനോ അതിലേക്ക് ഫോക്കസ് മാറ്റുന്നതിനോ OK ബട്ടൺ അമർത്തുക.
 
 പിന്നോട്ടുള്ള Regex തിരച്ചിൽ സവിശേഷത ആവശ്യമുണ്ടെങ്കിൽ, അത് പ്രവർത്തനക്ഷമമാക്കുന്നതിനുള്ള നിർദ്ദേശങ്ങൾക്കായി ഉപയോക്തൃ മാനുവൽ പരിശോധിക്കുക."/> <PrintError title="0" message="പ്രിന്റർ ഡോക്യുമെന്റ് ആരംഭിക്കാൻ കഴിയുന്നില്ല."/> <FindAutoChangeOfInSelectionWarning title="തിരച്ചിൽ മുന്നറിയിപ്പ്" message="&quot;തിരഞ്ഞെടുത്തതിൽ&quot; എന്ന ചെക്ക്ബോക്സിന്റെ നില സ്വമേധയാ മാറ്റിയിരിക്കുന്നു.
-പ്രവർത്തനം നടത്തുന്നതിന് മുമ്പ് തിരച്ചിൽ വ്യവസ്ഥ പരിശോധിക്കുക."/> <Need2Restart2ShowMenuShortcuts title="macpad++ വീണ്ടും ആരംഭിക്കേണ്ടതുണ്ട്" message="മെനുവിലെ ശരിയായ കുറുക്കുവഴികൾ കാണിക്കുന്നതിന് macpad++ വീണ്ടും ആരംഭിക്കണം."/> <NoAdminRight2ChangeReadOnlyFileAttribute title="ഫയലിന്റെ വായിക്കാൻ മാത്രം ആട്രിബ്യൂട്ട് മാറ്റുന്നത് പരാജയപ്പെട്ടു" message="ഫയൽ ആട്രിബ്യൂട്ടുകൾ മാറ്റുന്നതിനായി macpad++ അഡ്മിനിസ്ട്രേറ്ററായി പ്രവർത്തിപ്പിക്കുക."/> <ReadOnlyFileCannotBeSaved title="സംരക്ഷണം പരാജയപ്പെട്ടു - ഫയൽ വായിക്കാൻ മാത്രം കഴിയുന്നതാണ്" message="&quot;$STR_REPLACE$&quot;
+പ്രവർത്തനം നടത്തുന്നതിന് മുമ്പ് തിരച്ചിൽ വ്യവസ്ഥ പരിശോധിക്കുക."/> <Need2Restart2ShowMenuShortcuts title="macpadqq വീണ്ടും ആരംഭിക്കേണ്ടതുണ്ട്" message="മെനുവിലെ ശരിയായ കുറുക്കുവഴികൾ കാണിക്കുന്നതിന് macpadqq വീണ്ടും ആരംഭിക്കണം."/> <NoAdminRight2ChangeReadOnlyFileAttribute title="ഫയലിന്റെ വായിക്കാൻ മാത്രം ആട്രിബ്യൂട്ട് മാറ്റുന്നത് പരാജയപ്പെട്ടു" message="ഫയൽ ആട്രിബ്യൂട്ടുകൾ മാറ്റുന്നതിനായി macpadqq അഡ്മിനിസ്ട്രേറ്ററായി പ്രവർത്തിപ്പിക്കുക."/> <ReadOnlyFileCannotBeSaved title="സംരക്ഷണം പരാജയപ്പെട്ടു - ഫയൽ വായിക്കാൻ മാത്രം കഴിയുന്നതാണ്" message="&quot;$STR_REPLACE$&quot;
 ഫയൽ വായിക്കാൻ മാത്രം കഴിയുന്നതാണ്, അതിനാൽ സംരക്ഷിക്കാൻ കഴിയില്ല.
 വായിക്കാൻ മാത്രം എന്ന ആട്രിബ്യൂട്ട് നീക്കം ചെയ്ത ശേഷം ഫയൽ സംരക്ഷിക്കുക."/>
 <ShortcutsXmlHMACMissing title="സുരക്ഷാ മുന്നറിയിപ്പ്" message="shortcuts.xml-നുള്ള സുരക്ഷാ വിവരങ്ങൾ config.xml-ൽ ലഭ്യമല്ല.
@@ -1590,7 +1590,7 @@ Find ഡയലോഗ് തുറക്കുന്നതിനോ അതില�
 സുരക്ഷാ കാരണങ്ങളാൽ shortcuts.xml-ന്റെ സമഗ്രത പരിശോധിക്കും. നിങ്ങളുടെ ഇഷ്ടാനുസൃത കമാൻഡ് പ്രവർത്തിപ്പിക്കുന്നതിന്, തുറന്ന shortcuts.xml പരിശോധിക്കുക. ഫയലിന്റെ ഉള്ളടക്കം ശരിയാണെങ്കിൽ, സ്ഥിരീകരിക്കുന്നതിനായി Run മെനുവിൽ നിന്ന് &quot;shortcuts.xml സ്ഥിരീകരിക്കുക&quot; തിരഞ്ഞെടുക്കുക."/>
 <ShortcutsXmlTampered title="സുരക്ഷാ മുന്നറിയിപ്പ്" message="shortcuts.xml ഫയൽ സ്വമേധയാ മാറ്റിയതായി തോന്നുന്നു.
 
-സുരക്ഷാ കാരണങ്ങളാൽ, തുറന്ന shortcuts.xml പരിശോധിക്കുക. ഫയലിന്റെ ഉള്ളടക്കം ശരിയാണെങ്കിൽ, സ്ഥിരീകരിക്കുന്നതിനായി Run മെനുവിൽ നിന്ന് &quot;shortcuts.xml സ്ഥിരീകരിക്കുക&quot; തിരഞ്ഞെടുക്കുക."/> <SymlinkLoadingWarning title="മുന്നറിയിപ്പ്: സിംലിങ്ക് ലോഡ് ചെയ്യുന്നത് സിസ്റ്റം നിശ്ചലമാകാൻ കാരണമാകാം" message="Folder as Workspace-ൽ സിംലിങ്ക് ലോഡിംഗ് പ്രവർത്തനക്ഷമമാക്കുന്നത് macpad++ അനന്തമായ ലൂപ്പിൽ പ്രവേശിച്ച് നിശ്ചലമാകാൻ കാരണമാകാം.
+സുരക്ഷാ കാരണങ്ങളാൽ, തുറന്ന shortcuts.xml പരിശോധിക്കുക. ഫയലിന്റെ ഉള്ളടക്കം ശരിയാണെങ്കിൽ, സ്ഥിരീകരിക്കുന്നതിനായി Run മെനുവിൽ നിന്ന് &quot;shortcuts.xml സ്ഥിരീകരിക്കുക&quot; തിരഞ്ഞെടുക്കുക."/> <SymlinkLoadingWarning title="മുന്നറിയിപ്പ്: സിംലിങ്ക് ലോഡ് ചെയ്യുന്നത് സിസ്റ്റം നിശ്ചലമാകാൻ കാരണമാകാം" message="Folder as Workspace-ൽ സിംലിങ്ക് ലോഡിംഗ് പ്രവർത്തനക്ഷമമാക്കുന്നത് macpadqq അനന്തമായ ലൂപ്പിൽ പ്രവേശിച്ച് നിശ്ചലമാകാൻ കാരണമാകാം.
 ഡയറക്ടറി സിംലിങ്കുകൾ പാരന്റ് ഫോൾഡറുകളിലേക്ക് പോയിന്റ് ചെയ്യുകയോ പരസ്പരം ബന്ധിപ്പിച്ച വൃത്താകൃതിയിലുള്ള റഫറൻസുകൾ രൂപപ്പെടുകയോ ചെയ്യുമ്പോൾ ഇത് സംഭവിക്കാം.
 അപകടസാധ്യതകൾ മനസ്സിലാക്കിയിട്ടുണ്ടെങ്കിൽ മാത്രം തുടരുക."/>
 
@@ -1715,8 +1715,8 @@ Find ഡയലോഗ് തുറക്കുന്നതിനോ അതില�
 
 			<backup-select-folder value="ബാക്കപ്പ് ഡയറക്ടറിയായി ഒരു ഫോൾഡർ തിരഞ്ഞെടുക്കുക"/>
 			<cloud-invalid-warning value="അസാധുവായ പാത."/>
-			<cloud-restart-warning value="മാറ്റങ്ങൾ പ്രാബല്യത്തിൽ വരുന്നതിനായി macpad++ വീണ്ടും ആരംഭിക്കുക."/>
-			<cloud-select-folder value="macpad++ അതിന്റെ ക്രമീകരണങ്ങൾ വായിക്കുകയും എഴുതുകയും ചെയ്യുന്നതിനായി ഉപയോഗിക്കുന്ന ഫോൾഡർ തിരഞ്ഞെടുക്കുക"/>
+			<cloud-restart-warning value="മാറ്റങ്ങൾ പ്രാബല്യത്തിൽ വരുന്നതിനായി macpadqq വീണ്ടും ആരംഭിക്കുക."/>
+			<cloud-select-folder value="macpadqq അതിന്റെ ക്രമീകരണങ്ങൾ വായിക്കുകയും എഴുതുകയും ചെയ്യുന്നതിനായി ഉപയോഗിക്കുന്ന ഫോൾഡർ തിരഞ്ഞെടുക്കുക"/>
 			<default-open-save-select-folder value="ഡിഫോൾട്ട് ഡയറക്ടറിയായി ഒരു ഫോൾഡർ തിരഞ്ഞെടുക്കുക"/>
 			<shift-change-direction-tip value="വിപരീത ദിശയിൽ തിരയാൻ Shift+Enter ഉപയോഗിക്കുക"/>
 			<two-find-buttons-tip value="2 തിരയൽ ബട്ടൺ മോഡ്"/>
@@ -1910,7 +1910,7 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 
 			<global-override-tip value="ഇവിടെ &quot;Global override&quot; പ്രവർത്തനക്ഷമമാക്കുന്നത് എല്ലാ ഭാഷാ ശൈലികളിലുമുള്ള ആ പരാമീറ്ററിനെ അസാധുവാക്കും. നിങ്ങൾക്ക് യഥാർത്ഥത്തിൽ വേണ്ടത് &quot;Default Style&quot; ക്രമീകരണങ്ങൾ ഉപയോഗിക്കുന്നതായിരിക്കാം."/>
 
-			<scintillaRenderingTechnology-tip value="പ്രത്യേക അക്ഷരങ്ങളുടെ rendering മെച്ചപ്പെടുത്തുകയോ ചില graphics പ്രശ്നങ്ങൾ പരിഹരിക്കുകയോ ചെയ്യാം. മാറ്റങ്ങൾ പ്രാബല്യത്തിൽ വരാൻ macpad++ വീണ്ടും ആരംഭിക്കുക."/>
+			<scintillaRenderingTechnology-tip value="പ്രത്യേക അക്ഷരങ്ങളുടെ rendering മെച്ചപ്പെടുത്തുകയോ ചില graphics പ്രശ്നങ്ങൾ പരിഹരിക്കുകയോ ചെയ്യാം. മാറ്റങ്ങൾ പ്രാബല്യത്തിൽ വരാൻ macpadqq വീണ്ടും ആരംഭിക്കുക."/>
 
 			<statusbar-length-lines value="length: $STR_REPLACE1$    lines: $STR_REPLACE2$"/>
 			<statusbar-Ln-Col value="Ln: $STR_REPLACE1$    Col: $STR_REPLACE2$"/>

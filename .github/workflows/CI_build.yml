@@ -225,14 +225,14 @@ jobs:
       if: matrix.build_configuration == 'Release'
       uses: actions/upload-artifact@v7
       with:
-          name: macpad++.MSVC.${{ matrix.build_platform}}.${{ matrix.build_configuration}}
+          name: macpadqq.MSVC.${{ matrix.build_platform}}.${{ matrix.build_configuration}}
           path: PowerEditor\bin*\Notepad++.exe
 
     - name: Archive artifacts for ${{ matrix.build_platform}} / Debug
       if: matrix.build_configuration == 'Debug'
       uses: actions/upload-artifact@v7
       with:
-          name: macpad++.MSVC.${{ matrix.build_platform}}.${{ matrix.build_configuration}}
+          name: macpadqq.MSVC.${{ matrix.build_platform}}.${{ matrix.build_configuration}}
           path: PowerEditor\**\${{ matrix.build_configuration}}\Notepad++.exe
 
     - name: (cache) Restore Python modules for Win32 / Debug
@@ -422,5 +422,5 @@ jobs:
     - name: Archive artifacts for ${{ matrix.msys }} / ${{ matrix.configuration }}
       uses: actions/upload-artifact@v7
       with:
-        name: macpad++.${{ matrix.compiler }}.${{ matrix.arch }}.${{ matrix.configuration }}
+        name: macpadqq.${{ matrix.compiler }}.${{ matrix.arch }}.${{ matrix.configuration }}
         path: bin.${{ matrix.compiler }}.${{ matrix.arch }}${{ matrix.configuration == 'Debug' && '-debug' || '' }}\notepad++.exe

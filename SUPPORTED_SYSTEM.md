@@ -1,14 +1,14 @@
-# macpad++ compatibility
+# macpadqq compatibility
 
 | Component | Native macOS support |
 | --- | --- |
 | Platform | macOS 13 or later on Apple silicon and Intel. The app includes both architectures. |
-| Finder | Open selected files with the **Open in macpad++** service or the standard **Open With** menu. |
+| Finder | Open selected files with the **Open in macpadqq** service or the standard **Open With** menu. |
 | Documents | UTF‑8 and BOM-marked UTF‑16 are recognized before heuristic detection. Legacy detection uses uchardet and checks that the decoded text round-trips to the original bytes. Windows‑1252 is the fallback. Explicitly reopening in a chosen encoding overrides detection. |
 | Editor window | Independent tab strips with vertical and multi-row modes, hover previews and a Control-Tab switcher for recent documents. The rotatable split supports cloned buffers and synchronized zoom. Use File to reopen a recently closed file and View to open or move a saved document to another instance. |
 | Panels | Dock, resize or float the document list, file trees, three project panels, function list, document map, clipboard history and character panel. Panels on the same edge share a reorderable tab strip and can float together. Project XML accepts workspace-relative paths and mapped Windows paths. |
 | Search | Literal, Extended and Boost.Regex modes. Search in a selection, open buffers, folders and projects or refine earlier results. Set the thresholds for automatic selection scope and filling the Find field, and choose a monospaced font for dialog inputs. Five token styles support marking, navigation and copying. Volatile searches leave the previous query and history intact. Search by Unicode code point or range. Batch replacement preserves encodings and checks for stale changes. |
-| Editing | Select text or columns in two steps, convert tabs and spaces, change case, insert a date using a custom format and copy the paths of open files. Jump to matching braces, adjust multiple selections, open a selected path, search with a custom search provider or redact text. Paste HTML or RTF source from the macOS clipboard and transfer binary text bytes between macpad++ documents. |
+| Editing | Select text or columns in two steps, convert tabs and spaces, change case, insert a date using a custom format and copy the paths of open files. Jump to matching braces, adjust multiple selections, open a selected path, search with a custom search provider or redact text. Paste HTML or RTF source from the macOS clipboard and transfer binary text bytes between macpadqq documents. |
 | Syntax highlighting | Built-in Lexilla languages and UDL XML 2.0 and 2.1. Edit, copy and remove definitions in the form or dockable panel. Changes to bundled definitions are saved in the profile. Function List and Auto-Completion accept bundled and profile XML rules. |
 | Theme XML | Lexer styles, global overrides, fonts, editor and tab colors, selection and caret colors, fold markers and margins in the editor and search results, bookmark margins, change history, end-of-line marker colors, search status messages and the document map. Choose the end-of-line marker style under **Preferences → Editor guides**. The Style Configurator edits a copy in the profile. Some Windows GUI entries have no native equivalent. |
 | Translation and menu XML | Matching menus, dialogs and panels use translation XML, including preferences, Save All confirmation and search status strings. Nine languages include supplemental native strings, with coverage varying by language. For custom strings, add `MacpadStrings` under `Native-Langue` or put `native-labels/<language>.plist` in the profile. Use keys such as `native-text:English text` for matching strings or `Find:1632` for a specific control. |
@@ -27,7 +27,7 @@ The legacy Windows source and build instructions are available in [BUILD.md](BUI
 
 ## Map Windows paths
 
-Put a property list named `windowsPathMappings.plist` in the macpad++ profile. Each
+Put a property list named `windowsPathMappings.plist` in the macpadqq profile. Each
 key is a drive or UNC prefix. Each value is a local absolute directory.
 For example, `C:` can map to `/Volumes/Windows` and `//server/share` can map to
 `/Volumes/share`. More specific prefixes take precedence. A project saved

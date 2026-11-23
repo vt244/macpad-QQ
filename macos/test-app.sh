@@ -3,9 +3,9 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 root=$PWD
-app="$root/dist/macpad++.app"
-if [[ ! -x "$app/Contents/MacOS/macpad++" ]]; then
-	echo "Build macpad++.app with macos/build-app.sh first." >&2
+app="$root/dist/macpadqq.app"
+if [[ ! -x "$app/Contents/MacOS/macpadqq" ]]; then
+	echo "Build macpadqq.app with macos/build-app.sh first." >&2
 	exit 1
 fi
 
@@ -27,7 +27,7 @@ cat > "$work/toolbarButtonsConf.xml" <<'XML'
 <NotepadPlus><ToolbarButtons><Standard><Button id="44023" index="18" hide="yes"/></Standard></ToolbarButtons></NotepadPlus>
 XML
 codesign --verify --strict "$app"
-xcrun lipo "$app/Contents/MacOS/macpad++" -verify_arch arm64 x86_64
-"$app/Contents/MacOS/macpad++" --smoke-test
-MACPAD_DATA_DIR="$work/lifecycle" "$app/Contents/MacOS/macpad++" --smoke-workspace-write
-MACPAD_DATA_DIR="$work/lifecycle" "$app/Contents/MacOS/macpad++" --smoke-workspace-restore
+xcrun lipo "$app/Contents/MacOS/macpadqq" -verify_arch arm64 x86_64
+"$app/Contents/MacOS/macpadqq" --smoke-test
+MACPAD_DATA_DIR="$work/lifecycle" "$app/Contents/MacOS/macpadqq" --smoke-workspace-write
+MACPAD_DATA_DIR="$work/lifecycle" "$app/Contents/MacOS/macpadqq" --smoke-workspace-restore

@@ -55,7 +55,7 @@
 	{
 		close(_lock);
 		_lock = -1;
-		NSLog(@"macpad++ workspace: %@", error.localizedDescription);
+		NSLog(@"macpadqq workspace: %@", error.localizedDescription);
 		return NO;
 	}
 	_snapshotURL = snapshot;
@@ -83,7 +83,7 @@
 	NSError *error = nil;
 	if ([self writeToURL:_snapshotURL error:&error])
 		return YES;
-	NSLog(@"macpad++ workspace: %@", error.localizedDescription);
+	NSLog(@"macpadqq workspace: %@", error.localizedDescription);
 	return NO;
 }
 

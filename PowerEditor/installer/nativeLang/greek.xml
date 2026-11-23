@@ -317,12 +317,12 @@
 					<Item id="46250" name="Καθορίστε τη γλώσσα σας..."/>
 					<Item id="46300" name="Άνοιγμα του φακέλου Καθορισμένη από το χρήστη γλώσσα..."/>
 					<Item id="47000" name="Σχετικά..."/>
-					<Item id="47001" name="macpad++ Αρχική"/>
-					<Item id="47002" name="macpad++ Σελίδα Project"/>
+					<Item id="47001" name="macpadqq Αρχική"/>
+					<Item id="47002" name="macpadqq Σελίδα Project"/>
 					<Item id="47003" name="Βοήθεια με σύνδεση"/>
 					<Item id="47004" name="Φόρουμ"/>
 					<Item id="47005" name="Λήψη περισσότερων πρόσθετων"/>
-					<Item id="47006" name="Ενημέρωση macpad++"/>
+					<Item id="47006" name="Ενημέρωση macpadqq"/>
 					<Item id="47009" name="Σετ διακομιστή μεσολάβησης..."/>
 					<Item id="47010" name="Ορίσματα γραμμής εντολών..."/>
 					<Item id="47012" name="Πληροφορίες εντοπισμού σφαλμάτων..."/>
@@ -844,7 +844,7 @@
 
 				<DarkMode title="Σκοτεινή λειτουργία">
 					<Item id="7101" name="Ενεργ. σκοτεινής λειτουργίας"/>
-					<Item id="7106" name="* macpad++ πρέπει να γίνει επανεκκίνηση για να τεθεί πλήρως σε ισχύ"/>
+					<Item id="7106" name="* macpadqq πρέπει να γίνει επανεκκίνηση για να τεθεί πλήρως σε ισχύ"/>
 				</DarkMode>
 
 				<MarginsBorderEdge title="Περιθ/Περίγρ/Άκρο">
@@ -895,7 +895,7 @@
 				</DefaultDir>
 
 				<FileAssoc title="Συσχέτιση Αρχείων">
-					<Item id="4008" name="Έξοδος από το macpad++ και επανεκκινήστε σε λειτουργία διαχειριστή για να χρησιμοποιήσετε αυτήν τη δυνατότητα."/>
+					<Item id="4008" name="Έξοδος από το macpadqq και επανεκκινήστε σε λειτουργία διαχειριστή για να χρησιμοποιήσετε αυτήν τη δυνατότητα."/>
 					<Item id="4009" name="Επεκτάσεις: "/>
 					<Item id="4010" name="Ενεργές επεκτάσεις: "/>
 				</FileAssoc>
@@ -960,7 +960,7 @@
 
 				<Searching title="Αναζήτηση">
 					<Item id="6901" name="Να μην συμπληρωθεί το πεδίο εύρεσης στο παράθυρο διαλόγου Εύρεση με την επιλεγμένη λέξη"/>
-					<Item id="6902" name="Χρήση γραμματ. με ένα διάστημα στο παράθυρο διαλόγου Εύρεση (Ανάγκη επανεκκίνησης macpad++)"/>
+					<Item id="6902" name="Χρήση γραμματ. με ένα διάστημα στο παράθυρο διαλόγου Εύρεση (Ανάγκη επανεκκίνησης macpadqq)"/>
 					<Item id="6903" name="Το παράθυρο διαλόγου Εύρεση μένει ανοιχτό μετά την αναζήτηση που εξάγει στο παράθ. αποτελεσμάτων"/>
 					<Item id="6904" name="Επιβεβαίωση αντικατάστασης όλων σε όλα τα ανοιχτά έγγραφα"/>
 					<Item id="6905" name="Αντικατάσταση: Να μην μετακινηθεί στην ακόλουθη εμφάνιση"/>
@@ -1014,10 +1014,10 @@
 
 				<MultiInstance title="Πολλαπλή παρουσία">
 					<Item id="6151" name="Ρυθμίσεις πολλαπλών παρουσιών"/>
-					<Item id="6152" name="Άνοιγμα συνεδρίας σε νέα παρουσία του macpad++"/>
+					<Item id="6152" name="Άνοιγμα συνεδρίας σε νέα παρουσία του macpadqq"/>
 					<Item id="6153" name="Πάντα σε λειτουργία πολλαπλών παρουσιών"/>
 					<Item id="6154" name="Προεπιλογή (μονοπαρουσία)"/>
-					<Item id="6155" name="* Πρέπει να γίνει επανεκκίνηση της τροποποίησης αυτής της ρύθμισης macpad++"/>
+					<Item id="6155" name="* Πρέπει να γίνει επανεκκίνηση της τροποποίησης αυτής της ρύθμισης macpadqq"/>
 				</MultiInstance>
 
 				<Delimiter title="Οριοθέτης">
@@ -1064,7 +1064,7 @@
 					<Item id="6312" name="Κατάσταση Αρχείων Αυτόματης-ανίχνευσης"/>
 					<Item id="6313" name="Αθόρυβη ενημέρωση"/>
 					<Item id="6322" name="Επέκταση αρχείου συνόδου:"/>
-					<Item id="6323" name="Ενεργή macpad++ αυτόματη-ενημέρωση"/>
+					<Item id="6323" name="Ενεργή macpadqq αυτόματη-ενημέρωση"/>
 					<Item id="6324" name="Εναλλαγέας εγγράφων (Ctrl+TAB)"/>
 					<Item id="6325" name="Μετάβαση σε τελευταία γραμμή"/>
 					<Item id="6331" name="Εμφάνιση μόνο ονόματος αρχείου στη γραμμή τίτλου"/>
@@ -1130,7 +1130,7 @@
 		</Dialog>
 		<MessageBox><!-- $INT_REPLACE$ is a place holder, don't translate it -->
 			<ContextMenuXmlEditWarning title="Επεξεργασία μενού περιβάλλοντος" message="Η Επεξεργασία contextMenu.xml σάς επιτρέπει να τροποποιήσετε το αναδυόμενο μενού περιβάλλοντος
-Πρέπει να επανεκκινήσετε το macpad++ για να ισχύσει η τροποποίηση του contextMenu.xml."/>
+Πρέπει να επανεκκινήσετε το macpadqq για να ισχύσει η τροποποίηση του contextMenu.xml."/>
 			<SaveCurrentModifWarning title="Αποθήκευση τρέχουσας τροποποίησης" message="Θα πρέπει να αποθηκεύσετε την τρέχουσα τροποποίηση.
 Όλες οι αποθηκευμένες τροποποιήσεις δεν μπορούν να αναιρεθούν.
 
@@ -1139,10 +1139,10 @@
 Όλες οι αποθηκευμένες τροποποιήσεις δεν μπορούν να αναιρεθούν.
 
 Συνέχεια;"/><!-- HowToReproduce: when you openned file is modified and saved, then you are changing file encoding. -->
-			<CannotMoveDoc title="Μετακίνηση σε νέα περίπτωση macpad++" message="Το έγγραφο έχει τροποποιηθεί, αποθηκεύστε το και δοκιμάστε ξανά."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
-			<DocReloadWarning title="Επαναφόρτωση" message="Είστε σίγουροι ότι θέλετε να επαναφορτώσετε το τρέχον αρχείο και να χάσετε τις αλλαγές που έγιναν στο macpad++?"/>
+			<CannotMoveDoc title="Μετακίνηση σε νέα περίπτωση macpadqq" message="Το έγγραφο έχει τροποποιηθεί, αποθηκεύστε το και δοκιμάστε ξανά."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
+			<DocReloadWarning title="Επαναφόρτωση" message="Είστε σίγουροι ότι θέλετε να επαναφορτώσετε το τρέχον αρχείο και να χάσετε τις αλλαγές που έγιναν στο macpadqq?"/>
 			<FileLockedWarning title="Αποτυχία αποθήκευσης" message="Ελέγξτε εάν αυτό το αρχείο ανοίγει σε άλλο πρόγραμμα"/>
-			<FileAlreadyOpenedInNpp title="" message="Το αρχείο είναι ήδη ανοιχτό στο macpad++."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
+			<FileAlreadyOpenedInNpp title="" message="Το αρχείο είναι ήδη ανοιχτό στο macpadqq."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
 			<RenameTabTemporaryNameAlreadyInUse title="Η μετονομασία απέτυχε" message="Το καθορισμένο όνομα χρησιμοποιείται ήδη σε άλλη καρτέλα."/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
 			<DeleteFileFailed title="Διαγραφή αρχείου" message="Αποτυχία διαγραφής αρχείου"/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
 
@@ -1173,13 +1173,13 @@
 			<DoReloadOrNotAndLooseChange title="Επαναφόρτωση" message="&quot;$STR_REPLACE$&quot;
 
 Αυτό το αρχείο έχει τροποποιηθεί από άλλο πρόγραμμα.
-Θέλετε να το επαναφορτώσετε και να χάσετε τις αλλαγές που έγιναν στο macpad++?"/>
+Θέλετε να το επαναφορτώσετε και να χάσετε τις αλλαγές που έγιναν στο macpadqq?"/>
 			<PrehistoricSystemDetected title="Εντοπίστηκε προϊστορικό σύστημα" message="Φαίνεται ότι εξακολουθείτε να χρησιμοποιείτε ένα προϊστορικό σύστημα. Αυτή η λειτουργία λειτουργεί μόνο σε ένα σύγχρονο σύστημα, συγγνώμη."/><!-- HowToReproduce: Launch "Document Map" under Windows XP. -->
-			<XpUpdaterProblem title="macpad++ Ενημερωτής" message="macpad++ το πρόγραμμα ενημέρωσης δεν είναι συμβατό με τα XP λόγω του απαρχαιωμένου στρώματος ασφαλείας των XP.
-Θέλετε να μεταβείτε στη σελίδα του macpad++ για να κατεβάσετε την τελευταία έκδοση;"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
+			<XpUpdaterProblem title="macpadqq Ενημερωτής" message="macpadqq το πρόγραμμα ενημέρωσης δεν είναι συμβατό με τα XP λόγω του απαρχαιωμένου στρώματος ασφαλείας των XP.
+Θέλετε να μεταβείτε στη σελίδα του macpadqq για να κατεβάσετε την τελευταία έκδοση;"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
 			<DocTooDirtyToMonitor title="Πρόβλημα παρακολούθησης" message="Το έγγραφο είναι βρώμικο. Αποθηκεύστε την τροποποίηση πριν την παρακολουθήσετε."/>
 			<DocNoExistToMonitor title="Πρόβλημα παρακολούθησης" message="Το αρχείο πρέπει να υπάρχει για να παρακολουθείται."/>
-			<FileTooBigToOpen title="Πρόβλημα μεγέθους αρχείου" message="Το αρχείο είναι πολύ μεγάλο για να ανοιχτεί στο macpad++"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
+			<FileTooBigToOpen title="Πρόβλημα μεγέθους αρχείου" message="Το αρχείο είναι πολύ μεγάλο για να ανοιχτεί στο macpadqq"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
 			<CreateNewFileOrNot title="Δημιουργία νέου αρχείου" message="&quot;$STR_REPLACE$&quot; δεν υπάρχει. Να το δημιουργήσετε;"/>
 			<CreateNewFileError title="Δημιουργία νέου αρχείου" message="Δεν είναι δυνατή η δημιουργία του αρχείου &quot;$STR_REPLACE$&quot;."/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
 			<OpenFileError title="ERROR" message="Δεν μπορεί να ανοίξει το αρχείο &quot;$STR_REPLACE$&quot;."/>
@@ -1212,15 +1212,15 @@ please give another one."/>
 			<SCMapperDoDeleteOrNot title="Are you sure?" message="Are you sure you want to delete this shortcut?"/>
 			<FindCharRangeValueError title="Range Value problem" message="You should type between 0 and 255."/>
 			<OpenInAdminMode title="Save failed" message="The file cannot be saved and it may be protected.
-Do you want to launch macpad++ in Administrator mode?"/>
+Do you want to launch macpadqq in Administrator mode?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Save failed" message="The file cannot be saved and it may be protected.
-Do you want to launch macpad++ in Administrator mode?"/>
-			<OpenInAdminModeFailed title="Open in Administrator mode failed" message="macpad++ cannot be opened in Administrator mode."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
+Do you want to launch macpadqq in Administrator mode?"/>
+			<OpenInAdminModeFailed title="Open in Administrator mode failed" message="macpadqq cannot be opened in Administrator mode."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
 			<ViewInBrowser title="View Current File in Browser" message="Application cannot be found in your system."/>
-			<ExitToUpdatePlugins title="macpad++ is about to exit" message="If you click YES, you will quit macpad++ to continue the operations.
-macpad++ will be restarted after all the operations are terminated.
+			<ExitToUpdatePlugins title="macpadqq is about to exit" message="If you click YES, you will quit macpadqq to continue the operations.
+macpadqq will be restarted after all the operations are terminated.
 Continue?"/>
-			<NeedToRestartToLoadPlugins title="macpad++ need to be relaunched" message="You have to restart macpad++ to load plugins you installed."/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
+			<NeedToRestartToLoadPlugins title="macpadqq need to be relaunched" message="You have to restart macpadqq to load plugins you installed."/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
 		</MessageBox>
 		<ClipboardHistory>
 			<PanelTitle name="Clipboard History"/>
@@ -1328,8 +1328,8 @@ Continue?"/>
 			<word-chars-list-tab-warning value="$INT_REPLACE$ TAB(s)"/>
 			<word-chars-list-warning-end value="  in your character list."/><!-- HowToReproduce: In "Delimiter" section of Preferences dialog, check "Add your character as part of word\r(don't choose it unless you know what you're doing)", then type a white-space in the text field. -->
 			<cloud-invalid-warning value="Invalid path."/>
-			<cloud-restart-warning value="Please restart macpad++ to take effect."/>
-			<cloud-select-folder value="Select a folder from/to where macpad++ reads/writes its settings"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
+			<cloud-restart-warning value="Please restart macpadqq to take effect."/>
+			<cloud-select-folder value="Select a folder from/to where macpadqq reads/writes its settings"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
 			<shift-change-direction-tip value="Use Shift+Enter to search in the opposite direction"/>
 			<two-find-buttons-tip value="2 find buttons mode"/>
 			<find-in-files-filter-tip value="Find in cpp, cxx, h, hxx &amp;&amp; hpp:

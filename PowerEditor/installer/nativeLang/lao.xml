@@ -41,7 +41,7 @@ Translation note:
 					<Item subMenuId="edit-onSelection" name="&amp;ສ່ວນທີ່ເລືອກ"/>
 					<Item subMenuId="edit-multiSelectALL" name="ເລືອກຫຼາຍຈຸດທັງໝົດ"/>
 					<Item subMenuId="edit-multiSelectNext" name="ເລືອກຫຼາຍຈຸດຖັດໄປ"/>
-					<Item subMenuId="edit-readonlyInNotepad++" name="ອ່ານຢ່າງດຽວໃນ macpad++"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="ອ່ານຢ່າງດຽວໃນ macpadqq"/>
 					<Item subMenuId="search-changeHistory" name="ປະຫວັດການປ່ຽນແປງ"/>
 					<Item subMenuId="search-markAll" name="ເນັ້ນຮູບແບບຄຳທີ່ກົງກັນ&amp;ທັງໝົດ"/>
 					<Item subMenuId="search-markOne" name="ເນັ້ນຮູບແບບຄຳທີ່ກົງກັນ&amp;ຈຸດດຽວ"/>
@@ -369,17 +369,17 @@ Translation note:
 					<Item id="46016" name="ບໍ່ມີ (ຂໍ້ຄວາມທຳມະດອ)"/>
 					<Item id="46250" name="ກຳນົດພາສາຂອງທ່ານເອງ..."/>
 					<Item id="46300" name="ເປີດໂຟນເດີພາສາທີ່ກຳນົດເອງ..."/>
-					<Item id="46301" name="ຄໍເລັກຊັນພາສາທີ່ກຳນົດເອງຂອງ macpad++"/>
+					<Item id="46301" name="ຄໍເລັກຊັນພາສາທີ່ກຳນົດເອງຂອງ macpadqq"/>
 					<Item id="46180" name="ກຳນົດເອງ"/>
-					<Item id="47000" name="ກ່ຽວກັບ macpad++"/>
+					<Item id="47000" name="ກ່ຽວກັບ macpadqq"/>
 					<Item id="47010" name="ພາຣາມິເຕີ Command Line..."/>
-					<Item id="47001" name="ເວັບໄຊ macpad++"/>
-					<Item id="47002" name="ໜ້າໂຄງການ macpad++"/>
+					<Item id="47001" name="ເວັບໄຊ macpadqq"/>
+					<Item id="47002" name="ໜ້າໂຄງການ macpadqq"/>
 					<Item id="47003" name="ຄູ່ມືການໃຊ້ງານອອນໄລນ໌"/>
 					<Item id="47004" name="ຊຸມຊົນ (ຟໍຣຳ)"/>
 					<Item id="47012" name="ຂໍ້ມູນການດີບັກ..."/>
 					<Item id="47005" name="ຫາປລັກອິນເພີ່ມເຕີມ"/>
-					<Item id="47006" name="ອັບເດດ macpad++"/>
+					<Item id="47006" name="ອັບເດດ macpadqq"/>
 					<Item id="47009" name="ຕັ້ງຄ່າ Proxy ສຳລັບອັບເດດ..."/>
 					<Item id="48005" name="ນຳເຂົ້າ ປລັກອິນ..."/>
 					<Item id="48006" name="ນຳເຂົ້າ ຮູບແບບ (Theme)..."/>
@@ -450,7 +450,7 @@ Translation note:
 				<Item CMDID="41016" name="ຍ້າຍໄປຖັງຂີ້ເຫຍື້ອ"/>
 				<Item CMDID="41014" name="ໂຫຼດໃໝ່"/>
 				<Item CMDID="41010" name="ພິມ..."/>
-				<Item CMDID="42028" name="ອ່ານຢ່າງດຽວໃນ macpad++"/>
+				<Item CMDID="42028" name="ອ່ານຢ່າງດຽວໃນ macpadqq"/>
 				<Item CMDID="42033" name="ຄຸນສົມບັດອ່ານຢ່າງດຽວໃນ Windows"/>
 				<Item CMDID="2" name="ສຳເນົາໄປທີ່ຄລິບບອດ"/>
 				<Item CMDID="42029" name="ສຳເນົາເສັ້ນທາງແຟ້ມເຕັມ"/>
@@ -1140,7 +1140,7 @@ Translation note:
 				</DefaultDir>
 
 				<FileAssoc title="ການເຊື່ອມໂຍງໄຟລ໌">
-					<Item id="4008" name="ກະລຸນາອອກຈາກ macpad++ ແລະ ເປີດໃໝ່ດ້ວຍສິດ Administrator ເພື່ອໃຊ້ງານຄຸນສົມບັດນີ້."/>
+					<Item id="4008" name="ກະລຸນາອອກຈາກ macpadqq ແລະ ເປີດໃໝ່ດ້ວຍສິດ Administrator ເພື່ອໃຊ້ງານຄຸນສົມບັດນີ້."/>
 					<Item id="4009" name="ນາມສະກຸນທີ່ຮອງຮັບ:"/>
 					<Item id="4010" name="ນາມສະກຸນທີ່ລົງທະບຽນແລ້ວ:"/>
 				</FileAssoc>
@@ -1226,7 +1226,7 @@ Translation note:
 				</Print>
 
 				<Searching title="Searching">
-					<Item id="6902" name="Use monospaced font in Find dialog (Need to restart macpad++)"/>
+					<Item id="6902" name="Use monospaced font in Find dialog (Need to restart macpadqq)"/>
 					<Item id="6903" name="Find dialog remains open after search that outputs to results window"/>
 					<Item id="6904" name="Confirm Replace All in All Opened Documents"/>
 					<Item id="6905" name="Replace: Don't move to the following occurrence"/>
@@ -1295,7 +1295,7 @@ Translation note:
 					<Item id="6152" name="Open session in a new instance (and save session automatically on exit)"/>
 					<Item id="6153" name="Always in multi-instance mode"/>
 					<Item id="6154" name="Default (mono-instance)"/>
-					<Item id="6155" name="* The modification of this setting needs to restart macpad++"/>
+					<Item id="6155" name="* The modification of this setting needs to restart macpadqq"/>
 					<Item id="6171" name="Customize insert Date Time"/>
 					<Item id="6175" name="Reverse default date time order (short &amp;&amp; long formats)"/>
 					<Item id="6172" name="Custom format:"/>
@@ -1377,8 +1377,8 @@ Translation note:
 					</ComboBox>
 					<ComboBox id="6364">
 						<Element name="ປິດໃຊ້ງານ"/>
-						<Element name="ເປີດເມື່ອເລີ່ມ macpad++"/>
-						<Element name="ເປີດເມື່ອປິດ macpad++"/>
+						<Element name="ເປີດເມື່ອເລີ່ມ macpadqq"/>
+						<Element name="ເປີດເມື່ອປິດ macpadqq"/>
 					</ComboBox>
 					<Item id="6308" name="ຖາດລະບົບ (system tray)"/>
 					<Item id="6363" name="ໂໝດການສະແດງຜົນ (rendering mode)"/>
@@ -1472,8 +1472,8 @@ Translation note:
 			</DebugInfo>
 		</Dialog>
 		<MessageBox>
-			<ContextMenuXmlEditWarning title="ການແກ້ໄຂ contextMenu" message="ການແກ້ໄຂ contextMenu.xml ຊ່ວຍໃຫ້ທ່ານສາມາດປັບແຕ່ງເມນູຄລິກຂວາຂອງ macpad++.
-ທ່ານຕ້ອງເລີ່ມ macpad++ ໃໝ່ ເພື່ອໃຫ້ການປ່ຽນແປງມີຜົນ ຫຼັງຈາກແກ້ໄຂ contextMenu.xml."/>
+			<ContextMenuXmlEditWarning title="ການແກ້ໄຂ contextMenu" message="ການແກ້ໄຂ contextMenu.xml ຊ່ວຍໃຫ້ທ່ານສາມາດປັບແຕ່ງເມນູຄລິກຂວາຂອງ macpadqq.
+ທ່ານຕ້ອງເລີ່ມ macpadqq ໃໝ່ ເພື່ອໃຫ້ການປ່ຽນແປງມີຜົນ ຫຼັງຈາກແກ້ໄຂ contextMenu.xml."/>
 			<SaveCurrentModifWarning title="ບັນທຶກການແກ້ໄຂປັດຈຸບັນ" message="ທ່ານຄວນບັນທຶກການແກ້ໄຂປັດຈຸບັນ.
 ທຸກການແກ້ໄຂທີ່ບັນທຶກໄປແລ້ວຈະບໍ່ສາມາດຍົກເລີກ (Undo) ໄດ້.
 
@@ -1482,10 +1482,10 @@ Translation note:
 ທຸກການແກ້ໄຂທີ່ບັນທຶກໄປແລ້ວຈະບໍ່ສາມາດຍົກເລີກ (Undo) ໄດ້.
 
 ຕ້ອງການຕໍ່ໄປຫຼືບໍ່?"/>
-			<CannotMoveDoc title="ຍ້າຍໄປຍັງ macpad++ ຕົວໃໝ່" message="ເອກະສານຖືກແກ້ໄຂ, ກະລຸນາບັນທຶກກ່ອນແລ້ວລອງໃໝ່ອີກຄັ້ງ."/>
-			<DocReloadWarning title="ໂຫຼດໃໝ່" message="ທ່ານແນ່ໃຈຫຼືບໍ່ວ່າຕ້ອງການໂຫຼດໄຟລ໌ປັດຈຸບັນໃໝ່ ແລະ ຍອມຮັບການສູນເສຍການປ່ຽນແປງທີ່ເຮັດໃນ macpad++?"/>
+			<CannotMoveDoc title="ຍ້າຍໄປຍັງ macpadqq ຕົວໃໝ່" message="ເອກະສານຖືກແກ້ໄຂ, ກະລຸນາບັນທຶກກ່ອນແລ້ວລອງໃໝ່ອີກຄັ້ງ."/>
+			<DocReloadWarning title="ໂຫຼດໃໝ່" message="ທ່ານແນ່ໃຈຫຼືບໍ່ວ່າຕ້ອງການໂຫຼດໄຟລ໌ປັດຈຸບັນໃໝ່ ແລະ ຍອມຮັບການສູນເສຍການປ່ຽນແປງທີ່ເຮັດໃນ macpadqq?"/>
 			<FileLockedWarning title="ການບັນທຶກຫຼົ້ມເຫຼວ" message="ກະລຸນາກວດສອບເບິ່ງວ່າໄຟລ໌ນີ້ຖືກເປີດໃຊ້ງານຢູ່ໃນໂປຣແກຣມອື່ນຫຼືບໍ່"/>
-			<FileAlreadyOpenedInNpp title="" message="ໄຟລ໌ນີ້ຖືກເປີດຢູ່ໃນ macpad++ ແລ້ວ."/>
+			<FileAlreadyOpenedInNpp title="" message="ໄຟລ໌ນີ້ຖືກເປີດຢູ່ໃນ macpadqq ແລ້ວ."/>
 			<RenameTabTemporaryNameAlreadyInUse title="ການປ່ຽນຊື່ຫຼົ້ມເຫຼວ" message="ຊື່ທີ່ລະບຸຖືກນຳໃຊ້ແລ້ວໃນແຖບອື່ນ."/>
 			<RenameTabTemporaryNameIsEmpty title="ການປ່ຽນຊື່ຫຼົ້ມເຫຼວ" message="ຊື່ທີ່ລະບຸຈະວ່າງເປົ່າບໍ່ໄດ້, ຫຼື ຈະມີພຽງແຕ່ຍະວ່າງ ຫຼື TAB ບໍ່ໄດ້."/>
 			<DeleteFileFailed title="ລົບໄຟລ໌" message="ການລົບໄຟລ໌ຫຼົ້ມເຫຼວ"/>
@@ -1531,14 +1531,14 @@ Translation note:
 			<DoReloadOrNotAndLooseChange title="ໂຫຼດໃໝ່" message="&quot;$STR_REPLACE$&quot;
 
 ໄຟລ໌ນີ້ຖືກແກ້ໄຂໂດຍໂປຣແກຣມອື່ນ.
-ທ່ານຕ້ອງການໂຫຼດມັນໃໝ່ ແລະ ຍອມຮັບການສູນເສຍການປ່ຽນແປງທີ່ເຮັດໃນ macpad++ ຫຼືບໍ່?"/>
+ທ່ານຕ້ອງການໂຫຼດມັນໃໝ່ ແລະ ຍອມຮັບການສູນເສຍການປ່ຽນແປງທີ່ເຮັດໃນ macpadqq ຫຼືບໍ່?"/>
 			<PrehistoricSystemDetected title="ກວດພົບລະບົບທີ່ເກົ່າແກ່ເກີນໄປ" message="ເບິ່ງຄືວ່າທ່ານຍັງໃຊ້ລະບົບທີ່ເກົ່າແກ່ຫຼາຍ. ຄຸນສົມບັດນີ້ໃຊ້ໄດ້ສະເພາະໃນລະບົບທີ່ທັນສະໄໝເທົັ້ນັ້ນ, ຂໍອະໄພ."/>
-			<XpUpdaterProblem title="ຕົວອັບເດດ macpad++" message="ຕົວອັບເດດ macpad++ ບໍ່ຮອງຮັບກັບ XP ເນື່ອງຈາກລະບົບຄວາມປອດໄພທີ່ຫຼ້າສະໄໝຂອງ XP.
-ທ່ານຕ້ອງການໄປທີ່ໜ້າເວັບ macpad++ ເພື່ອດາວໂຫຼດເວີຊັນຫຼ້າສຸດຫຼືບໍ່?"/>
-			<GUpProxyConfNeedAdminMode title="ການຕັ້ງຄ່າພຣັອກຊີ" message="ກະລຸນາເປີດ macpad++ ຄືນໃໝ່ໃນໂໝດຜູ້ດູແລລະບົບ (Admin) ເພື່ອຕັ້ງຄ່າພຣັອກຊີ."/>
+			<XpUpdaterProblem title="ຕົວອັບເດດ macpadqq" message="ຕົວອັບເດດ macpadqq ບໍ່ຮອງຮັບກັບ XP ເນື່ອງຈາກລະບົບຄວາມປອດໄພທີ່ຫຼ້າສະໄໝຂອງ XP.
+ທ່ານຕ້ອງການໄປທີ່ໜ້າເວັບ macpadqq ເພື່ອດາວໂຫຼດເວີຊັນຫຼ້າສຸດຫຼືບໍ່?"/>
+			<GUpProxyConfNeedAdminMode title="ການຕັ້ງຄ່າພຣັອກຊີ" message="ກະລຸນາເປີດ macpadqq ຄືນໃໝ່ໃນໂໝດຜູ້ດູແລລະບົບ (Admin) ເພື່ອຕັ້ງຄ່າພຣັອກຊີ."/>
 			<DocTooDirtyToMonitor title="ບັນຫາການຕິດຕາມ" message="ເອກະສານມີການປ່ຽນແປງ. ກະລຸນາບັນທຶກການແກ້ໄຂກ່ອນທີ່ຈະເຮັດການຕິດຕາມ (Monitoring)."/>
 			<DocNoExistToMonitor title="ບັນຫາການຕິດຕາມ" message="ໄຟລ໌ຕ້ອງມີຢູ່ຈິງເພື່ອທີ່ຈະຕິດຕາມໄດ້."/>
-			<FileTooBigToOpen title="ບັນຫາຂະໜາດໄຟລ໌" message="ໄຟລ໌ມີຂະໜາດໃຫຍ່ເກີນໄປທີ່ຈະເປີດດ້ວຍ macpad++"/>
+			<FileTooBigToOpen title="ບັນຫາຂະໜາດໄຟລ໌" message="ໄຟລ໌ມີຂະໜາດໃຫຍ່ເກີນໄປທີ່ຈະເປີດດ້ວຍ macpadqq"/>
 			<FileLoadingException title="ລະຫັດຂໍ້ຜິດພາດ: $STR_REPLACE$" message="ເກີດຂໍ້ຜິດພາດໃນຂະນະທີ່ກຳລັງໂຫຼດໄຟລ໌!"/>
 			<WantToOpenHugeFile title="ຄຳເຕືອນການເປີດໄຟລ໌ຂະໜາດໃຫຍ່" message="ການເປີດໄຟລ໌ຂະໜາດໃຫຍ່ກວ່າ 2GB ອາດຈະໃຊ້ເວລາຫຼາຍນາທີ.
 ທ່ານຕ້ອງການເປີດມັນຫຼືບໍ່?"/>
@@ -1581,22 +1581,22 @@ Translation note:
 			<SCMapperDoDeleteOrNot title="ທ່ານແນ່ໃຈຫຼືບໍ່?" message="ທ່ານແນ່ໃຈຫຼືບໍ່ວ່າຕ້ອງການລົບປຸ່ມລັດນີ້?"/>
 			<FindCharRangeValueError title="ບັນຫາຄ່າຂອງຊ່ວງ" message="ທ່ານຄວນພິມຄ່າລະຫວ່າງ 0 ຫາ 255."/>
 			<OpenInAdminMode title="ການບັນທຶກຫຼົ້ມເຫຼວ" message="ໄຟລ໌ບໍ່ສາມາດບັນທຶກໄດ້ ແລະ ອາດຈະຖືກປ້ອງກັນໄວ້.
-ທ່ານຕ້ອງການເປີດ macpad++ ໃນໂໝດຜູ້ດູແລລະບົບ (Administrator) ຫຼືບໍ່?"/>
+ທ່ານຕ້ອງການເປີດ macpadqq ໃນໂໝດຜູ້ດູແລລະບົບ (Administrator) ຫຼືບໍ່?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="ການບັນທຶກຫຼົ້ມເຫຼວ" message="ໄຟລ໌ບໍ່ສາມາດບັນທຶກໄດ້ ແລະ ອາດຈະຖືກປ້ອງກັນໄວ້.
-ທ່ານຕ້ອງການເປີດ macpad++ ໃນໂໝດຜູ້ດູແລລະບົບ (Administrator) ຫຼືບໍ່?"/>
-			<OpenInAdminModeFailed title="ການເປີດໃນໂໝດຜູ້ດູແລລະບົບຫຼົ້ມເຫຼວ" message="macpad++ ບໍ່ສາມາດເປີດໃນໂໝດຜູ້ດູແລລະບົບໄດ້."/>
+ທ່ານຕ້ອງການເປີດ macpadqq ໃນໂໝດຜູ້ດູແລລະບົບ (Administrator) ຫຼືບໍ່?"/>
+			<OpenInAdminModeFailed title="ການເປີດໃນໂໝດຜູ້ດູແລລະບົບຫຼົ້ມເຫຼວ" message="macpadqq ບໍ່ສາມາດເປີດໃນໂໝດຜູ້ດູແລລະບົບໄດ້."/>
 			<ViewInBrowser title="ເບິ່ງໄຟລ໌ປັດຈຸບັນໃນບຣາວເຊີ" message="ບໍ່ພົບແອັບພລິເຄຊັນໃນລະບົບຂອງທ່ານ."/>
-			<ExitToUpdatePlugins title="macpad++ ກຳລັງຈະປິດລົງ" message="ຖ້າທ່ານຄລິກ &quot;ແມ່ນ&quot;, ທ່ານຈະອອກຈາກ macpad++ ເພື່ອດຳເນີນການຕໍ່.
-macpad++ ຈະຖືກເລີ່ມໃໝ່ຫຼັງຈາກການດຳເນີນການທັງໝົດສິ້ນສຸດລົງ.
+			<ExitToUpdatePlugins title="macpadqq ກຳລັງຈະປິດລົງ" message="ຖ້າທ່ານຄລິກ &quot;ແມ່ນ&quot;, ທ່ານຈະອອກຈາກ macpadqq ເພື່ອດຳເນີນການຕໍ່.
+macpadqq ຈະຖືກເລີ່ມໃໝ່ຫຼັງຈາກການດຳເນີນການທັງໝົດສິ້ນສຸດລົງ.
 ຕ້ອງການຕໍ່ໄປຫຼືບໍ່?"/>
-			<NeedToRestartToLoadPlugins title="ຕ້ອງເລີ່ມ macpad++ ໃໝ່" message="ທ່ານຕ້ອງເລີ່ມ macpad++ ໃໝ່ ເພື່ອໂຫຼດປລັກອິນທີ່ທ່ານຕິດຕັ້ງ."/>
-			<ChangeHistoryEnabledWarning title="ຕ້ອງເລີ່ມ macpad++ ໃໝ່" message="ທ່ານຕ້ອງເລີ່ມ macpad++ ໃໝ່ ເພື່ອເປີດໃຊ້ງານ ປະຫວັດການປ່ຽນແປງ (Change History)."/>
-			<WindowsSessionExit title="macpad++ - ອອກຈາກເຊດຊັນ Windows" message="ເຊດຊັນ Windows ກຳລັງຈະສິ້ນສຸດລົງ ແຕ່ທ່ານຍັງມີຂໍ້ມູນທີ່ບໍ່ໄດ້ບັນທຶກ. ທ່ານຕ້ອງການອອກຈາກ macpad++ ດຽວນີ້ຫຼືບໍ່?"/>
+			<NeedToRestartToLoadPlugins title="ຕ້ອງເລີ່ມ macpadqq ໃໝ່" message="ທ່ານຕ້ອງເລີ່ມ macpadqq ໃໝ່ ເພື່ອໂຫຼດປລັກອິນທີ່ທ່ານຕິດຕັ້ງ."/>
+			<ChangeHistoryEnabledWarning title="ຕ້ອງເລີ່ມ macpadqq ໃໝ່" message="ທ່ານຕ້ອງເລີ່ມ macpadqq ໃໝ່ ເພື່ອເປີດໃຊ້ງານ ປະຫວັດການປ່ຽນແປງ (Change History)."/>
+			<WindowsSessionExit title="macpadqq - ອອກຈາກເຊດຊັນ Windows" message="ເຊດຊັນ Windows ກຳລັງຈະສິ້ນສຸດລົງ ແຕ່ທ່ານຍັງມີຂໍ້ມູນທີ່ບໍ່ໄດ້ບັນທຶກ. ທ່ານຕ້ອງການອອກຈາກ macpadqq ດຽວນີ້ຫຼືບໍ່?"/>
 			<LanguageMenuCompactWarning title="ເມນູພາສາແບບກະທັດຮັດ" message="ຕົວເລືອກນີ້ຈະຖືກປ່ຽນແປງໃນການເປີດໃຊ້ງານຄັ້ງຕໍ່ໄປ."/>
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="ການປ່ຽນແປງທີ່ບໍ່ໄດ້ບັນທຶກກຳລັງຈະຖືກຍົກເລີກ!
 ທ່ານຕ້ອງການບັນທຶກການປ່ຽນແປງກ່ອນທີ່ຈະປ່ຽນທີມ (Theme) ຫຼືບໍ່?"/>
 			<FullReadOnlySavingForbidden title="ການບັນທຶກຫຼົ້ມເຫຼວ" message="ບໍ່ສາມາດບັນທຶກໄຟລ໌ໄດ້.
-ໂໝດຫ້າມບັນທຶກແບບອ່ານຢ່າງດຽວຂອງ macpad++ ໄດ້ປ້ອງກັນບໍ່ໃຫ້ໄຟລ໌ຖືກບັນທຶກ."/>
+ໂໝດຫ້າມບັນທຶກແບບອ່ານຢ່າງດຽວຂອງ macpadqq ໄດ້ປ້ອງກັນບໍ່ໃຫ້ໄຟລ໌ຖືກບັນທຶກ."/>
 			<NotEnoughRoom4Saving title="ການບັນທຶກຫຼົ້ມເຫຼວ" message="ບັນທຶກໄຟລ໌ຫຼົ້ມເຫຼວ.
 ເບິ່ງຄືວ່າພື້ນທີ່ໃນດິສກ໌ບໍ່ພຽງພໍທີ່ຈະບັນທຶກໄຟລ໌. ໄຟລ໌ຂອງທ່ານບໍ່ໄດ້ຖືກບັນທຶກ."/>
 			<FileInaccessibleUserSession title="ໄຟລ໌ເຂົ້າເຖິງບໍ່ໄດ້" message="ບາງໄຟລ໌ຈາກເຊດຊັນທີ່ທ່ານບັນທຶກໄວ້ດ້ວຍຕົນເອງ &quot;$STR_REPLACE$&quot; ເຂົ້າເຖິງບໍ່ໄດ້. ພວກມັນສາມາດເປີດເປັນເອກະສານວ່າງ ແລະ ອ່ານຢ່າງດຽວເພື່ອເປັນຕົວແທນຊົ່ວຄາວ.
@@ -1609,8 +1609,8 @@ macpad++ ຈະຖືກເລີ່ມໃໝ່ຫຼັງຈາກການ�
 ທ່ານຕ້ອງການສ້າງຕົວແທນຊົ່ວຄາວເຫຼົ່ານັ້ນຫຼືບໍ່?
 
 ໝາຍເຫດ: ຖ້າເລືອກບໍ່ສ້າງ ຫຼື ປິດພວກມັນພາຍຫຼັງ, ເຊດຊັນຂອງທ່ານຈະຖືກແກ້ໄຂເມື່ອປິດໂປຣແກຣມ! ພວກເຮົາແນະນຳໃຫ້ທ່ານສຳຮອງ &quot;session.xml&quot; ຂອງທ່ານໄວ້ດຽວນີ້."/>
-			<RTLvsDirectWrite title="ບໍ່ສາມາດລັນ RTL ໄດ້" message="RTL ບໍ່ຮອງຮັບກັບໂໝດ DirectWrite. ກະລຸນາປິດໂໝດ DirectWrite ໃນສ່ວນ MISC ຂອງກ່ອງການຕັ້ງຄ່າ, ແລະ ເລີ່ມ macpad++ ໃໝ່."/>
-			<FileMemoryAllocationFailed title="ຂໍ້ຜິດພາດ: ການຈັດສັນໜ່ວຍຄວາມຈຳໄຟລ໌ຫຼົ້ມເຫຼວ" message="ອາດຈະມີໜ່ວຍຄວາມຈຳວ່າງທີ່ຕໍ່ເນື່ອງກັນບໍ່ພຽງພໍສຳລັບໄຟລ໌ທີ່ macpad++ ກຳລັງໂຫຼດ."/>
+			<RTLvsDirectWrite title="ບໍ່ສາມາດລັນ RTL ໄດ້" message="RTL ບໍ່ຮອງຮັບກັບໂໝດ DirectWrite. ກະລຸນາປິດໂໝດ DirectWrite ໃນສ່ວນ MISC ຂອງກ່ອງການຕັ້ງຄ່າ, ແລະ ເລີ່ມ macpadqq ໃໝ່."/>
+			<FileMemoryAllocationFailed title="ຂໍ້ຜິດພາດ: ການຈັດສັນໜ່ວຍຄວາມຈຳໄຟລ໌ຫຼົ້ມເຫຼວ" message="ອາດຈະມີໜ່ວຍຄວາມຈຳວ່າງທີ່ຕໍ່ເນື່ອງກັນບໍ່ພຽງພໍສຳລັບໄຟລ໌ທີ່ macpadqq ກຳລັງໂຫຼດ."/>
 			<FindRegexBackwardDisabled title="ປິດການຄົ້ນຫາ Regex ແບບຖອຍຫຼັງ" message="ໂດຍມາດຕະຖານ, ການຄົ້ນຫາແບບ Regex ຖອຍຫຼັງຈະຖືກປິດໄວ້ເນື່ອງຈາກອາດຈະໄດ້ຜົນລັດທີ່ບໍ່ຄາດຄິດ. ເພື່ອເຮັດການຄົ້ນຫາແບບຖອຍຫຼັງ, ໃຫ້ເປີດກ່ອງ Find ແລະ ເລືອກໂໝດການຄົ້ນຫາແບບ normal ຫຼື extended ແທນ regular expression.
 ກົດປຸ່ມ OK ເພື່ອເປີດກ່ອງ Find ຫຼື ເນັ້ນໃສ່ມັນ.
 			
@@ -1618,8 +1618,8 @@ macpad++ ຈະຖືກເລີ່ມໃໝ່ຫຼັງຈາກການ�
 			<PrintError title="0" message="ບໍ່ສາມາດເລີ່ມພິມເອກະສານໄດ້."/>
 			<FindAutoChangeOfInSelectionWarning title="ຄຳເຕືອນການຄົ້ນຫາ" message="ສະຖານະຂອງຊ່ອງໝາຍ &quot;In selection&quot; ຖືກປ່ຽນແປງໂດຍອັດຕະໂນມັດ.
 ກະລຸນາກວດສອບເງື່ອນໄຂການຄົ້ນຫາກ່ອນທີ່ຈະດຳເນີນການ."/>
-			<Need2Restart2ShowMenuShortcuts title="ຕ້ອງເລີ່ມ macpad++ ໃໝ່" message="ຕ້ອງເລີ່ມ macpad++ ໃໝ່ ເພື່ອສະແດງປຸ່ມລັດໃນເມນູຄລິກຂວາ."/>
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="ການປ່ຽນຄຸນລັກສະນະອ່ານຢ່າງດຽວຂອງໄຟລ໌ຫຼົ້ມເຫຼວ" message="ກະລຸນາລັນ macpad++ ໃນຖານະຜູ້ດູແລລະບົບ (Administrator) ເພື່ອປ່ຽນຄຸນລັກສະນະຂອງໄຟລ໌."/>
+			<Need2Restart2ShowMenuShortcuts title="ຕ້ອງເລີ່ມ macpadqq ໃໝ່" message="ຕ້ອງເລີ່ມ macpadqq ໃໝ່ ເພື່ອສະແດງປຸ່ມລັດໃນເມນູຄລິກຂວາ."/>
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="ການປ່ຽນຄຸນລັກສະນະອ່ານຢ່າງດຽວຂອງໄຟລ໌ຫຼົ້ມເຫຼວ" message="ກະລຸນາລັນ macpadqq ໃນຖານະຜູ້ດູແລລະບົບ (Administrator) ເພື່ອປ່ຽນຄຸນລັກສະນະຂອງໄຟລ໌."/>
 			<ReadOnlyFileCannotBeSaved title="ການບັນທຶກຫຼົ້ມເຫຼວ - ໄຟລ໌ແມ່ນ Read-Only" message="&quot;$STR_REPLACE$&quot;
 ໄຟລ໌ນີ້ແມ່ນແບບອ່ານຢ່າງດຽວ ແລະ ບໍ່ສາມາດບັນທຶກໄດ້.
 ກະລຸນາຍົກເລີກຄຸນລັກສະນະອ່ານຢ່າງດຽວອອກກ່ອນ ແລ້ວຈຶ່ງບັນທຶກໄຟລ໌ຂອງທ່ານ."/>
@@ -1749,8 +1749,8 @@ macpad++ ຈະຖືກເລີ່ມໃໝ່ຫຼັງຈາກການ�
 			<word-chars-list-warning-end value="  ໃນລາຍການອັກສອນຂອງທ່ານ."/>
 			<backup-select-folder value="ເລືອກໂຟນເດີສຳລັບເກັບຂໍ້ມູນສຳຮອງ"/>
 			<cloud-invalid-warning value="ເສັ້ນທາງບໍ່ຖືກຕ້ອງ."/>
-			<cloud-restart-warning value="ກະລຸນາເລີ່ມລະບົບ macpad++ ໃໝ່ເພື່ອໃຫ້ມີຜົນນຳໃຊ້."/>
-			<cloud-select-folder value="ເລືອກໂຟນເດີທີ່ macpad++ ຈະໃຊ້ອ່ານ/ຂຽນການຕັ້ງຄ່າ"/>
+			<cloud-restart-warning value="ກະລຸນາເລີ່ມລະບົບ macpadqq ໃໝ່ເພື່ອໃຫ້ມີຜົນນຳໃຊ້."/>
+			<cloud-select-folder value="ເລືອກໂຟນເດີທີ່ macpadqq ຈະໃຊ້ອ່ານ/ຂຽນການຕັ້ງຄ່າ"/>
 			<default-open-save-select-folder value="ເລືອກໂຟນເດີເປັນໄດເຣັກທໍຣີເລີ່ມຕົ້ນ"/>
 			<shift-change-direction-tip value="ໃຊ້ Shift+Enter ເພື່ອຄົ້ນຫາໃນທິດທາງກົງກັນຂ້າມ"/>
 			<two-find-buttons-tip value="ໂໝດປຸ່ມຄົ້ນຫາ 2 ປຸ່ມ"/>
@@ -1911,7 +1911,7 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 
 			<!-- Don't translate "Global override" and "Default Style" -->
 			<global-override-tip value="ການເປີດໃຊ້ &quot;Global override&quot; ທີ່ນີ້ຈະຂ້າມຜ່ານຄ່າພາລາມິເຕີໃນທຸກຮູບແບບພາສາ. ສິ່ງທີ່ທ່ານອາດຈະຕ້ອງການແທ້ໆແມ່ນການໃຊ້ການຕັ້ງຄ່າ &quot;Default Style&quot; ແທນ"/>
-			<scintillaRenderingTechnology-tip value="ອາດຈະຊ່ວຍປັບປຸງການສະແດງຜົນຂອງອັກສອນພິເສດ ຫຼື ແກ້ໄຂບັນຫາດ້ານກຣາບຟິກບາງຢ່າງ, ເລີ່ມ macpad++ ໃໝ່ເພື່ອໃຫ້ມີຜົນ."/>
+			<scintillaRenderingTechnology-tip value="ອາດຈະຊ່ວຍປັບປຸງການສະແດງຜົນຂອງອັກສອນພິເສດ ຫຼື ແກ້ໄຂບັນຫາດ້ານກຣາບຟິກບາງຢ່າງ, ເລີ່ມ macpadqq ໃໝ່ເພື່ອໃຫ້ມີຜົນ."/>
 
 			<!-- Due to the limited space on the status bar, if the translations for 'length' & 'lines' are much longer than the English words, please leave them in English instead of translating them. -->
 			<statusbar-length-lines value="ຄວາມຍາວ: $STR_REPLACE1$    ແຖວ: $STR_REPLACE2$"/>

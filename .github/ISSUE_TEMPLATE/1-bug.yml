@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a problem in macpad++
+description: Report a problem in macpadqq
 body:
   - type: textarea
     id: description
@@ -18,8 +18,8 @@ body:
   - type: input
     id: environment
     attributes:
-      label: macpad++ version, OS version, and architecture
-      placeholder: macpad++ 0.1-beta, macOS 15, Apple silicon
+      label: macpadqq version, OS version, and architecture
+      placeholder: macpadqq 0.1-beta, macOS 15, Apple silicon
     validations:
       required: true
   - type: textarea

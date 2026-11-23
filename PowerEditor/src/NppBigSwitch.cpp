@@ -2746,8 +2746,8 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		{
 			int answer = _nativeLangSpeaker.messageBox("WindowsSessionExit",
 				_pPublicInterface->getHSelf(),
-				L"Windows session is about to be terminated but you have some data unsaved. Do you want to exit macpad++ now?",
-				L"macpad++ - Windows session exit",
+				L"Windows session is about to be terminated but you have some data unsaved. Do you want to exit macpadqq now?",
+				L"macpadqq - Windows session exit",
 				MB_YESNO | MB_ICONQUESTION | MB_APPLMODAL);
 			if (answer == IDYES)
 				::PostMessage(_pPublicInterface->getHSelf(), WM_CLOSE, 0, 0);
@@ -2891,7 +2891,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 				// in most cases we will need to take care and programmatically close such dialogs in order to exit gracefully,
 				// otherwise the Notepad++ most probably crashes itself without any tidy-up
 
-				string strLog = "Main macpad++ wnd is disabled by (an active modal-dlg?):  ";
+				string strLog = "Main macpadqq wnd is disabled by (an active modal-dlg?):  ";
 				char szBuf[MAX_PATH + 128] = { 0 };
 
 				HWND hActiveWnd = ::GetActiveWindow();
@@ -2930,7 +2930,7 @@ LRESULT Notepad_plus::process(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 
 				// re-test
 				if (::IsWindowEnabled(hwnd))
-					strLog += "  -> Main macpad++ wnd has been successfully reenabled.";
+					strLog += "  -> Main macpadqq wnd has been successfully reenabled.";
 			}
 
 			// NOTE: This should be the last possible place to eventually register Notepad++ for the app-restart OS feature,

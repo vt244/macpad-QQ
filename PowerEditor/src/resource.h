@@ -17,9 +17,9 @@
 #pragma once
 
 
-//************ macpad++ version ***************************
+//************ macpadqq version ***************************
 
-#define NOTEPAD_PLUS_VERSION L"macpad++ v0.1-beta"
+#define NOTEPAD_PLUS_VERSION L"macpadqq v0.1-beta"
 #define VERSION_PRODUCT_VALUE L"0.1-beta\0"
 #define VERSION_DIGITALVALUE 0, 1, 0, 0
 

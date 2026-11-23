@@ -22,7 +22,7 @@
 
 const wchar_t* nppName   = L"Notepad++_file";
 const wchar_t* nppBackup = L"Notepad++_backup";
-const wchar_t* nppDoc    = L"macpad++ Document";
+const wchar_t* nppDoc    = L"macpadqq Document";
 
 const int nbSupportedLang = 10;
 const int nbExtMax = 28;

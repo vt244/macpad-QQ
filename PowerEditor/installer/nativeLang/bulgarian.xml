@@ -45,7 +45,7 @@
 					<Item subMenuId="edit-onSelection" name="При маркиране"/>
 					<Item subMenuId="edit-multiSelectALL" name="Множествен избор на всички"/>
 					<Item subMenuId="edit-multiSelectNext" name="Множествен избор на следващи"/>
-					<Item subMenuId="edit-readonlyInNotepad++" name="Само за четене в macpad++"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="Само за четене в macpadqq"/>
 					<!-- Меню "Търсене" -->
 					<Item subMenuId="search-changeHistory" name="История на промените"/>
 					<Item subMenuId="search-markAll" name="Открояване на всички избрани"/>
@@ -424,7 +424,7 @@
 					<Item id="46016" name="Няма (обикновен текст)"/>
 					<Item id="46250" name="Дефиниране на синтаксис..."/>
 					<Item id="46300" name="Отваряне на папката със синтаксиси..."/>
-					<Item id="46301" name="macpad++ колекция със синтаксиси"/>
+					<Item id="46301" name="macpadqq колекция със синтаксиси"/>
 					<Item id="46180" name="Дефиниран от потребителя"/>
 					<!-- Меню "Настройки" -->
 					<Item id="48011" name="Предпочитания..."/>
@@ -481,14 +481,14 @@
 					<Item id="11011" name="Низходящ ред по време на последна промяна"/>
 					<!-- Меню "?" -->
 					<Item id="47010" name="Параметри на командния ред..."/>
-					<Item id="47001" name="macpad++ домашна страница"/>
-					<Item id="47002" name="macpad++ страница на проекта"/>
-					<Item id="47004" name="macpad++ общност (Форум)"/>
-					<Item id="47003" name="macpad++ онлайн ръководство"/>
-					<Item id="47006" name="Обновяване на macpad++"/>
+					<Item id="47001" name="macpadqq домашна страница"/>
+					<Item id="47002" name="macpadqq страница на проекта"/>
+					<Item id="47004" name="macpadqq общност (Форум)"/>
+					<Item id="47003" name="macpadqq онлайн ръководство"/>
+					<Item id="47006" name="Обновяване на macpadqq"/>
 					<Item id="47009" name="Задаване на прокси за обновяване..."/>
 					<Item id="47012" name="Инфо за отстраняване на грешки..."/>
-					<Item id="47000" name="Относно macpad++"/>
+					<Item id="47000" name="Относно macpadqq"/>
 					<!-- Контекстно меню -->
 					<!-- Списък с документи -->
 					<Item id="43501" name="Затваряне на избраните"/>
@@ -523,7 +523,7 @@
 				<Item CMDID="41016" name="Преместване в кошчето"/>
 				<Item CMDID="41014" name="Презареждане"/>
 				<Item CMDID="41010" name="Печат..."/>
-				<Item CMDID="42028" name="Само за четене в macpad++"/>
+				<Item CMDID="42028" name="Само за четене в macpadqq"/>
 				<Item CMDID="42033" name="Атрибут &quot;само за четене&quot; в Windows"/>
 				<Item CMDID="2" name="Копиране в системния буфер"/>
 				<!-- Подменю "Копиране в системния буфер" -->
@@ -678,7 +678,7 @@
 				<Item id="7" name="&amp;Не"/>
 				<Item id="4" name="Да, &amp;винаги"/>
 			</DoSaveAll>
-			<NetworkPathWarning title="Зареждане на сесията в macpad++" title2="Връзка към файл file://" title3="Зареждане на toolbarButtonsConf.xml" title4="Зареждане на XML файл на панел &quot;Проект&quot;">
+			<NetworkPathWarning title="Зареждане на сесията в macpadqq" title2="Връзка към файл file://" title3="Зареждане на toolbarButtonsConf.xml" title4="Зареждане на XML файл на панел &quot;Проект&quot;">
 				<Item id="1771" name="Предупреждение за мрежов път:
 
 $STR_REPLACE$
@@ -1087,7 +1087,7 @@ $STR_REPLACE$
 				<FileAssoc title="Файлови асоциации">
 					<Item id="4009" name="Поддържани"/>
 					<Item id="4010" name="Регистрирани"/>
-					<Item id="4008" name="За да използвате тази функция, рестартирайте macpad++ с администраторски права"/>
+					<Item id="4008" name="За да използвате тази функция, рестартирайте macpadqq с администраторски права"/>
 				</FileAssoc>
 				<!-- Синтаксис -->
 				<Language title="Синтаксис">
@@ -1176,7 +1176,7 @@ $STR_REPLACE$
 					<Item id="6908" name="Попълване на полето за търсене с избрания текст"/>
 					<Item id="6916" name=": максимален брой символи за автоматично попълване на полето"/>
 					<Item id="6909" name="Избиране на думата под курсора, когато не е избрано нищо"/>
-					<Item id="6902" name="Равноширок шрифт в диалога за търсене (изисква се рестартиране на macpad++)"/>
+					<Item id="6902" name="Равноширок шрифт в диалога за търсене (изисква се рестартиране на macpadqq)"/>
 					<Item id="6903" name="Диалога за търсене остава отворен, след като резултатите бъдат изведени в прозореца"/>
 					<Item id="6906" name="Прозорец с резултати от търсене: показване само на един запис на намерен ред, ако е възможно"/>
 					<Item id="6917" name="Търсене във файлове: Използване съдържанието на файла от диска вместо в отворените буфери"/>
@@ -1227,7 +1227,7 @@ $STR_REPLACE$
 					<Item id="6154" name="По подразбиране (един прозорец)"/>
 					<Item id="6153" name="Винаги в отделен прозорец"/>
 					<Item id="6152" name="Отваряне на сесия в нов прозорец (и автоматично запазване при изход)"/>
-					<Item id="6155" name="* Изисква се рестартиране на macpad++"/>
+					<Item id="6155" name="* Изисква се рестартиране на macpadqq"/>
 					<!-- Дата -->
 					<Item id="6171" name="Персонализиране на вмъкване на дата и час"/>
 					<Item id="6175" name="Обръщане реда на датата и часа (кратки и дълги формати)"/>
@@ -1320,8 +1320,8 @@ $STR_REPLACE$
 					<Item id="6365" name="Авто-обновяване:"/>
 					<ComboBox id="6364">
 						<Element name="Изключено"/>
-						<Element name="При стартиране на macpad++"/>
-						<Element name="При изход от macpad++"/>
+						<Element name="При стартиране на macpadqq"/>
+						<Element name="При изход от macpadqq"/>
 					</ComboBox>
 					<Item id="6360" name="Изключване на всички звуци"/>
 					<Item id="6334" name="Автоматично определяне кодировката на знаците"/>
@@ -1884,8 +1884,8 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 2. Ако е отметнато глобалното деактивиране на &quot;На повече редове&quot; и отворите голям файл, &quot;На повече редове&quot; ще бъде изключено за всички файлове. Може да се включи отново чрез меню &quot;Изглед &gt; На повече редове&quot;."/>
 			<!-- "Облак и връзка" -->
 			<cloud-invalid-warning value="Невалиден път"/>
-			<cloud-restart-warning value="Изисква се рестартиране на macpad++"/>
-			<cloud-select-folder value="Избор на папка, от/в която macpad++ ще чете/пише настройките си"/>
+			<cloud-restart-warning value="Изисква се рестартиране на macpadqq"/>
+			<cloud-select-folder value="Избор на папка, от/в която macpadqq ще чете/пише настройките си"/>
 			<!-- Дясно щракане върху раздел - "Преименуване..." -->
 			<tabrename-title value="Преименуване на раздела"/>
 			<tabrename-newname value="Ново име:"/>
@@ -1908,7 +1908,7 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 			<tab-untitled-string value="нов "/>
 			<close-panel-tip value="Затваряне"/>
 			<fileSaveAsCopySaveButton-tip value="Задръжте клавиша Shift, докато натискате Запис, за да отворите копието след запазване."/>
-			<scintillaRenderingTechnology-tip value="Може да се подобри изобразяването на специални символи или да се решат някои графични проблеми. Изисква се рестартиране на macpad++."/>
+			<scintillaRenderingTechnology-tip value="Може да се подобри изобразяването на специални символи или да се решат някои графични проблеми. Изисква се рестартиране на macpadqq."/>
 			<goto-setting-tip value="Намерете настройките си тук"/>
 			<common-error value="Грешка"/>
 			<!-- Лента на състоянието -->
@@ -1921,7 +1921,7 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 			<toolbar-accent-tip value="Тази опция прави така, че иконите в лентата с инструменти да следват системния цвят на Windows. Цветът на акцента е цветът на подчертаване, използван в бутоните, границите и плочките на Start менюто в Windows. За да го промените, отидете в Settings &gt; Personalization &gt; Colors (Настройки &gt; Персонализиране &gt; Цветове), след което изберете предпочитания от вас цвят на акцента."/>
 			<!-- Лента с отворени раздели -->
 			<tabbar-tabcompactlabellen-tip value="Ограничава видимата дължина на имената на разделите. Натиснете Enter, за да приложите зададената стойност. Диапазон на стойностите: 1-257 символа (0 деактивира съкращаването)."/>
-			<networkpathwarning-serverwhitelist-tip value="Добавяне на сървъра на текущия файл в serverWhiteList.xml на macpad++.
+			<networkpathwarning-serverwhitelist-tip value="Добавяне на сървъра на текущия файл в serverWhiteList.xml на macpadqq.
 
 За повече информация натиснете този бутон, за да отворите съответния раздел от онлайн ръководството."/>
 		</MiscStrings>
@@ -1959,9 +1959,9 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 		<!-- Диалогови прозорци със съобщения -->
 		<MessageBox>
 			<!-- $INT_REPLACE$ и $STR_REPLACE$ са контейнери, не се превеждат -->
-			<ContextMenuXmlEditWarning title="Редактиране на контекстното меню" message="Редактирането на файла contextMenu.xml позволява да се промени контекстното меню на macpad++
+			<ContextMenuXmlEditWarning title="Редактиране на контекстното меню" message="Редактирането на файла contextMenu.xml позволява да се промени контекстното меню на macpadqq
 
-Изисква се рестартиране на macpad++"/>
+Изисква се рестартиране на macpadqq"/>
 			<SaveCurrentModifWarning title="Запис на текущите промени" message="Текущите промени трябва да бъдат записани.
 Записаните промени не могат да бъдат отменяни.
 
@@ -1970,10 +1970,10 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 Записаните промени не могат да бъдат отменяни.
 
 Продължаване?"/>
-			<CannotMoveDoc title="Преместване в нов прозорец на macpad++" message="Документът е променен, запишете го и опитайте отново"/>
-			<DocReloadWarning title="Презареждане" message="Сигурни ли сте, че искате текущият документ да бъде презареден и да се загубят направените с macpad++ промени?"/>
+			<CannotMoveDoc title="Преместване в нов прозорец на macpadqq" message="Документът е променен, запишете го и опитайте отново"/>
+			<DocReloadWarning title="Презареждане" message="Сигурни ли сте, че искате текущият документ да бъде презареден и да се загубят направените с macpadqq промени?"/>
 			<FileLockedWarning title="Неуспешно записване" message="Проверете дали файлът не е отворен от друга програма"/>
-			<FileAlreadyOpenedInNpp title="" message="Файлът вече е отворен в macpad++"/>
+			<FileAlreadyOpenedInNpp title="" message="Файлът вече е отворен в macpadqq"/>
 			<RenameTabTemporaryNameAlreadyInUse title="Преименуването е неуспешно" message="Посоченото име вече се използва в друг раздел"/>
 			<RenameTabTemporaryNameIsEmpty title="Неуспешно преименуване" message="Името не може да бъде празно и не може да съдържа само интервали или табулации."/>
 			<DeleteFileFailed title="Изтриване на файл" message="Изтриването на файла е неуспешно"/>
@@ -1999,10 +1999,10 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 			<SortLocaleExcept title="Неуспешно подреждане" message="$STR_REPLACE$"/>
 			<BufferInvalidWarning title="Неуспешен запис" message="Не може да се запази: Невалиден буфер"/>
 			<OpenInAdminMode title="Неуспешен запис" message="Файлът може би е защитен и не може да се запази.
-Искате ли macpad++ да бъде стартиран с администраторски права?"/>
-			<OpenInAdminModeFailed title="Неуспешно стартиране с администраторски права" message="macpad++ не може да бъде стартиран с администраторски права"/>
+Искате ли macpadqq да бъде стартиран с администраторски права?"/>
+			<OpenInAdminModeFailed title="Неуспешно стартиране с администраторски права" message="macpadqq не може да бъде стартиран с администраторски права"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Неуспешен запис" message="Файлът може би е защитен и не може да се запази.
-Искате ли macpad++ да бъде стартиран с администраторски права?"/>
+Искате ли macpadqq да бъде стартиран с администраторски права?"/>
 			<DroppingFolderAsProjectModeWarning title="Невалидно действие" message="Тъй като сте в режим &quot;Директория като работно място&quot;, може да се влачат само файлове или папки, но не и двете.
 
 За да се разреши това действие, трябва да се включи опцията &quot;Отваряне на всички файлове от папката при влаченето ѝ в прозореца&quot; в секция &quot;Път по подразбиране&quot; на предпочитаните настройки."/>
@@ -2026,14 +2026,14 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 
 Файлът е променен от друга програма.
 
-Искате ли да бъде презареден и да се загубят направените в macpad++ промени?"/>
+Искате ли да бъде презареден и да се загубят направените в macpadqq промени?"/>
 			<PrehistoricSystemDetected title="Открита праисторическа система" message="Изглежда, че все още използвате праисторическа система. Тази функция работи само на модерна система, съжалявам."/>
-			<XpUpdaterProblem title="macpad++ обновяване" message="Обновяването на macpad++ е несъвместимо с Windows XP заради остарелият слой за сигурност.
+			<XpUpdaterProblem title="macpadqq обновяване" message="Обновяването на macpadqq е несъвместимо с Windows XP заради остарелият слой за сигурност.
 
-Искате ли страницата на macpad++ да бъде посетена за да се изтегли последната версия?"/>
+Искате ли страницата на macpadqq да бъде посетена за да се изтегли последната версия?"/>
 			<DocTooDirtyToMonitor title="Проблем с наблюдение" message="Документът е мръсен. Запишете промените преди да го наблюдавате."/>
 			<DocNoExistToMonitor title="Проблем с наблюдение" message="Файлът трябва да съществува за да бъде наблюдаван"/>
-			<FileTooBigToOpen title="Проблем с размер на файл" message="Файлът е твърде голям за да се отвори от macpad++"/>
+			<FileTooBigToOpen title="Проблем с размер на файл" message="Файлът е твърде голям за да се отвори от macpadqq"/>
 			<FileLoadingException title="Код за изключение: $STR_REPLACE$" message="Възникна грешка при зареждането на файла!"/>
 			<CreateNewFileOrNot title="Създаване на нов файл" message="&quot;$STR_REPLACE$&quot; не съществува.
 
@@ -2083,16 +2083,16 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 			<FindCharRangeValueError title="Проблем със стойност на обхвата" message="Трябва да въведете между 0 и 255."/>
 			<SCMapperDoDeleteOrNot title="Сигурни ли сте?" message="Сигурни ли сте, че искате този бърз клавиш да бъде изтрит?"/>
 			<ViewInBrowser title="Преглед на текущия файл в браузър" message="Програмата не може да бъде намерена във вашата система."/>
-			<ExitToUpdatePlugins title="Затваряне на macpad++" message="macpad++ ще се затвори за да продължи операциите.
+			<ExitToUpdatePlugins title="Затваряне на macpadqq" message="macpadqq ще се затвори за да продължи операциите.
 Програмата ще се рестартира след като всички операции бъдат завършени.
 
 Продължаване?"/>
-			<NeedToRestartToLoadPlugins title="Рестартиране на macpad++" message="macpad++ трябва да се рестартира за да заредят инсталираните добавки"/>
+			<NeedToRestartToLoadPlugins title="Рестартиране на macpadqq" message="macpadqq трябва да се рестартира за да заредят инсталираните добавки"/>
 			<WantToOpenHugeFile title="Отваряне на огромен файл" message="Отварянето на огромен файл с размер над 2GB може да отнеме няколко минути.
 			
 Искате ли да се отвори?"/>
-			<ChangeHistoryEnabledWarning title="Рестартиране на macpad++" message="macpad++ трябва да се рестартира за да се активира историята на промените"/>
-			<WindowsSessionExit title="macpad++ – Излизане от сесията на Windows" message="Сесията на Windows ще бъде прекратена, но има незаписани данни. Искате ли да излезете от macpad++ сега?"/>
+			<ChangeHistoryEnabledWarning title="Рестартиране на macpadqq" message="macpadqq трябва да се рестартира за да се активира историята на промените"/>
+			<WindowsSessionExit title="macpadqq – Излизане от сесията на Windows" message="Сесията на Windows ще бъде прекратена, но има незаписани данни. Искате ли да излезете от macpadqq сега?"/>
 			<LanguageMenuCompactWarning title="Компактно меню със синтаксиси" message="Тази опция ще бъде променена при следващото стартиране."/>
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="Незапазените промени ще бъдат отхвърлени!
 Искате ли промените да бъдат запазени, преди да смените темата?"/>
@@ -2114,8 +2114,8 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 
 ЗАБЕЛЕЖКА:
 Ако изберете да не създавате заместители или да ги затворите по-късно, сесията ЩЕ БЪДЕ МОДИФИЦИРАНА ПРИ ИЗХОД! Препоръчва се да направите резервно копие на &quot;session.xml&quot; сега."/>
-			<RTLvsDirectWrite title="Не може да се изпълни посока на текста отдясно наляво" message="Посоката на текста отдясно наляво не е съвместима с DirectWrite режима. Моля, изключете DirectWrite в раздел &quot;Разни&quot; от предпочитаните настройки и рестартирайте macpad++."/>
-			<FileMemoryAllocationFailed title="Изключение: Неуспешно разпределение на паметта на файла" message="Вероятно няма достатъчно свободна съседна памет за файла, който се зарежда от macpad++."/>
+			<RTLvsDirectWrite title="Не може да се изпълни посока на текста отдясно наляво" message="Посоката на текста отдясно наляво не е съвместима с DirectWrite режима. Моля, изключете DirectWrite в раздел &quot;Разни&quot; от предпочитаните настройки и рестартирайте macpadqq."/>
+			<FileMemoryAllocationFailed title="Изключение: Неуспешно разпределение на паметта на файла" message="Вероятно няма достатъчно свободна съседна памет за файла, който се зарежда от macpadqq."/>
 			<FindRegexBackwardDisabled title="Изключено обратно търсене с регулярен израз" message="По подразбиране търсенето в обратна посока с регулярен израз е изключено поради потенциални неочаквани резултати. За да извършите търсене в обратна посока, отворете диалоговия прозорец &quot;Търсене&quot; и изберете нормален или разширен режим вместо регулярен израз.
 Натиснете бутона OK, за да отворите диалоговия прозорец &quot;Търсене&quot; или да зададете фокус върху него.
 
@@ -2124,11 +2124,11 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 			<FindAutoChangeOfInSelectionWarning title="Предупреждение при търсене" message="Състоянието на отметката &quot;В избраното&quot; е променено автоматично.
 
 Проверете условието за търсене, преди да извършите действието."/>
-			<Need2Restart2ShowMenuShortcuts title="Рестартиране на macpad++" message="macpad++ трябва да се рестартира, за да се появят бутоните от дясното меню."/>
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="Неуспешна промяна на атрибута &quot;само за четене&quot;" message="Стартирайте macpad++ с администраторски права, за да промените атрибутите на файла."/>
+			<Need2Restart2ShowMenuShortcuts title="Рестартиране на macpadqq" message="macpadqq трябва да се рестартира, за да се появят бутоните от дясното меню."/>
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="Неуспешна промяна на атрибута &quot;само за четене&quot;" message="Стартирайте macpadqq с администраторски права, за да промените атрибутите на файла."/>
 			<FullReadOnlySavingForbidden title="Неуспешен запис" message="Файлът не може да бъде записан.
 
-Режимът на macpad++ за пълна забрана на запис в режим &quot;само за четене&quot; предотврати записването на файла."/>
+Режимът на macpadqq за пълна забрана на запис в режим &quot;само за четене&quot; предотврати записването на файла."/>
 			<ReadOnlyFileCannotBeSaved title="Неуспешен запис - файлът е само за четене" message="&quot;$STR_REPLACE$&quot;
 Файлът е само за четене и не може да бъде записан.
 Премахнете атрибута &quot;само за четене&quot;, след което запишете файла си."/>
@@ -2138,7 +2138,7 @@ C, C++, Java, C#, Objective-C, PHP, JavaScript, JSP, CSS, Perl, Rust, PowerShell
 			<ShortcutsXmlTampered title="Предупреждение за сигурност" message="Изглежда, че файлът shortcuts.xml е бил променян ръчно.
 
 От съображения за сигурност, прегледайте отворения shortcuts.xml. Ако съдържанието на файла е наред, използвайте &quot;Валидиране на shortcuts.xml&quot; от менюто &quot;Стартиране&quot;, за да го потвърдите."/>
-			<SymlinkLoadingWarning title="Предупреждение: Зареждането на символни връзки може да доведе до блокиране" message="Разрешаването на зареждане на символни връзки в &quot;Директория като работно място&quot; може да доведе до влизане на macpad++ в безкраен цикъл и блокиране.
+			<SymlinkLoadingWarning title="Предупреждение: Зареждането на символни връзки може да доведе до блокиране" message="Разрешаването на зареждане на символни връзки в &quot;Директория като работно място&quot; може да доведе до влизане на macpadqq в безкраен цикъл и блокиране.
 Това може да се случи, когато символни връзки към директории сочат към родителски папки или образуват циклични препратки.
 Продължете само ако разбирате рисковете."/>
 		</MessageBox>

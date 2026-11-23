@@ -1,6 +1,6 @@
-# Contributing to macpad++
+# Contributing to macpadqq
 
-Use the macpad++ issue tracker for this fork. For macOS issues, include the macOS version, your Mac architecture, and the macpad++ version.
+Use the macpadqq issue tracker for this fork. For macOS issues, include the macOS version, your Mac architecture, and the macpadqq version.
 
 ## Reporting Issues
 
@@ -12,13 +12,13 @@ Bug reports are appreciated. Following a few guidelines listed below will help s
     * NppExport
     * Converter
     * mimeTools
-4. Fill the complete information: a template will be shown when you create an issue. Please fill the complete information in the template. To fill the field **Debug Information** you can get it from macpad++ via menu `?>Debug Info...`. For the macOS build, include the macpad++ version from About macpad++. If you don't bother to complete the information we need to help you, we won't bother to solve your problem either.
+4. Fill the complete information: a template will be shown when you create an issue. Please fill the complete information in the template. To fill the field **Debug Information** you can get it from macpadqq via menu `?>Debug Info...`. For the macOS build, include the macpadqq version from About macpadqq. If you don't bother to complete the information we need to help you, we won't bother to solve your problem either.
     
 
 ## Pull Requests
 
-*The first rule of macpad++ is: you do not ask for permission to contribute.*<br/>
-*The second rule of macpad++ is: you DO NOT ask for permission to contribute.*
+*The first rule of macpadqq is: you do not ask for permission to contribute.*<br/>
+*The second rule of macpadqq is: you DO NOT ask for permission to contribute.*
 
 Just do your contribution if you have something to offer, and your pull requests are welcome.
 

@@ -33,7 +33,7 @@
 static bool Check(bool condition, const char *description)
 {
 	if (!condition)
-		fprintf(stderr, "macpad++ smoke test failed: %s\n", description);
+		fprintf(stderr, "macpadqq smoke test failed: %s\n", description);
 	return condition;
 }
 
@@ -1137,7 +1137,7 @@ int RunSmokeTest(void)
 	[resources chooseTranslation:translation];
 	if (!Check([[resources label:@"file" fallback:@"File"] isEqualToString:@"Файл"], "apply Russian menu labels"))
 		return 1;
-	if (!Check([[resources label:@"app-about" fallback:@"About macpad++"] hasPrefix:@"О программе"] &&
+	if (!Check([[resources label:@"app-about" fallback:@"About macpadqq"] hasPrefix:@"О программе"] &&
 		![[resources label:@"edit-comment" fallback:@"Comment/Uncomment"] isEqualToString:@"Comment/Uncomment"],
 		"apply both native and upstream Russian menu labels"))
 		return 1;
