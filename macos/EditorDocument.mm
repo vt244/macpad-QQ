@@ -3,6 +3,7 @@
 #import "EditorChrome.h"
 #import "EditorCompletion.h"
 #import "EditorContextMenus.h"
+#import "EditorDialogLayout.h"
 #import "EditorDocumentList.h"
 #import "EditorDocumentMap.h"
 #import "EditorDock.h"
@@ -3371,13 +3372,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	}
 	[choices selectItemAtIndex:0];
 	NSTextField *count = [NSTextField textFieldWithString:@"1"];
-	NSStackView *form = [NSStackView stackViewWithViews:@[choices, [NSTextField labelWithString:EditorUIString(@"Number of times")], count]];
-	form.orientation = NSUserInterfaceLayoutOrientationVertical;
-	form.alignment = NSLayoutAttributeLeading;
-	form.frame = NSMakeRect(0, 0, 275, 90);
-	[choices.widthAnchor constraintLessThanOrEqualToConstant:275].active = YES;
-	[count.widthAnchor constraintEqualToConstant:100].active = YES;
-	alert.accessoryView = form;
+	NSTextField *countLabel = [NSTextField labelWithString:EditorUIString(@"Number of times")];
+	[count setAccessibilityLabel:countLabel.stringValue];
+	alert.accessoryView = EditorDialogForm(@[choices, countLabel, count], 300);
 	alert.window.initialFirstResponder = count;
 	const auto response = [alert runModal];
 	if (response != NSAlertFirstButtonReturn && response != NSAlertThirdButtonReturn)
@@ -4428,12 +4425,6 @@ static sptr_t DeleteWhitespace(ScintillaView *editor, NSString *pattern, sptr_t 
 	[self showSearchMode:3];
 }
 
-static void PlaceSearchControl(NSView *form, NSView *control, NSRect frame)
-{
-	control.frame = frame;
-	[form addSubview:control];
-}
-
 static void LoadSearchHistory(NSComboBox *control, NSString *key)
 {
 	NSString *text = control.stringValue;
@@ -4942,12 +4933,8 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	NSButton *linesOnly = [NSButton checkboxWithTitle:label(@"1713", @"Search only in found lines") target:nil action:nil];
 	NSButton *matchCase = [NSButton checkboxWithTitle:label(@"1715", @"Match case") target:nil action:nil];
 	NSButton *regex = [NSButton checkboxWithTitle:label(@"1719", @"Regular expression") target:nil action:nil];
-	NSView *controls = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 330, 92)];
-	PlaceSearchControl(controls, queryField, NSMakeRect(0, 64, 330, 24));
-	PlaceSearchControl(controls, linesOnly, NSMakeRect(0, 40, 330, 21));
-	PlaceSearchControl(controls, matchCase, NSMakeRect(0, 18, 140, 21));
-	PlaceSearchControl(controls, regex, NSMakeRect(142, 18, 185, 21));
-	alert.accessoryView = controls;
+	[queryField setAccessibilityLabel:queryField.placeholderString];
+	alert.accessoryView = EditorDialogForm(@[queryField, linesOnly, matchCase, regex], 330);
 	alert.window.initialFirstResponder = queryField;
 	if ([alert runModal] != NSAlertFirstButtonReturn || !queryField.stringValue.length)
 		return;
@@ -5306,14 +5293,11 @@ static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor)
 	NSButton *backward = [NSButton checkboxWithTitle:[resources label:@"character-range-backward" fallback:@"Search backwards"] target:nil action:nil];
 	NSButton *wrap = [NSButton checkboxWithTitle:[resources label:@"character-range-wrap" fallback:@"Wrap around"] target:nil action:nil];
 	wrap.state = NSControlStateValueOn;
-	NSStackView *form = [NSStackView stackViewWithViews:@[
-		[NSTextField labelWithString:[resources label:@"character-range-first" fallback:@"First Unicode code point"]],
-		first, [NSTextField labelWithString:[resources label:@"character-range-last" fallback:@"Last Unicode code point"]],
-		last, backward, wrap]];
-	form.orientation = NSUserInterfaceLayoutOrientationVertical;
-	form.alignment = NSLayoutAttributeLeading;
-	form.frame = NSMakeRect(0, 0, 270, 160);
-	dialog.accessoryView = form;
+	NSTextField *firstLabel = [NSTextField labelWithString:[resources label:@"character-range-first" fallback:@"First Unicode code point"]];
+	NSTextField *lastLabel = [NSTextField labelWithString:[resources label:@"character-range-last" fallback:@"Last Unicode code point"]];
+	[first setAccessibilityLabel:firstLabel.stringValue];
+	[last setAccessibilityLabel:lastLabel.stringValue];
+	dialog.accessoryView = EditorDialogForm(@[firstLabel, first, lastLabel, last, backward, wrap], 290);
 	dialog.window.initialFirstResponder = first;
 	while ([dialog runModal] == NSAlertFirstButtonReturn)
 	{

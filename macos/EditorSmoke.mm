@@ -136,6 +136,59 @@ static bool CheckPreferencesLayout(void)
 	return passed;
 }
 
+static bool CheckEditingDialogs(EditorDocument *document)
+{
+	NSMenuItem *changeEngine = [NSMenuItem new];
+	changeEngine.tag = 42076;
+	const struct { const char *name; dispatch_block_t show; } dialogs[] = {
+		{"Style Configurator", ^{ EditorShowStyleConfigurator(); }},
+		{"Shortcut Mapper", ^{ EditorShowShortcutMapper(NSApp.mainMenu); }},
+		{"Column Editor", ^{ EditorShowColumnDialog(document.editor); }},
+		{"Find Characters in Range", ^{ [NSApp sendAction:NSSelectorFromString(@"showCharacterRangeSearch:") to:document from:nil]; }},
+		{"Change Search Engine", ^{ [NSApp sendAction:NSSelectorFromString(@"actOnSelection:") to:NSApp.delegate from:changeEngine]; }},
+	};
+	bool passed = true;
+	for (const auto &dialog : dialogs)
+	{
+		const char *name = dialog.name;
+		__block bool fits = false;
+		NSTimer *inspect = [NSTimer timerWithTimeInterval:0.05 repeats:NO block:^(NSTimer *timer) {
+			NSWindow *window = NSApp.modalWindow;
+			NSView *control = ViewMatching(window.contentView, ^BOOL(NSView *view) {
+				return [view isKindOfClass:NSTextField.class] && [(NSTextField *)view isEditable];
+			});
+			fits = CheckControlFrames(control.superview, name);
+			[NSApp stopModalWithCode:NSAlertSecondButtonReturn];
+		}];
+		[NSRunLoop.currentRunLoop addTimer:inspect forMode:NSModalPanelRunLoopMode];
+		dialog.show();
+		[inspect invalidate];
+		passed &= fits;
+	}
+	return passed;
+}
+
+static bool CheckUserLanguageLayout(void)
+{
+	NSScrollView *panel = (NSScrollView *)EditorCreateUDLPanel(nil);
+	NSTabView *tabs = (NSTabView *)ViewMatching(panel.documentView, ^BOOL(NSView *view) {
+		return [view isKindOfClass:NSTabView.class];
+	});
+	if (!Check(tabs.numberOfTabViewItems == 8, "show all user language tabs"))
+		return false;
+	for (NSTabViewItem *item in tabs.tabViewItems)
+	{
+		[tabs selectTabViewItem:item];
+		NSView *form = item.view;
+		for (NSView *view in form.subviews)
+			if ([view isKindOfClass:NSScrollView.class])
+				form = ((NSScrollView *)view).documentView;
+		if (!CheckControlFrames(form, item.label.UTF8String))
+			return false;
+	}
+	return true;
+}
+
 static bool CheckTabWindowHandoff(EditorDocumentController *controller, EditorDocument *document)
 {
 	NSWindow *original = document.windowControllers.firstObject.window;
@@ -1261,7 +1314,8 @@ int RunSmokeTest(void)
 		"show file and search commands and honor toolbarButtonsConf.xml"))
 		return 1;
 	[document showWindows];
-	if (!CheckTabWindowHandoff(controller, document) || !CheckFindLayouts(document) || !CheckPreferencesLayout())
+	if (!CheckTabWindowHandoff(controller, document) || !CheckFindLayouts(document) || !CheckPreferencesLayout() ||
+		!CheckEditingDialogs(document) || !CheckUserLanguageLayout())
 		return 1;
 	EditorDocument *second = [controller makeUntitledDocumentOfType:controller.defaultType error:&error];
 	if (!Check(second != nil, "create a second document tab"))

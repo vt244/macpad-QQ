@@ -84,6 +84,7 @@ static NSString *TabsLabel(NSString *key, NSString *fallback)
 	_table = [[NSTableView alloc] initWithFrame:NSMakeRect(0, 0, 660, 280)];
 	_table.usesAlternatingRowBackgroundColors = YES;
 	_table.allowsMultipleSelection = YES;
+	_table.columnAutoresizingStyle = NSTableViewUniformColumnAutoresizingStyle;
 	NSArray *columns = @[
 		@[@"displayName", TabsLabel(@"native-openTabs-file", @"File"), @190],
 		@[@"fileURL.path", TabsLabel(@"native-openTabs-path", @"Path"), @315],
@@ -94,6 +95,7 @@ static NSString *TabsLabel(NSString *key, NSString *fallback)
 		NSTableColumn *column = [[NSTableColumn alloc] initWithIdentifier:definition[0]];
 		column.title = definition[1];
 		column.width = [definition[2] doubleValue];
+		column.resizingMask = NSTableColumnAutoresizingMask | NSTableColumnUserResizingMask;
 		column.editable = NO;
 		column.sortDescriptorPrototype = [NSSortDescriptor sortDescriptorWithKey:column.identifier ascending:YES];
 		[_table addTableColumn:column];

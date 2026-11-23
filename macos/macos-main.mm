@@ -7,6 +7,7 @@
 #import "EditorDocument.h"
 #import "EditorChrome.h"
 #import "EditorContextMenus.h"
+#import "EditorDialogLayout.h"
 #import "EditorHash.h"
 #import "EditorLaunchOptions.h"
 #import "EditorMacros.h"
@@ -859,7 +860,11 @@ static void AddCharacterSets(NSMenu *menu)
 		disable.enabled = plugins.count > 0;
 		[panel addButtonWithTitle:EditorUIString(@"Catalog…")];
 		if (!plugins.count)
-			panel.accessoryView = [NSTextField labelWithString:EditorUIString(@"No native plugins installed.")];
+		{
+			NSTextField *notice = [NSTextField labelWithString:EditorUIString(@"No native plugins installed.")];
+			[notice sizeToFit];
+			panel.accessoryView = notice;
+		}
 		NSPopUpButton *files = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 365, 26) pullsDown:NO];
 		for (NSURL *file in plugins)
 		{
@@ -1190,10 +1195,7 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 		NSTextField *custom = [NSTextField textFieldWithString:[EditorResources.shared setting:@"searchEngineCustom" fallback:@""]];
 		custom.placeholderString = EditorUIString(@"https://example.com/search?q=$(CURRENT_WORD)");
 		[custom setAccessibilityLabel:Label(@"custom-search-url", @"Custom search URL")];
-		NSStackView *form = [NSStackView stackViewWithViews:@[choices, custom]];
-		form.orientation = NSUserInterfaceLayoutOrientationVertical;
-		form.frame = NSMakeRect(0, 0, 450, 61);
-		prompt.accessoryView = form;
+		prompt.accessoryView = EditorDialogForm(@[choices, custom], 450);
 		while ([prompt runModal] == NSAlertFirstButtonReturn)
 		{
 			if (choices.indexOfSelectedItem == engines.count && !CustomSearchURL(custom.stringValue, @"example"))

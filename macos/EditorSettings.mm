@@ -22,9 +22,12 @@ static NSString *SettingsLabel(NSString *text)
 	return [EditorResources.shared label:[@"settings-" stringByAppendingString:text] fallback:text];
 }
 
-static void Label(NSView *view, NSString *name, CGFloat y)
+static void Label(NSView *view, NSString *name, CGFloat y, CGFloat width)
 {
-	Place(view, [NSTextField labelWithString:SettingsLabel(name)], 0, y, 154);
+	NSTextField *label = [NSTextField labelWithString:SettingsLabel(name)];
+	label.toolTip = label.stringValue;
+	label.lineBreakMode = NSLineBreakByTruncatingTail;
+	Place(view, label, 0, y, width);
 }
 
 @interface PreferencePage : NSView
@@ -433,7 +436,7 @@ static NSString *Hex(NSColor *color)
 	dialog.informativeText = [NSString stringWithFormat:SettingsLabel(@"Theme: %@"), resources.selectedTheme.URLByDeletingPathExtension.lastPathComponent ?: @"Default"];
 	[dialog addButtonWithTitle:[resources label:@"StyleConfig:2301" fallback:@"Save & Close"]];
 	[dialog addButtonWithTitle:[resources label:@"StyleConfig:2" fallback:@"Cancel"]];
-	NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 400, 240)];
+	NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 470, 240)];
 	_language = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
 	_style = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
 	_language.target = _style.target = self;
@@ -444,32 +447,32 @@ static NSString *Hex(NSColor *color)
 		[_language addItemWithTitle:language.length ? language : SettingsLabel(@"Global Styles")];
 		_language.lastItem.representedObject = language;
 	}
-	Label(form, @"Language", 212);
-	Place(form, _language, 152, 212, 245);
-	Label(form, @"Style", 179);
-	Place(form, _style, 152, 179, 245);
+	Label(form, @"Language", 212, 162);
+	Place(form, _language, 176, 212, 294);
+	Label(form, @"Style", 179, 162);
+	Place(form, _style, 176, 179, 294);
 	_foreground = [[NSColorWell alloc] initWithFrame:NSZeroRect];
 	_background = [[NSColorWell alloc] initWithFrame:NSZeroRect];
 	_useForeground = [NSButton checkboxWithTitle:SettingsLabel(@"Use foreground color") target:nil action:nullptr];
 	_useBackground = [NSButton checkboxWithTitle:SettingsLabel(@"Use background color") target:nil action:nullptr];
-	Place(form, _useForeground, 0, 144, 230);
-	Place(form, _foreground, 240, 144, 72);
-	Place(form, _useBackground, 0, 111, 230);
-	Place(form, _background, 240, 111, 72);
+	Place(form, _useForeground, 0, 144, 306);
+	Place(form, _foreground, 320, 144, 72);
+	Place(form, _useBackground, 0, 111, 306);
+	Place(form, _background, 320, 111, 72);
 	_font = [NSTextField textFieldWithString:@""];
 	_font.placeholderString = SettingsLabel(@"Inherit");
 	_size = [NSTextField textFieldWithString:@""];
 	_size.placeholderString = SettingsLabel(@"Inherit");
-	Label(form, @"Font family", 77);
-	Place(form, _font, 152, 77, 245);
-	Label(form, @"Font size", 43);
-	Place(form, _size, 152, 43, 85);
+	Label(form, @"Font family", 77, 162);
+	Place(form, _font, 176, 77, 294);
+	Label(form, @"Font size", 43, 162);
+	Place(form, _size, 176, 43, 85);
 	_bold = [NSButton checkboxWithTitle:[resources label:@"StyleConfig:2204" fallback:@"Bold"] target:nil action:nullptr];
 	_italic = [NSButton checkboxWithTitle:[resources label:@"StyleConfig:2205" fallback:@"Italic"] target:nil action:nullptr];
 	_underline = [NSButton checkboxWithTitle:[resources label:@"StyleConfig:2218" fallback:@"Underline"] target:nil action:nullptr];
-	Place(form, _bold, 0, 8, 87);
-	Place(form, _italic, 92, 8, 87);
-	Place(form, _underline, 184, 8, 115);
+	Place(form, _bold, 0, 8, 137);
+	Place(form, _italic, 148, 8, 137);
+	Place(form, _underline, 296, 8, 174);
 	dialog.accessoryView = form;
 	[self chooseLanguage:nil];
 	if ([dialog runModal] != NSAlertFirstButtonReturn)
@@ -759,42 +762,43 @@ static NSArray<NSDictionary *> *ShortcutBindings(NSMenuItem *item, NSDictionary 
 	[dialog addButtonWithTitle:SettingsLabel(@"Apply")];
 	[dialog addButtonWithTitle:SettingsLabel(@"Cancel")];
 	[dialog addButtonWithTitle:SettingsLabel(@"Restore Default")];
-	NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 443, 186)];
+	NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 520, 186)];
 	NSSearchField *filter = [[NSSearchField alloc] initWithFrame:NSZeroRect];
 	filter.placeholderString = SettingsLabel(@"Filter commands");
 	filter.sendsSearchStringImmediately = YES;
 	filter.target = self;
 	filter.action = @selector(filter:);
-	Place(form, filter, 0, 156, 440);
+	Place(form, filter, 0, 156, 520);
 	_choice = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
 	_choice.accessibilityIdentifier = @"shortcut-command";
 	[_choice addItemsWithTitles:[_commands.allKeys sortedArrayUsingSelector:@selector(localizedStandardCompare:)]];
 	_choice.target = self;
 	_choice.action = @selector(choose:);
-	Place(form, _choice, 0, 122, 440);
+	Place(form, _choice, 0, 122, 520);
 	_bindingPicker = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
 	_bindingPicker.accessibilityIdentifier = @"shortcut-binding";
 	_bindingPicker.target = self;
 	_bindingPicker.action = @selector(pickBinding:);
 	[_bindingPicker setAccessibilityLabel:EditorUIString(@"Assigned shortcuts")];
-	Place(form, _bindingPicker, 0, 88, 210);
+	Place(form, _bindingPicker, 0, 88, 240);
 	EditorResources *resources = EditorResources.shared;
 	_addBinding = [NSButton buttonWithTitle:[resources label:@"ShortcutMapperSubDialg:5008" fallback:@"Add"]
 		target:self action:@selector(addBinding:)];
 	_addBinding.accessibilityIdentifier = @"shortcut-add";
 	_removeBinding = [NSButton buttonWithTitle:[resources label:@"ShortcutMapperSubDialg:5009" fallback:@"Remove"]
 		target:self action:@selector(removeBinding:)];
-	Place(form, _addBinding, 218, 88, 106);
-	Place(form, _removeBinding, 332, 88, 108);
-	Label(form, @"Shortcut key", 54);
+	Place(form, _addBinding, 248, 88, 132);
+	Place(form, _removeBinding, 388, 88, 132);
+	Label(form, @"Shortcut key", 54, 160);
 	_key = [NSTextField textFieldWithString:@""];
 	_key.accessibilityIdentifier = @"shortcut-key";
-	Place(form, _key, 150, 54, 100);
+	[_key setAccessibilityLabel:SettingsLabel(@"Shortcut key")];
+	Place(form, _key, 170, 54, 120);
 	NSMutableArray *modifiers = [NSMutableArray array];
 	for (NSString *name in @[@"Command", @"Shift", @"Option", @"Control"])
 	{
 		NSButton *modifier = [NSButton checkboxWithTitle:SettingsLabel(name) target:nil action:nullptr];
-		Place(form, modifier, modifiers.count * 110, 14, 105);
+		Place(form, modifier, modifiers.count * 130, 14, 124);
 		[modifiers addObject:modifier];
 	}
 	_modifiers = modifiers;
@@ -926,6 +930,9 @@ static NSArray<NSString *> *UDLTokenGroups(NSString *value, NSUInteger count)
 	return result;
 }
 
+static constexpr CGFloat UDLFormWidth = 570;
+static constexpr CGFloat UDLFormHeight = 356;
+
 @interface EditorUDLForm : NSObject
 @property(nonatomic, readonly) NSTabView *view;
 - (instancetype)initWithLanguage:(NSString *)name;
@@ -963,7 +970,8 @@ static NSArray<NSString *> *UDLTokenGroups(NSString *value, NSUInteger count)
 	auto &toggles = _toggles;
 	auto &values = _values;
 	auto &tokenGroups = _tokenGroups;
-	NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(0, 0, 570, 333)];
+	NSTabView *tabs = [[NSTabView alloc] initWithFrame:NSMakeRect(0, 0, UDLFormWidth, UDLFormHeight)];
+	tabs.allowsTruncatedLabels = NO;
 	auto tab = ^NSView *(NSString *title) {
 		NSTabViewItem *item = [[NSTabViewItem alloc] initWithIdentifier:title];
 		item.label = SettingsLabel(title);
@@ -974,8 +982,9 @@ static NSArray<NSString *> *UDLTokenGroups(NSString *value, NSUInteger count)
 	auto field = [](NSView *parent, NSString *title, NSString *text, CGFloat y) {
 		NSTextField *input = [NSTextField textFieldWithString:text ?: @""];
 		[input setAccessibilityLabel:SettingsLabel(title)];
-		Label(parent, title, y);
-		Place(parent, input, 159, y, 370);
+		Label(parent, title, y, 170);
+		Place(parent, input, 180, y, NSWidth(parent.bounds) - 188);
+		input.autoresizingMask = NSViewWidthSizable;
 		return input;
 	};
 	auto bind = [&](NSView *parent, NSString *title, pugi::xml_node node, const char *key, CGFloat y) {
@@ -986,7 +995,8 @@ static NSArray<NSString *> *UDLTokenGroups(NSString *value, NSUInteger count)
 		auto value = UDLAttribute(node, key);
 		NSButton *box = [NSButton checkboxWithTitle:SettingsLabel(title) target:nil action:nullptr];
 		box.state = strcmp(value.value(), "yes") == 0;
-		Place(parent, box, x, y, 160);
+		box.toolTip = box.title;
+		Place(parent, box, x, y, NSWidth(parent.bounds) - x - 8);
 		toggles.emplace_back(value, box);
 	};
 	auto keywordNode = [&](const char *key) {
@@ -1024,7 +1034,8 @@ static NSArray<NSString *> *UDLTokenGroups(NSString *value, NSUInteger count)
 		NSString *key = [NSString stringWithFormat:@"Keywords%d", index];
 		const CGFloat y = 275 - (index - 1) * 34;
 		NSTextField *input = keyword(keywords, [NSString stringWithFormat:SettingsLabel(@"Keyword group %d"), index], key.UTF8String, y);
-		input.frame = NSMakeRect(159, y, 255, 24);
+		input.frame = NSMakeRect(180, y, 234, 24);
+		input.autoresizingMask = NSViewNotSizable;
 		toggle(keywords, @"Prefix", prefix, key.UTF8String, 422, y);
 	}
 	NSView *comments = tab(@"Comments");
@@ -1072,7 +1083,8 @@ static NSArray<NSString *> *UDLTokenGroups(NSString *value, NSUInteger count)
 			keyword(folding, key, key.UTF8String, 276 - row++ * 29);
 		}
 	NSView *styling = tab(@"Styles");
-	NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:NSMakeRect(0, 0, 546, 300)];
+	NSScrollView *scroll = [[NSScrollView alloc] initWithFrame:styling.bounds];
+	scroll.autoresizingMask = NSViewWidthSizable | NSViewHeightSizable;
 	scroll.hasVerticalScroller = YES;
 	NSArray *styleNames = @[@"DEFAULT", @"COMMENTS", @"LINE COMMENTS", @"NUMBERS", @"KEYWORDS1", @"KEYWORDS2",
 		@"KEYWORDS3", @"KEYWORDS4", @"KEYWORDS5", @"KEYWORDS6", @"KEYWORDS7", @"KEYWORDS8", @"OPERATORS",
@@ -1115,6 +1127,10 @@ static NSArray<NSString *> *UDLTokenGroups(NSString *value, NSUInteger count)
 	}
 	[scroll.contentView scrollToPoint:NSMakePoint(0, NSHeight(styleRows.frame) - NSHeight(scroll.contentView.bounds))];
 	[scroll reflectScrolledClipView:scroll.contentView];
+	CGFloat labelWidth = 32;
+	for (NSTabViewItem *item in tabs.tabViewItems)
+		labelWidth += ceil([item sizeOfLabel:NO].width) + 24;
+	[tabs setFrameSize:NSMakeSize(MAX(UDLFormWidth, labelWidth), UDLFormHeight)];
 	_view = tabs;
 	return self;
 }
@@ -1234,6 +1250,7 @@ BOOL EditorRemoveUserLanguage(void)
 	NSPopUpButton *_languages;
 	EditorUDLForm *_form;
 	void (^_changes)(void);
+	BOOL _positionedAtTop;
 }
 
 - (void)refreshSelection:(NSString *)selection
@@ -1255,7 +1272,23 @@ BOOL EditorRemoveUserLanguage(void)
 	[_form.view removeFromSuperview];
 	_form = [[EditorUDLForm alloc] initWithLanguage:_languages.selectedItem.representedObject];
 	if (_form)
-		Place(self.documentView, _form.view, 8, 4, 570, 333);
+	{
+		CGFloat width = NSWidth(_form.view.frame);
+		[self.documentView setFrameSize:NSMakeSize(width + 20, UDLFormHeight + 44)];
+		Place(self.documentView, _form.view, 8, 4, width, UDLFormHeight);
+	}
+}
+
+- (void)layout
+{
+	[super layout];
+	CGFloat visibleHeight = NSHeight(self.contentView.bounds);
+	if (!_positionedAtTop && visibleHeight > 0)
+	{
+		_positionedAtTop = YES;
+		[self.contentView scrollToPoint:NSMakePoint(0, MAX(0, NSHeight(self.documentView.frame) - visibleHeight))];
+		[self reflectScrolledClipView:self.contentView];
+	}
 }
 
 - (instancetype)initWithChanges:(void (^)(void))changes
@@ -1266,17 +1299,17 @@ BOOL EditorRemoveUserLanguage(void)
 	_changes = [changes copy];
 	self.hasHorizontalScroller = YES;
 	self.hasVerticalScroller = YES;
-	self.documentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 590, 377)];
+	self.documentView = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, UDLFormWidth + 20, UDLFormHeight + 44)];
 	_languages = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
 	_languages.target = self;
 	_languages.action = @selector(selectLanguage:);
-	Place(self.documentView, _languages, 8, 344, 239);
+	Place(self.documentView, _languages, 8, UDLFormHeight + 11, 239);
 	NSArray *titles = @[@"Save", @"Save As…", @"Remove"];
 	for (NSUInteger i = 0; i < titles.count; ++i)
 	{
 		NSButton *button = [NSButton buttonWithTitle:EditorUIString(titles[i]) target:self action:@selector(edit:)];
 		button.tag = i;
-		Place(self.documentView, button, 251 + i * 109, 344, 106);
+		Place(self.documentView, button, 251 + i * 109, UDLFormHeight + 11, 106);
 	}
 	[self refreshSelection:nil];
 	[self selectLanguage:nil];
