@@ -1,9 +1,13 @@
 # macpad++
 
+<a href="docs/assets/macpad-logo.png"><img src="docs/assets/macpad-logo.png" width="220" alt="macpad++ logo. Open the full-resolution 1254 × 1254 PNG."></a>
+
 macpad++ is a native macOS code and text editor. It is an independent fork of
 Notepad++, originally created by Don Ho and developed by its contributors.
 The macOS port uses AppKit for the interface, Scintilla Cocoa for editing,
 and Lexilla for syntax highlighting. [Upstream project](https://github.com/notepad-plus-plus/notepad-plus-plus)
+
+![macpad++ showing a Python file with syntax highlighting, two tabs, the document list, and the function list](docs/assets/macpad-screenshot.png)
 
 ## Install on macOS
 
@@ -97,5 +101,4 @@ The fork preserves upstream copyright notices. Third-party components, themes
 and artwork have their own attribution and distribution considerations.
 [GPLv3](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
 
-Report macOS issues in this fork and include your macOS and macpad++ versions.
-[Issues](https://github.com/vt244/macpad-plus-plus/issues) · [Contributing](CONTRIBUTING.md)
+[Project repository](https://github.com/vt244/macpad-plus-plus) · [Contributing](CONTRIBUTING.md)

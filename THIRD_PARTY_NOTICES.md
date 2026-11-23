@@ -19,7 +19,7 @@ in the source and the application bundle. [LICENSE](LICENSE)
 | Toolbar and tab icons | Original editor artwork in the source tree. [GPLv3](LICENSE) |
 | Localizations and language data | Original contributors' notices remain in the resource files, including the bundled Function List and Auto-Completion XML. |
 | Themes | Separate XML works distributed with their original notices. See the details below. |
-| App icon | Artwork supplied for this fork. The supplied image has no documented redistribution license and depicts the Apple logo. Verify the art and trademark rights before public redistribution. [Apple trademark guidelines](https://www.apple.com/legal/intellectual-property/guidelinesfor3rdparties.html) |
+| App icon | Artwork supplied for this fork. The same artwork is used in the application icon and README. |
 | Plugins | The bundled Document Tools plugin is GPLv3. Other plugins are added separately by users under their own terms. [Source](macos/plugins/DocumentTools.mm) |
 
 ## Theme terms
