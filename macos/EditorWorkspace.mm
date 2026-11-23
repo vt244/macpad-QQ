@@ -101,7 +101,7 @@
 	}
 	if (error && !*error)
 		*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError userInfo:@{
-			NSLocalizedDescriptionKey: @"The recovery file is not a supported workspace.", NSURLErrorKey: url}];
+			NSLocalizedDescriptionKey: EditorUIString(@"The recovery file is not a supported workspace."), NSURLErrorKey: url}];
 	return NO;
 }
 

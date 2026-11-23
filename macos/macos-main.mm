@@ -54,8 +54,15 @@ void RunWorkspaceLifecycleTest(BOOL restore);
 
 - (id)targetForAction:(SEL)action to:(id)target from:(id)sender
 {
+	NSWindow *window = self.modalWindow ?: self.keyWindow;
+	NSResponder *responder = window.firstResponder;
+	if (!target && [responder isKindOfClass:NSTextView.class] &&
+		(action == @selector(paste:) || action == @selector(copy:) || action == @selector(cut:) ||
+		action == @selector(selectAll:) || action == @selector(undo:) || action == @selector(redo:)) &&
+		[responder respondsToSelector:action])
+		return responder;
 	id resolved = [super targetForAction:action to:target from:sender];
-	if (!target && (!resolved || [resolved isKindOfClass:EditorDocument.class]))
+	if (!target && !self.modalWindow && !window.attachedSheet && (!resolved || [resolved isKindOfClass:EditorDocument.class]))
 	{
 		EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 		EditorDocument *focused = controller.focusedDocument;
@@ -784,15 +791,15 @@ static void AddCharacterSets(NSMenu *menu)
 	{
 		NSArray<NSURL *> *plugins = _plugins.pluginFiles;
 		NSAlert *panel = [[NSAlert alloc] init];
-		panel.messageText = @"Plugins Admin";
-		panel.informativeText = @"Install or disable native macOS plugins. Restart macpad++ to apply changes.";
-		[panel addButtonWithTitle:@"Close"];
-		[panel addButtonWithTitle:@"Install…"];
-		NSButton *disable = [panel addButtonWithTitle:@"Disable"];
+		panel.messageText = EditorUIString(@"Plugins Admin");
+		panel.informativeText = EditorUIString(@"Install or disable native macOS plugins. Restart macpad++ to apply changes.");
+		[panel addButtonWithTitle:EditorUIString(@"Close")];
+		[panel addButtonWithTitle:EditorUIString(@"Install…")];
+		NSButton *disable = [panel addButtonWithTitle:EditorUIString(@"Disable")];
 		disable.enabled = plugins.count > 0;
-		[panel addButtonWithTitle:@"Catalog…"];
+		[panel addButtonWithTitle:EditorUIString(@"Catalog…")];
 		if (!plugins.count)
-			panel.accessoryView = [NSTextField labelWithString:@"No native plugins installed."];
+			panel.accessoryView = [NSTextField labelWithString:EditorUIString(@"No native plugins installed.")];
 		NSPopUpButton *files = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 365, 26) pullsDown:NO];
 		for (NSURL *file in plugins)
 		{
@@ -840,10 +847,10 @@ static void AddCharacterSets(NSMenu *menu)
 {
 	NSAlert *prompt = [[NSAlert alloc] init];
 	prompt.messageText = Label(@"49000", @"Run");
-	prompt.informativeText = @"Program and arguments";
-	[prompt addButtonWithTitle:@"Run"];
-	[prompt addButtonWithTitle:@"Cancel"];
-	[prompt addButtonWithTitle:@"Save…"];
+	prompt.informativeText = EditorUIString(@"Program and arguments");
+	[prompt addButtonWithTitle:EditorUIString(@"Run")];
+	[prompt addButtonWithTitle:EditorUIString(@"Cancel")];
+	[prompt addButtonWithTitle:EditorUIString(@"Save…")];
 	NSTextField *input = [NSTextField textFieldWithString:_lastRunCommand ?: @""];
 	input.frame = NSMakeRect(0, 0, 510, 26);
 	prompt.accessoryView = input;
@@ -864,11 +871,11 @@ static void AddCharacterSets(NSMenu *menu)
 - (void)saveRunCommand:(NSString *)command
 {
 	NSAlert *dialog = [NSAlert new];
-	dialog.messageText = @"Save Run Command";
-	[dialog addButtonWithTitle:@"Save"];
-	[dialog addButtonWithTitle:@"Cancel"];
+	dialog.messageText = EditorUIString(@"Save Run Command");
+	[dialog addButtonWithTitle:EditorUIString(@"Save")];
+	[dialog addButtonWithTitle:EditorUIString(@"Cancel")];
 	NSTextField *name = [NSTextField textFieldWithString:@""];
-	name.placeholderString = @"Command name";
+	name.placeholderString = EditorUIString(@"Command name");
 	name.frame = NSMakeRect(0, 0, 325, 24);
 	dialog.accessoryView = name;
 	dialog.window.initialFirstResponder = name;
@@ -883,8 +890,8 @@ static void AddCharacterSets(NSMenu *menu)
 	{
 		NSAlert *confirm = [NSAlert new];
 		confirm.messageText = [NSString stringWithFormat:@"Replace the saved command “%@”?", title];
-		[confirm addButtonWithTitle:@"Cancel"];
-		[confirm addButtonWithTitle:@"Replace"];
+		[confirm addButtonWithTitle:EditorUIString(@"Cancel")];
+		[confirm addButtonWithTitle:EditorUIString(@"Replace")];
 		if ([confirm runModal] != NSAlertSecondButtonReturn)
 			return;
 	}
@@ -900,9 +907,9 @@ static void AddCharacterSets(NSMenu *menu)
 	if (!commands.count)
 		return;
 	NSAlert *dialog = [NSAlert new];
-	dialog.messageText = @"Manage Saved Run Commands";
-	[dialog addButtonWithTitle:@"Remove"];
-	[dialog addButtonWithTitle:@"Cancel"];
+	dialog.messageText = EditorUIString(@"Manage Saved Run Commands");
+	[dialog addButtonWithTitle:EditorUIString(@"Remove")];
+	[dialog addButtonWithTitle:EditorUIString(@"Cancel")];
 	NSPopUpButton *choices = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 350, 28) pullsDown:NO];
 	[choices addItemsWithTitles:[commands.allKeys sortedArrayUsingSelector:@selector(localizedStandardCompare:)]];
 	dialog.accessoryView = choices;
@@ -1121,7 +1128,7 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 		[choices addItemWithTitle:Label(@"custom-search-engine", @"Custom")];
 		[choices selectItemAtIndex:engine];
 		NSTextField *custom = [NSTextField textFieldWithString:[EditorResources.shared setting:@"searchEngineCustom" fallback:@""]];
-		custom.placeholderString = @"https://example.com/search?q=$(CURRENT_WORD)";
+		custom.placeholderString = EditorUIString(@"https://example.com/search?q=$(CURRENT_WORD)");
 		[custom setAccessibilityLabel:Label(@"custom-search-url", @"Custom search URL")];
 		NSStackView *form = [NSStackView stackViewWithViews:@[choices, custom]];
 		form.orientation = NSUserInterfaceLayoutOrientationVertical;
@@ -1260,8 +1267,8 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 {
 	NSAlert *result = [[NSAlert alloc] init];
 	result.messageText = HashName(algorithm);
-	[result addButtonWithTitle:@"Copy"];
-	[result addButtonWithTitle:@"Close"];
+	[result addButtonWithTitle:EditorUIString(@"Copy")];
+	[result addButtonWithTitle:EditorUIString(@"Close")];
 	result.accessoryView = HashTextView(contents, NO);
 	if ([result runModal] == NSAlertFirstButtonReturn)
 		CopyText(contents);
@@ -1276,11 +1283,11 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 	{
 		NSAlert *input = [[NSAlert alloc] init];
 		input.messageText = HashName(algorithm);
-		[input addButtonWithTitle:@"Generate"];
-		[input addButtonWithTitle:@"Cancel"];
+		[input addButtonWithTitle:EditorUIString(@"Generate")];
+		[input addButtonWithTitle:EditorUIString(@"Cancel")];
 		NSScrollView *scroll = HashTextView(@"", YES);
 		NSTextView *editor = (NSTextView *)scroll.documentView;
-		NSButton *perLine = [NSButton checkboxWithTitle:@"Treat each line as a separate string" target:nil action:nil];
+		NSButton *perLine = [NSButton checkboxWithTitle:EditorUIString(@"Treat each line as a separate string") target:nil action:nil];
 		NSView *form = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 480, 210)];
 		scroll.frame = NSMakeRect(0, 30, 480, 180);
 		perLine.frame = NSMakeRect(0, 0, 480, 24);
@@ -1371,9 +1378,9 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 	}
 	[chooser selectItemAtIndex:0];
 	NSAlert *alert = [[NSAlert alloc] init];
-	alert.messageText = @"Delete a saved macro";
-	[alert addButtonWithTitle:@"Cancel"];
-	[alert addButtonWithTitle:@"Delete"].hasDestructiveAction = YES;
+	alert.messageText = EditorUIString(@"Delete a saved macro");
+	[alert addButtonWithTitle:EditorUIString(@"Cancel")];
+	[alert addButtonWithTitle:EditorUIString(@"Delete")].hasDestructiveAction = YES;
 	alert.accessoryView = chooser;
 	if ([alert runModal] != NSAlertSecondButtonReturn)
 		return;
@@ -1583,7 +1590,7 @@ static NSScrollView *LegalTextView(NSString *contents)
 	NSString *build = [bundle objectForInfoDictionaryKey:@"CFBundleVersion"];
 	NSAlert *about = [NSAlert new];
 	about.icon = NSApp.applicationIconImage;
-	about.messageText = @"macpad++";
+	about.messageText = EditorUIString(@"macpad++");
 	NSString *versionLine = [NSString stringWithFormat:Label(@"app-version", @"Version %@ (build %@)"), version, build];
 	NSString *description = Label(@"app-about-description",
 		@"Native text and code editor for macOS. Built with Scintilla and Lexilla and distributed under version 3 of the GNU GPL.");

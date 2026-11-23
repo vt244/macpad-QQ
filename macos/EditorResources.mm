@@ -66,6 +66,43 @@ static void CollectLabels(pugi::xml_node node, NSMutableDictionary<NSString *, N
 		CollectLabels(child, labels);
 }
 
+static NSString *NormalizedUIString(NSString *text)
+{
+	return [text stringByReplacingOccurrencesOfString:@"..." withString:@"…"];
+}
+
+static void CollectSharedStrings(pugi::xml_node english, pugi::xml_node localized, NSMutableDictionary *strings)
+{
+	if (!english || !localized)
+		return;
+	for (const char *key : {"name", "title", "value"})
+	{
+		NSString *original = NormalizedUIString(MenuLabel(String(english.attribute(key).value())));
+		NSString *translation = MenuLabel(String(localized.attribute(key).value()));
+		if (original.length && translation.length && !strings[original])
+			strings[original] = translation;
+	}
+	for (auto node : english.children())
+	{
+		if (node.type() != pugi::node_element)
+			continue;
+		pugi::xml_node counterpart;
+		bool keyed = false;
+		for (const char *key : {"id", "menuId", "subMenuId", "CMDID"})
+			if (auto id = node.attribute(key))
+			{
+				keyed = true;
+				counterpart = localized.find_child_by_attribute(node.name(), key, id.value());
+				break;
+			}
+		if (!keyed && !node.next_sibling(node.name()) && !node.previous_sibling(node.name()))
+			counterpart = localized.child(node.name());
+		CollectSharedStrings(node, counterpart, strings);
+	}
+}
+
+NSString *EditorUIString(NSString *english) { return [EditorResources.shared text:english]; }
+
 static std::optional<int> Color(pugi::xml_attribute attribute)
 {
 	std::string_view value = attribute.value();
@@ -209,6 +246,8 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	NSDictionary<NSString *, NSString *> *_labels;
 	NSDictionary<NSString *, NSString *> *_englishLabels;
 	NSDictionary<NSString *, NSString *> *_findLabels;
+	NSDictionary<NSString *, NSString *> *_translatedText;
+	pugi::xml_document _english;
 	NSMutableDictionary<NSString *, id> *_settings;
 	pugi::xml_document _languages;
 	pugi::xml_document _theme;
@@ -233,10 +272,9 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 		_profile = override.isAbsolutePath ? [NSURL fileURLWithPath:override isDirectory:YES] :
 			[support URLByAppendingPathComponent:@"macpad++/profile" isDirectory:YES];
 		LoadXML(_languages, [NSBundle.mainBundle URLForResource:@"langs.model" withExtension:@"xml"]);
-		pugi::xml_document english;
 		NSMutableDictionary *englishLabels = [NSMutableDictionary dictionary];
-		if (LoadXML(english, [NSBundle.mainBundle URLForResource:@"english" withExtension:@"xml" subdirectory:@"localization"]))
-			CollectLabels(TranslationRoot(english).child("Menu").child("Main"), englishLabels);
+		if (LoadXML(_english, [NSBundle.mainBundle URLForResource:@"english" withExtension:@"xml" subdirectory:@"localization"]))
+			CollectLabels(TranslationRoot(_english).child("Menu").child("Main"), englishLabels);
 		_englishLabels = [englishLabels copy];
 		[self loadUserLanguages];
 		NSDictionary *preferences = [NSDictionary dictionaryWithContentsOfURL:[_profile URLByAppendingPathComponent:@"native-settings.plist"]];
@@ -333,7 +371,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	{
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileWriteInapplicableStringEncodingError
-				userInfo:@{NSLocalizedDescriptionKey: @"Enter one valid UDL 2.0 or 2.1 XML definition with a unique language name."}];
+				userInfo:@{NSLocalizedDescriptionKey: EditorUIString(@"Enter one valid UDL 2.0 or 2.1 XML definition with a unique language name.")}];
 		return NO;
 	}
 	NSURL *destination = previousName ? _userLanguageFiles[previousName] : nil;
@@ -392,7 +430,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	{
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError userInfo:@{
-				NSURLErrorKey: url, NSLocalizedDescriptionKey: @"Choose an XML file with a named UDL 2.0 or 2.1 definition."}];
+				NSURLErrorKey: url, NSLocalizedDescriptionKey: EditorUIString(@"Choose an XML file with a named UDL 2.0 or 2.1 definition.")}];
 		return NO;
 	}
 	NSURL *directory = [_profile URLByAppendingPathComponent:@"userDefineLangs" isDirectory:YES];
@@ -463,17 +501,37 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 	pugi::xml_document document;
 	NSMutableDictionary *labels = [NSMutableDictionary dictionary];
 	NSMutableDictionary *findLabels = [NSMutableDictionary dictionary];
+	NSMutableDictionary *translatedText = [NSMutableDictionary dictionary];
 	NSURL *existing = [_profile URLByAppendingPathComponent:@"nativeLang.xml"];
 	if (LoadXML(document, url ?: existing))
 	{
 		auto root = TranslationRoot(document);
+		CollectSharedStrings(TranslationRoot(_english), root, translatedText);
 		NSString *filename = String(root.attribute("filename").value());
 		NSString *language = (filename.length ? filename : (url ?: existing).lastPathComponent)
 			.lastPathComponent.stringByDeletingPathExtension;
 		NSURL *native = language.length ? [NSBundle.mainBundle URLForResource:language withExtension:@"plist" subdirectory:@"native-labels"] : nil;
 		NSDictionary *nativeLabels = native ? [NSDictionary dictionaryWithContentsOfURL:native] : nil;
+		NSMutableDictionary *overlays = [NSMutableDictionary dictionary];
 		if (nativeLabels)
-			[labels addEntriesFromDictionary:nativeLabels];
+			[overlays addEntriesFromDictionary:nativeLabels];
+		// An exported profile can add platform-specific translations without editing the bundle.
+		if (language.length && [language isEqualToString:language.lastPathComponent])
+		{
+			NSURL *folder = [_profile URLByAppendingPathComponent:@"native-labels" isDirectory:YES];
+			NSDictionary *overrides = [NSDictionary dictionaryWithContentsOfURL:
+				[folder URLByAppendingPathComponent:[language stringByAppendingPathExtension:@"plist"]]];
+			for (NSString *key in overrides)
+				if ([overrides[key] isKindOfClass:NSString.class])
+					overlays[key] = overrides[key];
+		}
+		for (auto item : root.child("MacpadStrings").children("String"))
+		{
+			NSString *key = String(item.attribute("key").value());
+			NSString *value = String(item.attribute("value").value());
+			if (key.length && value.length)
+				overlays[key] = value;
+		}
 		auto menu = root.child("Menu");
 		CollectLabels(menu.child("Main"), labels);
 		for (auto item : menu.child("TabBar").children("Item"))
@@ -492,7 +550,8 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 			for (auto item : root.child(section).children())
 				if (auto name = item.attribute("name"))
 					labels[[NSString stringWithFormat:@"%s:%s", section, item.name()]] = String(name.value());
-		for (const char *section : {"StyleConfig", "ShortcutMapper", "Preference", "UserDefine", "ColumnEditor", "FindInFinder"})
+		for (const char *section : {"StyleConfig", "ShortcutMapper", "ShortcutMapperSubDialg", "Preference", "UserDefine",
+			"ColumnEditor", "FindInFinder", "IncrementalFind", "DoSaveAll", "Window"})
 		{
 			auto dialog = root.child("Dialog").child(section);
 			labels[[NSString stringWithFormat:@"%s:title", section]] = String(dialog.attribute("title").value());
@@ -504,16 +563,53 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 		auto misc = root.child("MiscStrings");
 		labels[@"find-result-caption"] = String(misc.child("find-result-caption").attribute("value").value());
 		for (auto item : misc.children())
-			if (std::string_view(item.name()).starts_with("finder-") || std::string_view(item.name()).starts_with("statusbar-"))
+			if (std::string_view(item.name()).starts_with("finder-") || std::string_view(item.name()).starts_with("statusbar-") ||
+				std::string_view(item.name()).starts_with("IncrementalFind-") ||
+				std::string_view(item.name()).starts_with("find-status-") || std::string_view(item.name()).starts_with("find-result-"))
 				labels[String(item.name())] = String(item.attribute("value").value());
 		auto find = root.child("Dialog").child("Find");
 		CollectLabels(find, findLabels);
 		for (const char *title : {"titleFind", "titleReplace", "titleFindInFiles", "titleFindInProjects", "titleMark"})
 			if (auto value = find.attribute(title); value && *value.value())
 				findLabels[String(title)] = String(value.value());
+		NSDictionary *preferences = @{
+			@"pref-saveAllConfirm": @"6361", @"pref-fillFindSelection": @"6908",
+			@"pref-fillFindWord": @"6909", @"pref-findFilesOnDisk": @"6917",
+			@"pref-inSelectionAutocheckThreshold": @"6910", @"pref-fillFindWhatThreshold": @"6916",
+			@"pref-tabCloseButtons": @"6112", @"pref-doubleClickClosesTab": @"6113", @"pref-lockTabs": @"6108",
+			@"pref-currentLineMode": @"6651", @"pref-currentLineMode-0": @"6652", @"pref-currentLineMode-1": @"6653",
+			@"pref-currentLineMode-2": @"6654", @"pref-wrapIndent-0": @"6228", @"pref-wrapIndent-1": @"6229",
+			@"pref-wrapIndent-2": @"6230", @"pref-scrollBeyondLastLine": @"6236", @"pref-virtualSpace": @"6245",
+			@"pref-selectedTextForeground": @"6225", @"pref-bookmarkMargin": @"6207",
+			@"pref-rememberSession": @"6309", @"pref-checkpointDrafts": @"6818",
+			@"pref-backupMode-0": @"6315", @"pref-backupMode-1": @"6316", @"pref-backupMode-2": @"6317",
+			@"pref-limitLargeFiles": @"7143", @"pref-largeFileCompletion": @"7148",
+			@"pref-largeFileBraceMatch": @"7147", @"pref-largeFileDisableWrap": @"7150",
+			@"pref-printLineNumbers": @"6601", @"pref-printColorMode-1": @"6604",
+			@"pref-printColorMode-2": @"6605", @"pref-printColorMode-3": @"6606", @"pref-printFormFeedBreak": @"6616",
+			@"pref-toolbarStyle-0": @"6103", @"pref-toolbarStyle-1": @"6104", @"pref-toolbarStyle-2": @"6129",
+			@"pref-toolbarStyle-3": @"6130", @"pref-toolbarStyle-4": @"6105",
+		};
+		for (NSString *key in preferences)
+			if (NSString *translation = labels[[@"Preference:" stringByAppendingString:preferences[key]]])
+				labels[key] = [translation stringByTrimmingCharactersInSet:[NSCharacterSet characterSetWithCharactersInString:@" :"]];
+		const char *sections[][2] = {
+			{"pref-search", "Searching"}, {"pref-backup", "Backup"}, {"pref-print", "Print"},
+			{"pref-tabs", "Tabbar"}, {"pref-largeFiles", "Performance"},
+		};
+		for (const auto &section : sections)
+			if (auto title = root.child("Dialog").child("Preference").child(section[1]).attribute("title"); *title.value())
+				labels[String(section[0])] = MenuLabel(String(title.value()));
+		NSDictionary *windows = @{@"native-openTabs-save": @"Window:7002", @"native-openTabs-close": @"Window:7003",
+			@"native-openTabs-sort": @"Window:7004"};
+		for (NSString *key in windows)
+			if (NSString *translation = labels[windows[key]])
+				labels[key] = translation;
+		[labels addEntriesFromDictionary:overlays];
 	}
 	_findLabels = [findLabels copy];
 	_labels = [labels copy];
+	_translatedText = [translatedText copy];
 }
 
 - (void)savePreferences
@@ -789,7 +885,15 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 - (NSString *)label:(NSString *)identifier fallback:(NSString *)fallback
 {
 	NSString *label = _labels[identifier];
-	return label.length ? label : fallback;
+	return label.length ? label : [self text:fallback];
+}
+
+- (NSString *)text:(NSString *)english
+{
+	if (!english.length)
+		return english;
+	NSString *key = [@"native-text:" stringByAppendingString:english];
+	return _labels[key] ?: _translatedText[NormalizedUIString(english)] ?: english;
 }
 
 - (NSString *)englishMenuLabel:(NSString *)identifier { return _englishLabels[identifier]; }
@@ -810,8 +914,8 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 
 - (NSString *)findLabel:(NSString *)identifier fallback:(NSString *)fallback
 {
-	NSString *label = _findLabels[identifier];
-	return label.length ? label : fallback;
+	NSString *label = _labels[[@"Find:" stringByAppendingString:identifier]] ?: _findLabels[identifier];
+	return label.length ? label : [self text:fallback];
 }
 
 - (NSString *)translationName:(NSURL *)url
@@ -847,7 +951,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language)
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError
 				userInfo:@{NSURLErrorKey: url, NSLocalizedDescriptionKey: theme ?
-					@"This file does not contain a macpad++ theme." : @"This file does not contain a macpad++ translation."}];
+					EditorUIString(@"This file does not contain a macpad++ theme.") : EditorUIString(@"This file does not contain a macpad++ translation.")}];
 		return nil;
 	}
 	NSURL *directory = [_profile URLByAppendingPathComponent:theme ? @"themes" : @"localization" isDirectory:YES];

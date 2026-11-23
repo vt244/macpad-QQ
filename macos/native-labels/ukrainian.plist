@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>pref-category</key><string>Розділ налаштувань</string>
+	<key>pref-detectEncoding</key><string>Автоматично визначати старі кодування</string>
+	<key>pref-guides</key><string>Напрямні редактора</string>
+	<key>pref-currentLineMode</key><string>Поточний рядок</string>
+	<key>pref-currentLineMode-0</key><string>Вимкнено</string>
+	<key>pref-currentLineMode-1</key><string>Підсвітити</string>
+	<key>pref-currentLineMode-2</key><string>Обвести</string>
+	<key>pref-currentLineFrameWidth</key><string>Ширина рамки</string>
+	<key>pref-wrapIndent</key><string>Відступ перенесеного рядка</string>
+	<key>pref-wrapIndent-0</key><string>Типово</string>
+	<key>pref-wrapIndent-1</key><string>Вирівняно</string>
+	<key>pref-wrapIndent-2</key><string>З відступом</string>
+	<key>pref-edgeColumns</key><string>Стовпці вертикальних напрямних</string>
+	<key>pref-edgeBackground</key><string>Затінювати область за однією напрямною</string>
+	<key>pref-print-layout</key><string>Макет друку</string>
+	<key>pref-printFormFeedBreak</key><string>Розрив сторінки за символом FF</string>
+	<key>pref-printHeaderFontName</key><string>Шрифт верхнього колонтитула</string>
+	<key>pref-printHeaderFontSize</key><string>Розмір шрифту верхнього колонтитула</string>
+	<key>pref-printFooterFontName</key><string>Шрифт нижнього колонтитула</string>
+	<key>pref-printFooterFontSize</key><string>Розмір шрифту нижнього колонтитула</string>
+	<key>native-text:Toggle User Language Panel</key><string>Показати або приховати панель мов</string>
+	<key>native-text:Remove User Defined Language…</key><string>Видалити користувацьку мову…</string>
+	<key>native-text:Save User Defined Language As</key><string>Зберегти користувацьку мову як</string>
+	<key>native-text:Remove the language “%@”?</key><string>Видалити мову «%@»?</string>
+	<key>native-text:Saving is disabled for this instance.</key><string>У цьому екземплярі збереження вимкнено.</string>
+	<key>pref-monospacedFontFindDlg</key><string>Використовувати моноширинний шрифт у вікні пошуку</string>
+	<key>pref-inSelectionHint</key><string>Встановіть поріг 0, щоб перемикати «У виділеному» вручну.</string>
+	<key>pref-styleOverride</key><string>Глобальне перевизначення стилів</string>
+	<key>native-text:Assigned shortcuts</key><string>Призначені сполучення клавіш</string>
+	<key>native-text:Unassigned</key><string>Не призначено</string>
+	<key>native-text:That shortcut is assigned to %@.</key><string>Це сполучення вже призначено команді «%@».</string>
+	<key>native-text:Enter a single character or a function key from F1 to F20.</key><string>Введіть один символ або функціональну клавішу від F1 до F20.</string>
+</dict>
+</plist>

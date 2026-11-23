@@ -401,7 +401,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	panel.canChooseFiles = NO;
 	panel.canChooseDirectories = YES;
 	panel.allowsMultipleSelection = YES;
-	panel.prompt = @"Add";
+	panel.prompt = EditorUIString(@"Add");
 	panel.directoryURL = self.focusedDocument.fileURL.URLByDeletingLastPathComponent;
 	[panel beginWithCompletionHandler:^(NSModalResponse response) {
 		if (response == NSModalResponseOK)
@@ -1430,7 +1430,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	{
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadCorruptFileError
-				userInfo:@{NSURLErrorKey: url, NSLocalizedDescriptionKey: @"This XML file does not contain an editor session."}];
+				userInfo:@{NSURLErrorKey: url, NSLocalizedDescriptionKey: EditorUIString(@"This XML file does not contain an editor session.")}];
 		return NO;
 	}
 
@@ -1496,7 +1496,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	{
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadNoSuchFileError userInfo:@{
-				NSLocalizedDescriptionKey: @"Some files in this session could not be opened.",
+				NSLocalizedDescriptionKey: EditorUIString(@"Some files in this session could not be opened."),
 				NSLocalizedRecoverySuggestionErrorKey: [missing componentsJoinedByString:@"\n"]}];
 		return NO;
 	}
@@ -2586,8 +2586,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	alert.messageText = [NSString stringWithFormat:@"%@ changed on disk", self.displayName];
 	alert.informativeText = self.isDocumentEdited ? @"Reloading will discard the unsaved edits in this document." :
 		@"Reload the file to read the latest contents.";
-	[alert addButtonWithTitle:@"Keep Editor Contents"];
-	[alert addButtonWithTitle:@"Reload"];
+	[alert addButtonWithTitle:EditorUIString(@"Keep Editor Contents")];
+	[alert addButtonWithTitle:EditorUIString(@"Reload")];
 	[alert beginSheetModalForWindow:window completionHandler:^(NSModalResponse response) {
 		self->_askingAboutDisk = NO;
 		self->_pendingDiskState = nil;
@@ -2641,9 +2641,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	NSAlert *alert = [NSAlert new];
 	alert.messageText = [NSString stringWithFormat:@"Move %@ to the Trash?", self.displayName];
 	if (self.isDocumentEdited)
-		alert.informativeText = @"Moving this file to the Trash will also discard its unsaved edits.";
-	[alert addButtonWithTitle:@"Cancel"];
-	[alert addButtonWithTitle:@"Move to Trash"].hasDestructiveAction = YES;
+		alert.informativeText = EditorUIString(@"Moving this file to the Trash will also discard its unsaved edits.");
+	[alert addButtonWithTitle:EditorUIString(@"Cancel")];
+	[alert addButtonWithTitle:EditorUIString(@"Move to Trash")].hasDestructiveAction = YES;
 	[alert beginSheetModalForWindow:self.windowForSheet completionHandler:^(NSModalResponse response) {
 		if (response == NSAlertSecondButtonReturn && [self.fileURL isEqual:url])
 			[NSWorkspace.sharedWorkspace recycleURLs:@[url] completionHandler:^(NSDictionary *results, NSError *error) {
@@ -3040,11 +3040,11 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		return;
 	NSAlert *alert = [[NSAlert alloc] init];
 	alert.messageText = [EditorResources.shared label:@"42025" fallback:@"Save Current Recorded Macro"];
-	[alert addButtonWithTitle:@"Save"];
-	[alert addButtonWithTitle:@"Cancel"];
+	[alert addButtonWithTitle:EditorUIString(@"Save")];
+	[alert addButtonWithTitle:EditorUIString(@"Cancel")];
 	NSTextField *input = [NSTextField textFieldWithString:@""];
 	input.frame = NSMakeRect(0, 0, 260, 24);
-	input.placeholderString = @"Macro name";
+	input.placeholderString = EditorUIString(@"Macro name");
 	alert.accessoryView = input;
 	alert.window.initialFirstResponder = input;
 	if ([alert runModal] != NSAlertFirstButtonReturn)
@@ -3057,8 +3057,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	{
 		NSAlert *replace = [[NSAlert alloc] init];
 		replace.messageText = [NSString stringWithFormat:@"Replace the macro “%@”?", name];
-		[replace addButtonWithTitle:@"Cancel"];
-		[replace addButtonWithTitle:@"Replace"];
+		[replace addButtonWithTitle:EditorUIString(@"Cancel")];
+		[replace addButtonWithTitle:EditorUIString(@"Replace")];
 		if ([replace runModal] != NSAlertSecondButtonReturn)
 			return;
 		error = nil;
@@ -3078,9 +3078,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		return;
 	NSAlert *alert = [[NSAlert alloc] init];
 	alert.messageText = [EditorResources.shared label:@"42032" fallback:@"Run a Macro Multiple Times"];
-	[alert addButtonWithTitle:@"Run"];
-	[alert addButtonWithTitle:@"Cancel"];
-	[alert addButtonWithTitle:@"Run Until End of File"];
+	[alert addButtonWithTitle:EditorUIString(@"Run")];
+	[alert addButtonWithTitle:EditorUIString(@"Cancel")];
+	[alert addButtonWithTitle:EditorUIString(@"Run Until End of File")];
 	NSPopUpButton *choices = [[NSPopUpButton alloc] initWithFrame:NSZeroRect pullsDown:NO];
 	if (!_macro.empty())
 		[choices addItemWithTitle:@"Current recorded macro"];
@@ -3093,7 +3093,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	}
 	[choices selectItemAtIndex:0];
 	NSTextField *count = [NSTextField textFieldWithString:@"1"];
-	NSStackView *form = [NSStackView stackViewWithViews:@[choices, [NSTextField labelWithString:@"Number of times"], count]];
+	NSStackView *form = [NSStackView stackViewWithViews:@[choices, [NSTextField labelWithString:EditorUIString(@"Number of times")], count]];
 	form.orientation = NSUserInterfaceLayoutOrientationVertical;
 	form.alignment = NSLayoutAttributeLeading;
 	form.frame = NSMakeRect(0, 0, 275, 90);
@@ -3130,7 +3130,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	if (![_editor.string canBeConvertedToEncoding:encoding])
 	{
 		[self presentError:[NSError errorWithDomain:NSCocoaErrorDomain code:NSFileWriteInapplicableStringEncodingError
-			userInfo:@{NSLocalizedDescriptionKey: @"The document contains characters that this encoding cannot represent."}]];
+			userInfo:@{NSLocalizedDescriptionKey: EditorUIString(@"The document contains characters that this encoding cannot represent.")}]];
 		return;
 	}
 	_encoding = encoding;
@@ -3168,10 +3168,10 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	if ([self.editor message:SCI_CANUNDO])
 	{
 		NSAlert *alert = [[NSAlert alloc] init];
-		alert.messageText = @"Reopen the file in the selected character set?";
-		alert.informativeText = @"Reopening clears the undo history.";
-		[alert addButtonWithTitle:@"Cancel"];
-		[alert addButtonWithTitle:@"Reopen"];
+		alert.messageText = EditorUIString(@"Reopen the file in the selected character set?");
+		alert.informativeText = EditorUIString(@"Reopening clears the undo history.");
+		[alert addButtonWithTitle:EditorUIString(@"Cancel")];
+		[alert addButtonWithTitle:EditorUIString(@"Reopen")];
 		if ([alert runModal] != NSAlertSecondButtonReturn)
 			return;
 	}
@@ -3225,8 +3225,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	{
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadInapplicableStringEncodingError
-				userInfo:@{NSLocalizedDescriptionKey: encoding ? @"The file cannot be decoded using the selected character set." :
-					@"Open text encoded as UTF-8, UTF-16 with BOM, or Windows-1252."}];
+				userInfo:@{NSLocalizedDescriptionKey: encoding ? EditorUIString(@"The file cannot be decoded using the selected character set.") :
+					EditorUIString(@"Open text encoded as UTF-8, UTF-16 with BOM, or Windows-1252.")}];
 		return NO;
 	}
 	_encoding = encoding;
@@ -3587,11 +3587,11 @@ static void ApplyPreferencesToView(ScintillaView *view)
 {
 	NSAlert *alert = [[NSAlert alloc] init];
 	alert.messageText = [EditorResources.shared label:@"43004" fallback:@"Go to Line"];
-	[alert addButtonWithTitle:@"Go"];
-	[alert addButtonWithTitle:@"Cancel"];
+	[alert addButtonWithTitle:EditorUIString(@"Go")];
+	[alert addButtonWithTitle:EditorUIString(@"Cancel")];
 	NSTextField *input = [NSTextField textFieldWithString:@""];
 	input.frame = NSMakeRect(0, 0, 200, 24);
-	input.placeholderString = @"Line number";
+	input.placeholderString = EditorUIString(@"Line number");
 	alert.accessoryView = input;
 	alert.window.initialFirstResponder = input;
 	if ([alert runModal] != NSAlertFirstButtonReturn)
@@ -4458,14 +4458,17 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	if (_fileSearch)
 		return;
 	NSAlert *alert = [[NSAlert alloc] init];
-	alert.messageText = @"Find in these search results";
-	[alert addButtonWithTitle:@"Find All"];
-	[alert addButtonWithTitle:@"Cancel"];
+	auto label = ^NSString *(NSString *key, NSString *fallback) {
+		return [EditorResources.shared label:[@"FindInFinder:" stringByAppendingString:key] fallback:fallback];
+	};
+	alert.messageText = label(@"title", @"Find in these search results");
+	[alert addButtonWithTitle:label(@"1", @"Find All")];
+	[alert addButtonWithTitle:EditorUIString(@"Cancel")];
 	NSTextField *queryField = [NSTextField textFieldWithString:@""];
-	queryField.placeholderString = @"Find what";
-	NSButton *linesOnly = [NSButton checkboxWithTitle:@"Search only in found lines" target:nil action:nil];
-	NSButton *matchCase = [NSButton checkboxWithTitle:@"Match case" target:nil action:nil];
-	NSButton *regex = [NSButton checkboxWithTitle:@"Regular expression" target:nil action:nil];
+	queryField.placeholderString = label(@"1711", @"Find what");
+	NSButton *linesOnly = [NSButton checkboxWithTitle:label(@"1713", @"Search only in found lines") target:nil action:nil];
+	NSButton *matchCase = [NSButton checkboxWithTitle:label(@"1715", @"Match case") target:nil action:nil];
+	NSButton *regex = [NSButton checkboxWithTitle:label(@"1719", @"Regular expression") target:nil action:nil];
 	NSView *controls = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 330, 92)];
 	PlaceSearchControl(controls, queryField, NSMakeRect(0, 64, 330, 24));
 	PlaceSearchControl(controls, linesOnly, NSMakeRect(0, 40, 330, 21));
@@ -4576,8 +4579,8 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	confirmation.messageText = [NSString localizedStringWithFormat:@"Replace %lu matches in %lu files?", report.hits, report.files.count];
 	confirmation.informativeText = mayWriteToDisk ? @"Open tabs receive undoable edits. Closed files are updated on disk." :
 		@"The replacement is undoable in each open document.";
-	[confirmation addButtonWithTitle:@"Cancel"];
-	NSButton *replace = [confirmation addButtonWithTitle:@"Replace All"];
+	[confirmation addButtonWithTitle:EditorUIString(@"Cancel")];
+	NSButton *replace = [confirmation addButtonWithTitle:EditorUIString(@"Replace All")];
 	replace.hasDestructiveAction = YES;
 	if ([confirmation runModal] == NSAlertSecondButtonReturn)
 		[self applyFileReplacement:report];

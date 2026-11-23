@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>native-openTabs</key><string>Gestionar pestañas abiertas…</string>
+	<key>native-openTabs-file</key><string>Archivo</string>
+	<key>native-openTabs-path</key><string>Ruta</string>
+	<key>native-openTabs-modified</key><string>Modificado</string>
+	<key>native-openTabs-activate</key><string>Activar</string>
+	<key>native-openTabs-save</key><string>Guardar selección</string>
+	<key>native-openTabs-close</key><string>Cerrar selección</string>
+	<key>native-openTabs-sort</key><string>Aplicar el orden de pestañas</string>
+	<key>native-importShortcuts</key><string>Importar atajos y comandos…</string>
+	<key>native-invalidShortcuts</key><string>Elige un archivo shortcuts.xml válido.</string>
+	<key>native-shortcutsImported</key><string>Atajos importados</string>
+	<key>native-shortcutsSkipped</key><string>Se omitieron %lu entradas duplicadas o incompatibles.</string>
+	<key>pref-lockTabs</key><string>Impedir que se arrastren las pestañas</string>
+	<key>pref-caretWidth</key><string>Ancho del cursor</string>
+	<key>pref-caretBlink</key><string>Intervalo de parpadeo (ms)</string>
+	<key>pref-print</key><string>Impresión</string>
+	<key>pref-printColorMode</key><string>Modo de color</string>
+	<key>pref-printColorMode-0</key><string>Colores del editor</string>
+	<key>pref-printColorMode-1</key><string>Invertir colores</string>
+	<key>pref-printColorMode-2</key><string>Negro sobre blanco</string>
+	<key>pref-printColorMode-3</key><string>Colores sin fondo</string>
+	<key>pref-printLineNumbers</key><string>Imprimir números de línea</string>
+	<key>pref-printHeaderLeft</key><string>Encabezado izquierdo</string>
+	<key>pref-printHeaderMiddle</key><string>Encabezado central</string>
+	<key>pref-printHeaderRight</key><string>Encabezado derecho</string>
+	<key>pref-printFooterLeft</key><string>Pie izquierdo</string>
+	<key>pref-printFooterMiddle</key><string>Pie central</string>
+	<key>pref-printFooterRight</key><string>Pie derecho</string>
+	<key>pref-printMargins</key><string>Márgenes en mm (izquierdo, superior, derecho, inferior)</string>
+	<key>native-text:Filter commands</key><string>Filtrar comandos</string>
+	<key>native-text:Scintilla commands</key><string>Comandos de Scintilla</string>
+	<key>native-text:Name</key><string>Nombre</string>
+	<key>native-text:File extensions</key><string>Extensiones de archivo</string>
+	<key>native-text:Ignore case</key><string>Ignorar mayúsculas y minúsculas</string>
+	<key>native-text:Fold comments</key><string>Plegar comentarios</string>
+	<key>native-text:Compact folding</key><string>Plegado compacto</string>
+	<key>native-text:Keywords</key><string>Palabras clave</string>
+	<key>native-text:Keyword group %d</key><string>Grupo de palabras clave %d</string>
+	<key>native-text:Prefix</key><string>Prefijo</string>
+	<key>native-text:Comments</key><string>Comentarios</string>
+	<key>native-text:Numbers</key><string>Números</string>
+	<key>native-text:Operators</key><string>Operadores</string>
+	<key>native-text:Delimiters</key><string>Delimitadores</string>
+	<key>native-text:Folding</key><string>Plegado</string>
+	<key>native-text:Styles</key><string>Estilos</string>
+	<key>native-text:Line start</key><string>Inicio de línea</string>
+	<key>native-text:Line continuation</key><string>Continuación de línea</string>
+	<key>native-text:Line end</key><string>Fin de línea</string>
+	<key>native-text:Block start</key><string>Inicio de bloque</string>
+	<key>native-text:Block end</key><string>Fin de bloque</string>
+	<key>native-text:Start</key><string>Inicio</string>
+	<key>native-text:Escape</key><string>Escape</string>
+	<key>native-text:End</key><string>Fin</string>
+	<key>native-text:Foreground</key><string>Primer plano</string>
+	<key>native-text:Background</key><string>Fondo</string>
+	<key>native-text:Font</key><string>Fuente</string>
+	<key>native-text:Size</key><string>Tamaño</string>
+	<key>native-text:Flags</key><string>Indicadores</string>
+	<key>native-text:Nesting</key><string>Anidamiento</string>
+	<key>native-text:Program and arguments</key><string>Programa y argumentos</string>
+	<key>native-text:Save Run Command</key><string>Guardar comando</string>
+	<key>native-text:Manage Saved Run Commands</key><string>Gestionar comandos guardados</string>
+	<key>native-text:Command name</key><string>Nombre del comando</string>
+	<key>native-text:Macro name</key><string>Nombre de la macro</string>
+	<key>pref-category</key><string>Categoría de preferencias</string>
+	<key>pref-detectEncoding</key><string>Detectar automáticamente codificaciones antiguas</string>
+	<key>pref-guides</key><string>Guías del editor</string>
+	<key>pref-currentLineMode</key><string>Línea actual</string>
+	<key>pref-currentLineMode-0</key><string>Desactivado</string>
+	<key>pref-currentLineMode-1</key><string>Resaltar</string>
+	<key>pref-currentLineMode-2</key><string>Enmarcar</string>
+	<key>pref-currentLineFrameWidth</key><string>Ancho del marco</string>
+	<key>pref-wrapIndent</key><string>Sangría de líneas ajustadas</string>
+	<key>pref-wrapIndent-0</key><string>Predeterminada</string>
+	<key>pref-wrapIndent-1</key><string>Alineada</string>
+	<key>pref-wrapIndent-2</key><string>Con sangría</string>
+	<key>pref-edgeColumns</key><string>Columnas de las guías verticales</string>
+	<key>pref-edgeBackground</key><string>Sombrear más allá de una sola guía</string>
+	<key>pref-print-layout</key><string>Diseño de impresión</string>
+	<key>pref-printFormFeedBreak</key><string>Salto de página con el carácter FF</string>
+	<key>pref-printHeaderFontName</key><string>Fuente del encabezado</string>
+	<key>pref-printHeaderFontSize</key><string>Tamaño de la fuente del encabezado</string>
+	<key>pref-printFooterFontName</key><string>Fuente del pie de página</string>
+	<key>pref-printFooterFontSize</key><string>Tamaño de la fuente del pie de página</string>
+	<key>native-text:Toggle User Language Panel</key><string>Mostrar u ocultar el panel de lenguajes</string>
+	<key>native-text:Remove User Defined Language…</key><string>Eliminar lenguaje definido por el usuario…</string>
+	<key>native-text:Save User Defined Language As</key><string>Guardar lenguaje definido por el usuario como</string>
+	<key>native-text:Remove the language “%@”?</key><string>¿Eliminar el lenguaje «%@»?</string>
+	<key>native-text:Saving is disabled for this instance.</key><string>El guardado está desactivado en esta instancia.</string>
+	<key>pref-monospacedFontFindDlg</key><string>Usar una fuente monoespaciada en la búsqueda</string>
+	<key>pref-inSelectionHint</key><string>Establece el umbral en 0 para controlar manualmente «En la selección».</string>
+	<key>pref-styleOverride</key><string>Anulación global de estilos</string>
+	<key>native-text:Assigned shortcuts</key><string>Atajos asignados</string>
+	<key>native-text:Unassigned</key><string>Sin asignar</string>
+	<key>native-text:That shortcut is assigned to %@.</key><string>Este atajo está asignado a %@.</string>
+	<key>native-text:Enter a single character or a function key from F1 to F20.</key><string>Introduce un solo carácter o una tecla de función de F1 a F20.</string>
+</dict>
+</plist>

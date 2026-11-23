@@ -106,14 +106,14 @@ static NSURL *CatalogSource()
 void EditorChoosePluginCatalog(void)
 {
 	NSAlert *choice = [NSAlert new];
-	choice.messageText = @"Plugin Catalog Source";
-	choice.informativeText = @"Use the bundled catalog, choose a local JSON file, or enter an HTTPS catalog URL.";
-	[choice addButtonWithTitle:@"Use URL"];
-	[choice addButtonWithTitle:@"Choose File…"];
-	[choice addButtonWithTitle:@"Use Bundled Catalog"];
-	[choice addButtonWithTitle:@"Cancel"];
+	choice.messageText = EditorUIString(@"Plugin Catalog Source");
+	choice.informativeText = EditorUIString(@"Use the bundled catalog, choose a local JSON file, or enter an HTTPS catalog URL.");
+	[choice addButtonWithTitle:EditorUIString(@"Use URL")];
+	[choice addButtonWithTitle:EditorUIString(@"Choose File…")];
+	[choice addButtonWithTitle:EditorUIString(@"Use Bundled Catalog")];
+	[choice addButtonWithTitle:EditorUIString(@"Cancel")];
 	NSTextField *url = [NSTextField textFieldWithString:[EditorResources.shared setting:@"pluginCatalogURL" fallback:@""]];
-	url.placeholderString = @"https://example.org/plugins.json";
+	url.placeholderString = EditorUIString(@"https://example.org/plugins.json");
 	url.frame = NSMakeRect(0, 0, 420, 25);
 	choice.accessoryView = url;
 	NSModalResponse response = [choice runModal];
@@ -157,7 +157,7 @@ static void Install(EditorPlugins *plugins, EditorPluginPackage *package, BOOL u
 		[resources setSetting:versions forName:@"catalogPluginVersions"];
 		NSAlert *complete = [NSAlert new];
 		complete.messageText = [NSString stringWithFormat:@"%@ %@ installed", package.name, package.version];
-		complete.informativeText = @"Restart macpad++ to load this version.";
+		complete.informativeText = EditorUIString(@"Restart macpad++ to load this version.");
 		[complete runModal];
 	});
 }
@@ -177,10 +177,10 @@ void EditorShowPluginCatalog(EditorPlugins *plugins)
 		}
 		NSDictionary *versions = [EditorResources.shared setting:@"catalogPluginVersions" fallback:@{}];
 		NSAlert *catalog = [NSAlert new];
-		catalog.messageText = @"Plugin Catalog";
+		catalog.messageText = EditorUIString(@"Plugin Catalog");
 		catalog.informativeText = packages.count ? @"Select a native plugin to install or update." : @"This catalog contains no compatible entries.";
-		[catalog addButtonWithTitle:@"Install or Update"];
-		[catalog addButtonWithTitle:@"Close"];
+		[catalog addButtonWithTitle:EditorUIString(@"Install or Update")];
+		[catalog addButtonWithTitle:EditorUIString(@"Close")];
 		NSPopUpButton *choices = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 0, 436, 28) pullsDown:NO];
 		for (EditorPluginPackage *package in packages)
 		{
@@ -210,7 +210,7 @@ void EditorShowPluginCatalog(EditorPlugins *plugins)
 		confirm.messageText = [NSString stringWithFormat:@"%@ %@ %@?", exists ? @"Update" : @"Install", package.name, package.version];
 		confirm.informativeText = package.url.isFileURL ? package.url.lastPathComponent : package.url.host;
 		[confirm addButtonWithTitle:exists ? @"Update" : @"Install"];
-		[confirm addButtonWithTitle:@"Cancel"];
+		[confirm addButtonWithTitle:EditorUIString(@"Cancel")];
 		if ([confirm runModal] == NSAlertFirstButtonReturn)
 			Install(plugins, package, exists);
 	});

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>pref-category</key><string>環境設定のカテゴリ</string>
+	<key>pref-detectEncoding</key><string>従来の文字コードを自動検出する</string>
+	<key>pref-guides</key><string>エディターガイド</string>
+	<key>pref-currentLineMode</key><string>現在の行</string>
+	<key>pref-currentLineMode-0</key><string>オフ</string>
+	<key>pref-currentLineMode-1</key><string>強調表示</string>
+	<key>pref-currentLineMode-2</key><string>枠で囲む</string>
+	<key>pref-currentLineFrameWidth</key><string>枠の幅</string>
+	<key>pref-wrapIndent</key><string>折り返し行のインデント</string>
+	<key>pref-wrapIndent-0</key><string>既定</string>
+	<key>pref-wrapIndent-1</key><string>位置をそろえる</string>
+	<key>pref-wrapIndent-2</key><string>インデントする</string>
+	<key>pref-edgeColumns</key><string>縦ガイドの列</string>
+	<key>pref-edgeBackground</key><string>単一ガイド以降を網掛けする</string>
+	<key>pref-print-layout</key><string>印刷レイアウト</string>
+	<key>pref-printFormFeedBreak</key><string>フォームフィードで改ページする</string>
+	<key>pref-printHeaderFontName</key><string>ヘッダーのフォント</string>
+	<key>pref-printHeaderFontSize</key><string>ヘッダーのフォントサイズ</string>
+	<key>pref-printFooterFontName</key><string>フッターのフォント</string>
+	<key>pref-printFooterFontSize</key><string>フッターのフォントサイズ</string>
+	<key>native-text:Toggle User Language Panel</key><string>言語パネルの表示を切り替える</string>
+	<key>native-text:Remove User Defined Language…</key><string>ユーザー定義言語を削除…</string>
+	<key>native-text:Save User Defined Language As</key><string>ユーザー定義言語に名前を付けて保存</string>
+	<key>native-text:Remove the language “%@”?</key><string>言語「%@」を削除しますか？</string>
+	<key>native-text:Saving is disabled for this instance.</key><string>このインスタンスでは保存が無効です。</string>
+	<key>pref-monospacedFontFindDlg</key><string>検索で等幅フォントを使用する</string>
+	<key>pref-inSelectionHint</key><string>しきい値を 0 にすると「選択範囲内」を手動で切り替えられます。</string>
+	<key>pref-styleOverride</key><string>スタイルの一括上書き</string>
+	<key>native-text:Assigned shortcuts</key><string>割り当て済みのショートカット</string>
+	<key>native-text:Unassigned</key><string>未割り当て</string>
+	<key>native-text:That shortcut is assigned to %@.</key><string>このショートカットは %@ に割り当てられています。</string>
+	<key>native-text:Enter a single character or a function key from F1 to F20.</key><string>1 文字または F1 から F20 のファンクションキーを入力してください。</string>
+</dict>
+</plist>

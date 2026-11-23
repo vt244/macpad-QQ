@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #import "EditorEditActions.h"
+#import "EditorResources.h"
 #import "EditorContextMenus.h"
 #import "ScintillaView.h"
 
@@ -89,23 +90,27 @@ void EditorShowColumnDialog(ScintillaView *editor)
 	if (!editor || [editor message:SCI_GETREADONLY])
 		return;
 	NSAlert *alert = [NSAlert new];
-	alert.messageText = @"Column Editor";
-	[alert addButtonWithTitle:@"Insert"];
-	[alert addButtonWithTitle:@"Cancel"];
+	auto label = ^NSString *(NSString *key, NSString *fallback) {
+		return [EditorResources.shared label:[@"ColumnEditor:" stringByAppendingString:key] fallback:fallback];
+	};
+	alert.messageText = label(@"title", @"Column Editor");
+	[alert addButtonWithTitle:EditorUIString(@"Insert")];
+	[alert addButtonWithTitle:EditorUIString(@"Cancel")];
 	NSView *controls = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 330, 194)];
-	NSSegmentedControl *mode = [NSSegmentedControl segmentedControlWithLabels:@[@"Text", @"Numbers"]
+	NSSegmentedControl *mode = [NSSegmentedControl segmentedControlWithLabels:@[label(@"2023", @"Text"), label(@"2033", @"Numbers")]
 		trackingMode:NSSegmentSwitchTrackingSelectOne target:nil action:nullptr];
 	mode.selectedSegment = 0;
-	mode.frame = NSMakeRect(0, 166, 210, 24);
+	mode.frame = NSMakeRect(0, 166, 330, 24);
 	[controls addSubview:mode];
-	NSTextField *text = ColumnField(controls, @"Text to insert", @"", 134);
-	NSTextField *initial = ColumnField(controls, @"Initial number", @"1", 102);
-	NSTextField *step = ColumnField(controls, @"Increase by", @"1", 72);
-	NSTextField *repeat = ColumnField(controls, @"Repeat each", @"1", 42);
+	NSTextField *text = ColumnField(controls, label(@"2023", @"Text to insert"), @"", 134);
+	NSTextField *initial = ColumnField(controls, label(@"2030", @"Initial number"), @"1", 102);
+	NSTextField *step = ColumnField(controls, label(@"2031", @"Increase by"), @"1", 72);
+	NSTextField *repeat = ColumnField(controls, label(@"2036", @"Repeat each"), @"1", 42);
 	NSPopUpButton *format = [[NSPopUpButton alloc] initWithFrame:NSMakeRect(0, 8, 160, 25) pullsDown:NO];
-	[format addItemsWithTitles:@[@"Decimal", @"Hexadecimal", @"Octal", @"Binary"]];
+	[format addItemsWithTitles:@[label(@"2024", @"Decimal"), label(@"2026", @"Hexadecimal"),
+		label(@"2025", @"Octal"), label(@"2027", @"Binary")]];
 	[controls addSubview:format];
-	NSButton *zeros = [NSButton checkboxWithTitle:@"Leading zeros" target:nil action:nullptr];
+	NSButton *zeros = [NSButton checkboxWithTitle:EditorUIString(@"Leading zeros") target:nil action:nullptr];
 	zeros.frame = NSMakeRect(169, 8, 150, 25);
 	[controls addSubview:zeros];
 	alert.accessoryView = controls;
@@ -154,7 +159,7 @@ void EditorShowColumnDialog(ScintillaView *editor)
 			break;
 		}
 		[values removeAllObjects];
-		alert.informativeText = @"Enter valid numbers in the chosen base and a positive decimal repeat count.";
+		alert.informativeText = EditorUIString(@"Enter valid numbers in the chosen base and a positive decimal repeat count.");
 	}
 	if (values.count != columns.size() || !values.count)
 		return;

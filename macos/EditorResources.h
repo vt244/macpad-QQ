@@ -2,6 +2,7 @@
 #import <Cocoa/Cocoa.h>
 
 @class ScintillaView;
+NSString *EditorUIString(NSString *english);
 
 @interface EditorResources : NSObject
 @property(nonatomic, readonly) NSURL *profile;
@@ -12,6 +13,7 @@
 @property(nonatomic, readonly) BOOL usesDarkColors;
 + (instancetype)shared;
 - (NSString *)label:(NSString *)identifier fallback:(NSString *)fallback;
+- (NSString *)text:(NSString *)english;
 - (NSString *)englishMenuLabel:(NSString *)identifier;
 - (NSArray<NSString *> *)commandIDsWithEnglishTitle:(NSString *)title;
 - (NSString *)findLabel:(NSString *)identifier fallback:(NSString *)fallback;

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #import "EditorPlugins.h"
 #import "EditorDocument.h"
+#import "EditorResources.h"
 #import "ScintillaView.h"
 
 #include "MacpadPlugin.h"
@@ -265,7 +266,7 @@ struct PluginCommand
 	{
 		if (error)
 			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileReadUnsupportedSchemeError userInfo:@{
-				NSURLErrorKey: source, NSLocalizedDescriptionKey: @"Choose a regular macOS .dylib plugin file."}];
+				NSURLErrorKey: source, NSLocalizedDescriptionKey: EditorUIString(@"Choose a regular macOS .dylib plugin file.")}];
 		return NO;
 	}
 	NSFileManager *files = NSFileManager.defaultManager;
