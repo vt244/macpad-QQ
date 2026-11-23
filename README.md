@@ -62,6 +62,7 @@ app and bundles it with matching source and SHA-256 checksums.
 - Use **Print Layout** in Preferences for header and footer fonts and form-feed page breaks. **File → Print Now** uses the selected printer.
 - Open **Language → Toggle User Language Panel** to edit, copy or remove definitions in a dockable panel.
 - Generate checksums from **Tools**, run macOS commands and save or open XML sessions.
+- Double-click the empty space to the right of the tabs to open a new document.
 - Reopen the working session, including unsaved drafts, after quitting or restarting.
 - Import existing XML themes, translations and user-defined languages.
 

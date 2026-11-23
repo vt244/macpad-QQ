@@ -193,12 +193,28 @@ static bool CheckTabWindowHandoff(EditorDocumentController *controller, EditorDo
 {
 	NSWindow *original = document.windowControllers.firstObject.window;
 	NSRect frame = original.frame;
-	EditorDocument *added = [controller makeUntitledDocumentOfType:controller.defaultType error:nullptr];
-	if (!Check(added != nil, "create a tab for window handoff"))
+	[original.contentView layoutSubtreeIfNeeded];
+	NSScrollView *strip = (NSScrollView *)document.chrome.primaryTabs;
+	NSView *content = strip.documentView;
+	NSView *lastTab = content.subviews.lastObject;
+	NSPoint blank = NSMakePoint(NSMaxX(lastTab.frame) + 12, NSMidY(lastTab.frame));
+	NSPoint point = [content convertPoint:blank toView:nil];
+	NSView *hit = [original.contentView hitTest:[original.contentView convertPoint:point fromView:nil]];
+	if (!Check(hit == content && lastTab, "hit the empty tab strip to the right of the tabs"))
 		return false;
-	[controller addDocument:added];
-	[added makeWindowControllers];
-	[added showWindows];
+	auto click = ^(NSInteger count) {
+		[hit mouseDown:[NSEvent mouseEventWithType:NSEventTypeLeftMouseDown location:point modifierFlags:0
+			timestamp:0 windowNumber:original.windowNumber context:nil eventNumber:0 clickCount:count pressure:1]];
+	};
+	NSUInteger count = controller.documents.count;
+	click(1);
+	if (!Check(controller.documents.count == count, "leave the tabs alone on a single background click"))
+		return false;
+	click(2);
+	EditorDocument *added = controller.focusedDocument;
+	if (!Check(controller.documents.count == count + 1 && added != document && !added.fileURL && added.editor.string.length == 0,
+		"create and select a blank tab on a double-click"))
+		return false;
 	NSWindow *incoming = added.windowControllers.firstObject.window;
 	BOOL opened = incoming.visible && !original.visible && NSEqualRects(incoming.frame, frame);
 	__block BOOL restoredBeforeClose = NO;
