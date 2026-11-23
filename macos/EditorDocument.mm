@@ -45,6 +45,7 @@ static constexpr int FirstTokenMark = 10;
 static constexpr int TokenMarkCount = 5;
 static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor);
 static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end);
+static void HighlightPair(ScintillaView *view, bool enabled);
 static NSUInteger NextUntitledNumber = 1;
 static uint64_t NextRuntimeDocumentID = 1;
 
@@ -187,6 +188,7 @@ static NSView *AddEditorHost(EditorTabPane *pane, NSView *tabs)
 - (ScintillaView *)primaryEditorView;
 - (ScintillaView *)clonedEditorView;
 - (void)clonedViewNotification:(SCNotification *)notification;
+- (void)notification:(SCNotification *)notification fromView:(ScintillaView *)view;
 - (BOOL)userReadOnly;
 - (void)setUserReadOnly:(BOOL)readOnly;
 @end
@@ -2405,7 +2407,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		case SCN_MACRORECORD:
 		case SCN_MARGINCLICK:
 		case SCN_CHARADDED:
-			[self notification:notification];
+			[self notification:notification fromView:_clone];
 			break;
 	}
 }
@@ -2955,6 +2957,11 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			[view message:SCI_INDICSETALPHA wParam:indicator lParam:75];
 			[view message:SCI_INDICSETUNDER wParam:indicator lParam:1];
 		}
+	}
+	const bool matchPairs = !large || [[EditorResources.shared setting:@"largeFileBraceMatch" fallback:@NO] boolValue];
+	for (ScintillaView *view in _clone ? @[_editor, _clone] : @[_editor])
+	{
+		HighlightPair(view, matchPairs);
 	}
 	[_chrome refreshColors];
 	[_resultsView refreshTheme];
@@ -3698,7 +3705,94 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	return [super writeSafelyToURL:url ofType:typeName forSaveOperation:operation error:error];
 }
 
+static sptr_t MatchingQuote(ScintillaView *view, sptr_t position)
+{
+	const auto line = [view message:SCI_LINEFROMPOSITION wParam:position];
+	const auto start = [view message:SCI_POSITIONFROMLINE wParam:line];
+	const auto end = [view message:SCI_GETLINEENDPOSITION wParam:line];
+	const auto *bytes = reinterpret_cast<const char *>([view message:SCI_GETRANGEPOINTER wParam:start lParam:end - start]);
+	const std::string_view text{bytes, static_cast<size_t>(end - start)};
+	const auto candidate = static_cast<size_t>(position - start);
+	const bool plainText = [view message:SCI_GETLEXER] <= SCLEX_NULL;
+	const auto isWord = [](unsigned char byte) {
+		return byte >= 0x80 || (byte >= 'a' && byte <= 'z') || (byte >= 'A' && byte <= 'Z') ||
+			(byte >= '0' && byte <= '9') || byte == '_';
+	};
+	size_t opening = text.npos;
+	bool escaped = false;
+	for (size_t index = 0; index < text.size(); ++index)
+	{
+		const char ch = text[index];
+		if (!escaped && (ch == '"' || ch == '\''))
+		{
+			if (opening == text.npos)
+			{
+				const bool apostrophe = plainText && ch == '\'' && index > 0 && index + 1 < text.size() &&
+					isWord(text[index - 1]) && isWord(text[index + 1]);
+				if (!apostrophe)
+					opening = index;
+			}
+			else if (ch == text[opening])
+			{
+				if (index == candidate)
+					return start + opening;
+				if (opening == candidate)
+					return start + index;
+				opening = text.npos;
+			}
+		}
+		escaped = !escaped && ch == '\\';
+		if (index >= candidate && opening != candidate)
+			break;
+	}
+	return -1;
+}
+
+static void HighlightPair(ScintillaView *view, bool enabled)
+{
+	sptr_t position = -1;
+	sptr_t match = -1;
+	if (enabled)
+	{
+		const auto caret = [view message:SCI_GETCURRENTPOS];
+		for (const auto candidate : {caret - 1, caret})
+		{
+			if (candidate < 0)
+				continue;
+			const auto ch = [view message:SCI_GETCHARAT wParam:candidate];
+			if (ch && std::strchr("()[]{}", static_cast<char>(ch)))
+			{
+				position = candidate;
+				match = [view message:SCI_BRACEMATCH wParam:candidate];
+				break;
+			}
+			if (ch == '"' || ch == '\'')
+			{
+				match = MatchingQuote(view, candidate);
+				if (match >= 0)
+				{
+					position = candidate;
+					break;
+				}
+			}
+		}
+	}
+	if (position >= 0 && match < 0)
+		[view message:SCI_BRACEBADLIGHT wParam:position];
+	else
+		[view message:SCI_BRACEHIGHLIGHT wParam:position lParam:match];
+	const auto column = match >= 0 && [view message:SCI_GETINDENTATIONGUIDES] ?
+		std::min([view message:SCI_GETCOLUMN wParam:position], [view message:SCI_GETCOLUMN wParam:match]) : 0;
+	if ([view message:SCI_GETHIGHLIGHTGUIDE] != column)
+		[view message:SCI_SETHIGHLIGHTGUIDE wParam:column];
+}
+
 - (void)notification:(SCNotification *)notification
+{
+	[self notification:notification fromView:_editor];
+}
+
+- (void)notification:(SCNotification *)notification fromView:(ScintillaView *)view
 {
 	if (_loading)
 		return;
@@ -3761,6 +3855,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 			[(EditorDocumentController *)NSDocumentController.sharedDocumentController syncZoomFromDocument:self];
 			break;
 		case SCN_UPDATEUI:
+			if (notification->updated & (SC_UPDATE_SELECTION | SC_UPDATE_CONTENT))
+				HighlightPair(view, !self.largeFileMode || [[EditorResources.shared setting:@"largeFileBraceMatch" fallback:@NO] boolValue]);
 			[self updateStatus];
 			[_chrome refreshToolbar];
 			if (notification->updated & (SC_UPDATE_SELECTION | SC_UPDATE_V_SCROLL | SC_UPDATE_H_SCROLL))

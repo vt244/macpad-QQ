@@ -662,6 +662,26 @@ static bool CheckSearchAndConfigurationParity(EditorDocumentController *controll
 	[document findMatchingBrace:action];
 	if (!Check([editor.selectedString isEqualToString:@"(bar)"], "select a matching bracket pair"))
 		return false;
+	[editor message:SCI_SETINDENTATIONGUIDES wParam:SC_IV_REAL];
+	auto paint = [&] {
+		NSView *content = editor.content;
+		[content displayRectIgnoringOpacity:content.bounds];
+	};
+	[editor message:SCI_GOTOPOS wParam:4];
+	paint();
+	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 4, "highlight the bracket pair beside the caret"))
+		return false;
+	editor.string = @"  \"a\\\"b\"  'x'";
+	[editor message:SCI_GOTOPOS wParam:8];
+	paint();
+	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 2, "match the closing double quote across an escaped quote"))
+		return false;
+	[editor message:SCI_GOTOPOS wParam:11];
+	paint();
+	if (!Check([editor message:SCI_GETHIGHLIGHTGUIDE] == 10, "match the opening single quote"))
+		return false;
+	[editor message:SCI_SETINDENTATIONGUIDES wParam:SC_IV_NONE];
+	editor.string = @"foo (bar) foo\nFOO";
 	[editor message:SCI_SETSEL wParam:0 lParam:3];
 	action.tag = 43022;
 	[document useMarkStyle:action];
