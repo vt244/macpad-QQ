@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>pref-category</key><string>Categoria delle preferenze</string>
+	<key>pref-detectEncoding</key><string>Rileva automaticamente le codifiche legacy</string>
+	<key>pref-guides</key><string>Guide dell’editor</string>
+	<key>pref-currentLineMode</key><string>Riga corrente</string>
+	<key>pref-currentLineMode-0</key><string>Disattivato</string>
+	<key>pref-currentLineMode-1</key><string>Evidenzia</string>
+	<key>pref-currentLineMode-2</key><string>Contorno</string>
+	<key>pref-currentLineFrameWidth</key><string>Spessore del contorno</string>
+	<key>pref-wrapIndent</key><string>Rientro delle righe a capo</string>
+	<key>pref-wrapIndent-0</key><string>Predefinito</string>
+	<key>pref-wrapIndent-1</key><string>Allineato</string>
+	<key>pref-wrapIndent-2</key><string>Rientrato</string>
+	<key>pref-edgeColumns</key><string>Colonne delle guide verticali</string>
+	<key>pref-edgeBackground</key><string>Ombreggia oltre una singola guida</string>
+	<key>pref-print-layout</key><string>Layout di stampa</string>
+	<key>pref-printFormFeedBreak</key><string>Interruzione di pagina al carattere FF</string>
+	<key>pref-printHeaderFontName</key><string>Carattere dell’intestazione</string>
+	<key>pref-printHeaderFontSize</key><string>Dimensione dell’intestazione</string>
+	<key>pref-printFooterFontName</key><string>Carattere del piè di pagina</string>
+	<key>pref-printFooterFontSize</key><string>Dimensione del piè di pagina</string>
+	<key>native-text:Toggle User Language Panel</key><string>Mostra o nascondi il pannello dei linguaggi</string>
+	<key>native-text:Remove User Defined Language…</key><string>Rimuovi linguaggio personalizzato…</string>
+	<key>native-text:Save User Defined Language As</key><string>Salva linguaggio personalizzato con nome</string>
+	<key>native-text:Remove the language “%@”?</key><string>Rimuovere il linguaggio «%@»?</string>
+	<key>native-text:Saving is disabled for this instance.</key><string>Il salvataggio è disattivato in questa istanza.</string>
+	<key>pref-monospacedFontFindDlg</key><string>Usa un carattere a spaziatura fissa nella ricerca</string>
+	<key>pref-inSelectionHint</key><string>Imposta la soglia a 0 per controllare manualmente «Nella selezione».</string>
+	<key>pref-styleOverride</key><string>Sostituzione globale degli stili</string>
+	<key>native-text:Assigned shortcuts</key><string>Scorciatoie assegnate</string>
+	<key>native-text:Unassigned</key><string>Non assegnata</string>
+	<key>native-text:That shortcut is assigned to %@.</key><string>Questa scorciatoia è assegnata a %@.</string>
+	<key>native-text:Enter a single character or a function key from F1 to F20.</key><string>Inserisci un solo carattere o un tasto funzione da F1 a F20.</string>
+</dict>
+</plist>

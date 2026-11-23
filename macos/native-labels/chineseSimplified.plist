@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>pref-category</key><string>首选项类别</string>
+	<key>pref-detectEncoding</key><string>自动检测旧版编码</string>
+	<key>pref-guides</key><string>编辑器辅助线</string>
+	<key>pref-currentLineMode</key><string>当前行</string>
+	<key>pref-currentLineMode-0</key><string>关闭</string>
+	<key>pref-currentLineMode-1</key><string>高亮</string>
+	<key>pref-currentLineMode-2</key><string>描边</string>
+	<key>pref-currentLineFrameWidth</key><string>描边宽度</string>
+	<key>pref-wrapIndent</key><string>换行缩进</string>
+	<key>pref-wrapIndent-0</key><string>默认</string>
+	<key>pref-wrapIndent-1</key><string>对齐</string>
+	<key>pref-wrapIndent-2</key><string>缩进</string>
+	<key>pref-edgeColumns</key><string>垂直标尺列</string>
+	<key>pref-edgeBackground</key><string>为单条标尺后的区域着色</string>
+	<key>pref-print-layout</key><string>打印布局</string>
+	<key>pref-printFormFeedBreak</key><string>遇到换页符时分页</string>
+	<key>pref-printHeaderFontName</key><string>页眉字体</string>
+	<key>pref-printHeaderFontSize</key><string>页眉字号</string>
+	<key>pref-printFooterFontName</key><string>页脚字体</string>
+	<key>pref-printFooterFontSize</key><string>页脚字号</string>
+	<key>native-text:Toggle User Language Panel</key><string>显示或隐藏语言面板</string>
+	<key>native-text:Remove User Defined Language…</key><string>删除用户定义语言…</string>
+	<key>native-text:Save User Defined Language As</key><string>用户定义语言另存为</string>
+	<key>native-text:Remove the language “%@”?</key><string>删除语言“%@”吗？</string>
+	<key>native-text:Saving is disabled for this instance.</key><string>此实例已禁用保存。</string>
+	<key>pref-monospacedFontFindDlg</key><string>在查找窗口中使用等宽字体</string>
+	<key>pref-inSelectionHint</key><string>将选区阈值设为 0，可手动控制「在选区中」选项。</string>
+	<key>pref-styleOverride</key><string>全局样式覆盖</string>
+	<key>native-text:Assigned shortcuts</key><string>已分配的快捷键</string>
+	<key>native-text:Unassigned</key><string>未分配</string>
+	<key>native-text:That shortcut is assigned to %@.</key><string>此快捷键已分配给 %@。</string>
+	<key>native-text:Enter a single character or a function key from F1 to F20.</key><string>请输入单个字符或 F1 到 F20 之间的功能键。</string>
+</dict>
+</plist>

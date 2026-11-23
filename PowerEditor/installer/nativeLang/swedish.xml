@@ -41,7 +41,7 @@ Translation note:
 					<Item subMenuId="edit-onSelection" name="För markerad te&amp;xt"/>
 					<Item subMenuId="edit-multiSelectALL" name="Multimarkera ALLA"/>
 					<Item subMenuId="edit-multiSelectNext" name="Multimarkera nästkommande"/>
-					<Item subMenuId="edit-readonlyInNotepad++" name="Skrivskydd i Notepad++"/>
+					<Item subMenuId="edit-readonlyInNotepad++" name="Skrivskydd i macpad++"/>
 					<Item subMenuId="search-changeHistory" name="Förändringshistorik"/>
 					<Item subMenuId="search-markAll" name="Sti&amp;lsätt alla förekomster"/>
 					<Item subMenuId="search-markOne" name="S&amp;tilsätt en förekomst"/>
@@ -368,17 +368,17 @@ Translation note:
 					<Item id="46016" name="Inget (oformaterad text)"/>
 					<Item id="46250" name="Definiera ditt språk..."/>
 					<Item id="46300" name="Öppna mapp för användardefinierade språk..."/>
-					<Item id="46301" name="Samling av användardefinierade språk för Notepad++"/>
+					<Item id="46301" name="Samling av användardefinierade språk för macpad++"/>
 					<Item id="46180" name="Användardefinierat"/>
-					<Item id="47000" name="Om Notepad++"/>
+					<Item id="47000" name="Om macpad++"/>
 					<Item id="47010" name="Kommandoradsargument"/>
-					<Item id="47001" name="Officiell hemsida för Notepad++"/>
-					<Item id="47002" name="Projekthemsida för Notepad++"/>
-					<Item id="47003" name="Internetmanual för Notepad++"/>
-					<Item id="47004" name="Gemenskapsforum för Notepad++"/>
+					<Item id="47001" name="Officiell hemsida för macpad++"/>
+					<Item id="47002" name="Projekthemsida för macpad++"/>
+					<Item id="47003" name="Internetmanual för macpad++"/>
+					<Item id="47004" name="Gemenskapsforum för macpad++"/>
 					<Item id="47012" name="Felsökningsinformation..."/>
 					<Item id="47005" name="Hämta fler insticksprogram"/>
-					<Item id="47006" name="Uppdatera Notepad++"/>
+					<Item id="47006" name="Uppdatera macpad++"/>
 					<Item id="47009" name="Ange uppdateringsproxy..."/>
 					<Item id="48005" name="Importera insticksprogram..."/>
 					<Item id="48006" name="Importera teman..."/>
@@ -974,7 +974,7 @@ Translation note:
 					<Item id="6132" name="Dölj knappa&amp;rna ＋ ▼ ✕ på högersidan"/>
 					<Item id="6133" name="Statusfält"/>
 					<Item id="6134" name="&amp;Dölj"/>
-					<Item id="7165" name="Teckensnitt för dialogrutor (kräver omstart av Notepad++)"/>
+					<Item id="7165" name="Teckensnitt för dialogrutor (kräver omstart av macpad++)"/>
 					<Item id="7166" name="&amp;Storlek:"/>
 					<Item id="7168" name="Namn:"/>
 				</Global>
@@ -1143,7 +1143,7 @@ Translation note:
 				</DefaultDir>
 
 				<FileAssoc title="Filassociering">
-					<Item id="4008" name="Var god avsluta och starta Notepad++ som administratör för att använda denna funktion."/>
+					<Item id="4008" name="Var god avsluta och starta macpad++ som administratör för att använda denna funktion."/>
 					<Item id="4009" name="Kompatibla filändelser:"/>
 					<Item id="4010" name="Registrerade filändelser:"/>
 				</FileAssoc>
@@ -1229,7 +1229,7 @@ Translation note:
 				</Print>
 
 				<Searching title="Sökning">
-					<Item id="6902" name="Använd teckensnitt med fast bredd i sökdialogen (kräver omstart av Notepad++)"/>
+					<Item id="6902" name="Använd teckensnitt med fast bredd i sökdialogen (kräver omstart av macpad++)"/>
 					<Item id="6903" name="Låt sökdialogen förbli öppen efter sökningar som visas i resultatfönstret"/>
 					<Item id="6906" name="Sökresultatsfönstret: Visa endast en post per funnen rad om det är möjligt"/>
 					<Item id="6907" name="När sökdialogen öppnas"/>
@@ -1296,7 +1296,7 @@ Translation note:
 					<Item id="6152" name="Öppna session i en ny instans (och spara sessionen automatiskt vid avslut)"/>
 					<Item id="6153" name="Alltid flera instanser"/>
 					<Item id="6154" name="Standard (en enda instans)"/>
-					<Item id="6155" name="* En omstart av Notepad++ krävs om denna inställning ändras"/>
+					<Item id="6155" name="* En omstart av macpad++ krävs om denna inställning ändras"/>
 					<Item id="6171" name="Anpassa datum och tid att infoga"/>
 					<Item id="6175" name="Omvänd standardordning av datum och tid (kort och långt format)"/>
 					<Item id="6172" name="Anpassat format:"/>
@@ -1379,8 +1379,8 @@ Translation note:
 					</ComboBox>
 					<ComboBox id="6364">
 						<Element name="Inaktivera"/>
-						<Element name="Aktivera när Notepad++ startar"/>
-						<Element name="Aktivera när Notepad++ avslutas"/>
+						<Element name="Aktivera när macpad++ startar"/>
+						<Element name="Aktivera när macpad++ avslutas"/>
 					</ComboBox>
 					<Item id="6308" name="systemfältet"/>
 					<Item id="6363" name="som renderingsläge"/>
@@ -1468,7 +1468,7 @@ Du kan aktivera denna dialogruta i inställningarna senare."/>
 				<Item id="7" name="N&amp;ej"/>
 				<Item id="4" name="&amp;Alltid"/>
 			</DoSaveAll><!-- HowToReproduce: Check the "Enable Save All confirm dialog" checkbox in Preference->MISC, now click "Save all" -->
-			<NetworkPathWarning title="Sessionsinläsning i Notepad++" title2="Klickbar länk med prefixet file://" title3="Läser in toolbarButtonsConf.xml" title4="Läser in XML-fil i projektpanel">
+			<NetworkPathWarning title="Sessionsinläsning i macpad++" title2="Klickbar länk med prefixet file://" title3="Läser in toolbarButtonsConf.xml" title4="Läser in XML-fil i projektpanel">
 				<Item id="1771" name="Varning för nätverkssökväg:
 
 $STR_REPLACE$
@@ -1488,8 +1488,8 @@ Vill du läsa in den ändå?"/>
 		</Dialog>
 		<MessageBox>
 			<!-- $INT_REPLACE$ and $STR_REPLACE$ are place holders, don't translate these place holders. -->
-			<ContextMenuXmlEditWarning title="Redigera högerklicksmenyn" message="Genom att redigera contextMenu.xml kan du anpassa högerklicksmenyn i Notepad++.
-Du måste starta om Notepad++ för att ändringarna i contextMenu.xml ska gälla."/>
+			<ContextMenuXmlEditWarning title="Redigera högerklicksmenyn" message="Genom att redigera contextMenu.xml kan du anpassa högerklicksmenyn i macpad++.
+Du måste starta om macpad++ för att ändringarna i contextMenu.xml ska gälla."/>
 			<SaveCurrentModifWarning title="Spara aktuella ändringar" message="Du bör spara dina aktuella ändringar.
 Det går inte att ångra ändringar som har sparats.
 
@@ -1498,10 +1498,10 @@ Vill du fortsätta?"/><!-- HowToReproduce: when you openned file is modified but
 Det går inte att ångra ändringar som har sparats.
 
 Vill du fortsätta?"/><!-- HowToReproduce: when you openned file is modified and saved, then you are changing file encoding. -->
-			<CannotMoveDoc title="Flytta till en ny instans av Notepad++" message="Dokumentet har ändrats. Spara det och försök igen."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
-			<DocReloadWarning title="Ladda om" message="Är du säker på att du vill ladda om aktuell fil och förlora de ändringar som gjorts i Notepad++?"/>
+			<CannotMoveDoc title="Flytta till en ny instans av macpad++" message="Dokumentet har ändrats. Spara det och försök igen."/><!-- HowToReproduce: From your Notepad++ drag & drop a clean (not dirty) file to outside of Notepad++, another instance of Notepad++ will be created. Then from your first Notepad++ drag & drop an unsaved file to the new instance. -->
+			<DocReloadWarning title="Ladda om" message="Är du säker på att du vill ladda om aktuell fil och förlora de ändringar som gjorts i macpad++?"/>
 			<FileLockedWarning title="Misslyckades att spara" message="Kontrollera om denna fil är öppen i ett annat program"/>
-			<FileAlreadyOpenedInNpp title="" message="Filen är redan öppen i Notepad++."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
+			<FileAlreadyOpenedInNpp title="" message="Filen är redan öppen i macpad++."/><!-- HowToReproduce: Open a new document and open a file "c:/tmp/foo", save this new document by choosing "c:/tmp/foo" as file to save, reply the override popup "yes", then this message appears. -->
 			<RenameTabTemporaryNameAlreadyInUse title="Misslyckades att byta namn" message="Det angivna filnamnet används redan i en annan flik."/><!-- HowToReproduce: Rename the tab of an untitled document and provide a name that is the same as an already-existing tab of an untitled document. -->
 			<RenameTabTemporaryNameIsEmpty title="Misslyckades att byta namn" message="Det angivna filnamnet kan varken vara tomt eller endast innehålla blanksteg eller tabb."/><!-- HowToReproduce: Rename the tab of an untitled document and provide an empty string or only some white speces. -->
 			<DeleteFileFailed title="Radera fil" message="Misslyckades att radera filen"/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
@@ -1533,7 +1533,7 @@ Det finns 3 sätt att växla till kolumnmarkeringsläget:
        sedan kommandot &quot;Inled/avsluta markering i kolumnläge&quot; igen"/>
 			<BufferInvalidWarning title="Misslyckades att spara" message="Kan inte spara: Bufferten är felaktig."/><!-- HowToReproduce: this message prevents from system failure. It's hard to reproduce. -->
 			<DoCloseOrNot title="Behålla fil som inte längre finns" message="Filen &quot;$STR_REPLACE$&quot; finns inte längre.
-Ska filen behållas i Notepad++?"/>
+Ska filen behållas i macpad++?"/>
 			<DoDeleteOrNot title="Radera fil" message="Filen &quot;$STR_REPLACE$&quot;
 kommer att flyttas till papperskorgen och detta dokument kommer att stängas.
 Vill du fortsätta?"/>
@@ -1547,13 +1547,13 @@ Vill du ladda om den?"/>
 			<DoReloadOrNotAndLooseChange title="Ladda om" message="&quot;$STR_REPLACE$&quot;
 
 Denna fil har ändrats av ett annat program.
-Vill du ladda om den och förlora ändringarna som gjordes i Notepad++?"/>
+Vill du ladda om den och förlora ändringarna som gjordes i macpad++?"/>
 			<PrehistoricSystemDetected title="Förhistoriskt system upptäcktes" message="Det verkar som om du fortfarande använder ett uråldrigt system. Tyvärr fungerar endast denna funktion på ett modernt system."/><!-- HowToReproduce: Launch "Document Map" under Windows XP. -->
-			<XpUpdaterProblem title="Uppdateringsprogram för Notepad++" message="Uppdateringsprogrammet för Notepad++ är inte kompatibelt med XP på grund av ett föråldrat säkerhetslager i XP.
-Vill du gå till hemsidan för Notepad++ för att ladda ned den senaste versionen?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
+			<XpUpdaterProblem title="Uppdateringsprogram för macpad++" message="Uppdateringsprogrammet för macpad++ är inte kompatibelt med XP på grund av ett föråldrat säkerhetslager i XP.
+Vill du gå till hemsidan för macpad++ för att ladda ned den senaste versionen?"/><!-- HowToReproduce: Run menu "? -> Update Notepad++" under Windows XP. -->
 			<DocTooDirtyToMonitor title="Övervakningsproblem" message="Dokumentet har ändrats. Spara ändringarna innan du övervakar den."/>
 			<DocNoExistToMonitor title="Övervakningsproblem" message="Filen måste finnas för att kunna övervakas."/>
-			<FileTooBigToOpen title="Problem med filstorleken" message="Filen är för stor för att öppnas med Notepad++"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
+			<FileTooBigToOpen title="Problem med filstorleken" message="Filen är för stor för att öppnas med macpad++"/><!-- HowToReproduce: Try to open a 4GB file (it's not easy to reproduce, it depends on your system). -->
 			<FileLoadingException title="Felkod: $STR_REPLACE$" message="Ett fel uppstod när filen lästes in!"/>
 			<WantToOpenHugeFile title="Varning om att öppna stor fil" message="Det kan ta flera minuter att öppna en stor fil på över 2GB.
 Vill du öppna den?"/>
@@ -1596,28 +1596,28 @@ Använd ett annat namn."/>
 			<SCMapperDoDeleteOrNot title="Är du säker?" message="Är du säker på att du vill radera detta kortkommando?"/>
 			<FindCharRangeValueError title="Felaktigt intervall" message="Du måste ange ett värde mellan 0 och 255."/> <!-- HowToReproduce: Search menu, then Find characters in range, select Custom range, enter 999 in either edit box, press Find. -->
 			<OpenInAdminMode title="Misslyckades att spara" message="Filen kunde inte sparas och kanske är skrivskyddad.
-Vill du starta Notepad++ som administratör?"/>
+Vill du starta macpad++ som administratör?"/>
 			<OpenInAdminModeWithoutCloseCurrent title="Misslyckades att spara" message="Filen kunde inte sparas och kanske är skrivskyddad.
-Vill du starta Notepad++ som administratör?"/>
-			<OpenInAdminModeFailed title="Misslyckades att starta som administratör" message="Notepad++ kan inte öppnas som administratör."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
+Vill du starta macpad++ som administratör?"/>
+			<OpenInAdminModeFailed title="Misslyckades att starta som administratör" message="macpad++ kan inte öppnas som administratör."/><!-- HowToReproduce: When you have no Admin privilege and you try to save a modified file in a protected location (for example: any file in sub-folder of "C:\Program Files\". This message will appear after replying "Yes" to "Open in Admin mode" dialog. -->
 			<ViewInBrowser title="Visa aktuell fil i webbläsaren" message="Programmet hittas inte på din dator."/>
-			<ExitToUpdatePlugins title="Notepad++ håller på att avslutas" message="Om du klickar på &quot;Ja&quot; kommer Notepad++ avslutas för att slutföra åtgärderna.
-Notepad++ kommer att startas om när alla åtgärder är avslutade.
+			<ExitToUpdatePlugins title="macpad++ håller på att avslutas" message="Om du klickar på &quot;Ja&quot; kommer macpad++ avslutas för att slutföra åtgärderna.
+macpad++ kommer att startas om när alla åtgärder är avslutade.
 Vill du fortsätta?"/>
-			<NeedToRestartToLoadPlugins title="Notepad++ behöver startas om" message="Du måste starta om Notepad++ för att läsa in de insticksprogram du har installerat."/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
-			<ChangeHistoryEnabledWarning title="Notepad++ behöver startas om" message="Du måste starta om Notepad++ för att aktivera förändringshistoriken."/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
-			<WindowsSessionExit title="Notepad++ - Windows-session avslutas" message="Windows-sessionen håller på att avslutas men du har osparad data. Vill du avsluta Notepad++ nu?"/>
+			<NeedToRestartToLoadPlugins title="macpad++ behöver startas om" message="Du måste starta om macpad++ för att läsa in de insticksprogram du har installerat."/><!-- HowToReproduce: Import a plugin via menu "Settings->Import->Import Plugin(s)...". -->
+			<ChangeHistoryEnabledWarning title="macpad++ behöver startas om" message="Du måste starta om macpad++ för att aktivera förändringshistoriken."/><!-- HowToReproduce: uncheck "Display Change History" via Preferences dialog "Marges/Border/Edge. -->
+			<WindowsSessionExit title="macpad++ - Windows-session avslutas" message="Windows-sessionen håller på att avslutas men du har osparad data. Vill du avsluta macpad++ nu?"/>
 			<LanguageMenuCompactWarning title="Kompakt språkmeny" message="Detta alternativ kommer att ändras vid nästa uppstart."/><!-- HowToReproduce: toggle "Make language menu compact" via Preferences dialog "Language/Language Menu. -->
 			<SwitchUnsavedThemeWarning title="$STR_REPLACE$" message="Osparade ändringar håller på att ignoreras!
 Vill du spara dina ändringar innan du byter tema?"/><!-- HowToReproduce: In the Style Configurator dialog change some theme and switch to other theme without saving. -->
-			<MacroAndRunCmdlWarning title="Kompatibilitet för makron och körbara kommandon" message="Dina makron och körbara kommandon som har sparats i Notepad++ v.8.5.2 (eller äldre) kanske inte är kompatibla med den aktuella versionen av Notepad++.
+			<MacroAndRunCmdlWarning title="Kompatibilitet för makron och körbara kommandon" message="Dina makron och körbara kommandon som har sparats i macpad++ v.8.5.2 (eller äldre) kanske inte är kompatibla med den aktuella versionen av macpad++.
 Var god testa dessa kommandon och redigera dem vid behov.
 
-Annars kan du nedgradera till Notepad++ v8.5.2 och återställa din föregående data.
-Notepad++ kommer att säkerhetskopiera din gamla &quot;shortcuts.xml&quot; och spara den som &quot;shortcuts.xml.v8.5.2.backup&quot;.
+Annars kan du nedgradera till macpad++ v8.5.2 och återställa din föregående data.
+macpad++ kommer att säkerhetskopiera din gamla &quot;shortcuts.xml&quot; och spara den som &quot;shortcuts.xml.v8.5.2.backup&quot;.
 Byt namn på &quot;shortcuts.xml.v8.5.2.backup&quot; -&gt; &quot;shortcuts.xml&quot; så bör dina kommandon återställas och fungera ordentligt."/> <!-- HowToReproduce: Close Notepad++, remove shortcuts.xml.v8.5.2.backup & v852ShortcutsCompatibilityWarning.xml if present, relaunch Notepad++, delete or modify a shortcuts via Shortcut Mapper, close Notepad++, then the message will show up -->
 			<FullReadOnlySavingForbidden title="Misslyckades att spara" message="Kan inte spara filen.
-Det fullständiga skrivskyddet i Notepad++ förbjuder sparning och förhindrade filen från att sparas."/>
+Det fullständiga skrivskyddet i macpad++ förbjuder sparning och förhindrade filen från att sparas."/>
 			<NotEnoughRoom4Saving title="Misslyckades att spara" message="Misslyckades att spara filen.
 Det verkar inte finnas tillräckligt mycket diskutrymme för att spara filen. Din fil sparades inte."/>
 			<FileInaccessibleUserSession title="Filen är otillgänglig" message="Vissa filer från din manuellt sparade session &quot;$STR_REPLACE$&quot; är otillgängliga. De kan öppnas som platshållare i form av tomma och skrivskyddade dokument.
@@ -1630,8 +1630,8 @@ OBS: Om du inte skapar platshållarna eller stänger dem senare kommer din manue
 Vill du skapa dessa platshållare?
 
 OBS: Om du inte skapar platshållarna eller stänger dem senare kommer din session MODIFIERAS VID AVSLUT! Vi föreslår att du nu säkerhetskopierar din &quot;session.xml&quot;."/>
-			<RTLvsDirectWrite title="Kan inte köra RTL" message="RTL är inte kompatibelt med DirectWrite-läget. Inaktivera DirectWrite-läget under avsnittet Övrigt i inställningarna och starta sedan om Notepad++."/>
-			<FileMemoryAllocationFailed title="Undantag: Minnesallokering av fil misslyckades" message="Det finns förmodligen inte tillräckligt mycket ledigt angränsande minne för att filen ska kunna läsas in av Notepad++."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
+			<RTLvsDirectWrite title="Kan inte köra RTL" message="RTL är inte kompatibelt med DirectWrite-läget. Inaktivera DirectWrite-läget under avsnittet Övrigt i inställningarna och starta sedan om macpad++."/>
+			<FileMemoryAllocationFailed title="Undantag: Minnesallokering av fil misslyckades" message="Det finns förmodligen inte tillräckligt mycket ledigt angränsande minne för att filen ska kunna läsas in av macpad++."/><!-- HowToReproduce: Try to open multiple files with total size > ~700MB in the x86 Notepad++ (it will depend on the PC memory configuration and the current system memory usage...). -->
 			<FindRegexBackwardDisabled title="Reguljär bakåtsökning har inaktiverats" message="Som standard har reguljär bakåtsökning inaktiverats p.g.a. potentiellt oväntade resultat. Öppna sökdialogen och välj antingen normalt eller utökat sökläge i stället för reguljärt uttryck för att genomföra en bakåtsökning.
 Tryck på OK-knappen för att öppna sökdialogen eller sätta fokus på den.
 			
@@ -1639,8 +1639,8 @@ Se användarmanualen för instruktioner om hur man aktiverar reguljär bakåtsö
 			<PrintError title="0" message="Kan inte starta utskift av dokument."/><!-- Use title="0" to use Windows OS default translated "Error" title. -->
 			<FindAutoChangeOfInSelectionWarning title="Sökvarning" message="Tillståndet hos kryssrutan &quot;I markering&quot; har ändrats automatiskt.
 Kontrollera sökvillkoren innan du utför åtgärden."/> <!-- HowToReproduce: https://github.com/notepad-plus-plus/notepad-plus-plus/issues/14897#issuecomment-2564316224 -->
-			<Need2Restart2ShowMenuShortcuts title="Notepad++ behöver startas om" message="Notepad++ behöver startas om för att visa knapparna på högersidan."/>
-			<NoAdminRight2ChangeReadOnlyFileAttribute title="Misslyckades att ändra filens skrivskyddsattribut" message="Starta Notepad++ som administratör för att ändra filattribut."/>
+			<Need2Restart2ShowMenuShortcuts title="macpad++ behöver startas om" message="macpad++ behöver startas om för att visa knapparna på högersidan."/>
+			<NoAdminRight2ChangeReadOnlyFileAttribute title="Misslyckades att ändra filens skrivskyddsattribut" message="Starta macpad++ som administratör för att ändra filattribut."/>
 			<ReadOnlyFileCannotBeSaved title="Misslyckades att spara - Filen är skrivskyddad" message="&quot;$STR_REPLACE$&quot;
 Filen är skrivskyddad och kan inte sparas.
 Var god ta bort skrivskyddet och spara sedan din fil."/>
@@ -1650,7 +1650,7 @@ Integriteten för shortcuts.xml kommer att kontrolleras av säkerhetsskäl. Var 
 			<ShortcutsXmlTampered title="Säkerhetsvarning" message="Filen shortcuts.xml verkar ha ändrats manuellt.
 
 Var god granska den öppnade filen shortcuts.xml av säkerhetsskäl. Använd &quot;Validera shortcuts.xml&quot; från menyn &quot;Kör&quot; för att bekräfta att filinnehållet är OK."/>
-			<SymlinkLoadingWarning title="Varning: Programmet kan fastna om symboliska länkar läses in" message="Om inläsning av symboliska länkar aktiveras i &quot;Mapp som arbetsyta&quot; kan det få Notepad++ att hamna i en oändlig loop och fastna.
+			<SymlinkLoadingWarning title="Varning: Programmet kan fastna om symboliska länkar läses in" message="Om inläsning av symboliska länkar aktiveras i &quot;Mapp som arbetsyta&quot; kan det få macpad++ att hamna i en oändlig loop och fastna.
 Detta kan hända när symboliska länkar för mappar pekar på överordnade mappar eller skapar cirkulära referenser.
 Fortsätt endast om du förstår riskerna."/>
 		</MessageBox>
@@ -1773,8 +1773,8 @@ Fortsätt endast om du förstår riskerna."/>
 			<word-chars-list-warning-end value="  i din teckenlista."/><!-- HowToReproduce: In "Delimiter" section of Preferences dialog, check "Add your character as part of word\r(don't choose it unless you know what you're doing)", then type a white-space in the text field. -->
 			<backup-select-folder value="Välj en mapp för säkerhetskopior"/><!-- HowToReproduce: Settings > Preferences > Backup > [...] -->
 			<cloud-invalid-warning value="Felaktig sökväg."/>
-			<cloud-restart-warning value="Starta om Notepad++ för att ändringarna ska börja gälla."/>
-			<cloud-select-folder value="Välj en mapp där Notepad++ ska läsa/skriva sina inställningar"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
+			<cloud-restart-warning value="Starta om macpad++ för att ändringarna ska börja gälla."/>
+			<cloud-select-folder value="Välj en mapp där macpad++ ska läsa/skriva sina inställningar"/><!-- HowToReproduce: In "Cloud" section of Preferences dialog, check "Set your cloud location path here: ", then click the button "...". This message is displayed in the "Browse For Folder" dialog. -->
 			<default-open-save-select-folder value="Välj en standardmapp"/><!-- HowToReproduce: Settings > Preferences > Default Directory > [...] -->
 			<shift-change-direction-tip value="Använd Shift + Enter för att söka i omvänd riktning"/>
 			<two-find-buttons-tip value="Sök med två knappar"/>
@@ -1939,7 +1939,7 @@ Om du väljer avancerat läge men inte redigerar filer i de omfattande språken 
 
 			<!-- Don't translate "Global override" and "Default Style" -->
 			<global-override-tip value="Om &quot;Global override&quot; aktiveras här kommer samma parameter att åsidosättas i alla språkstilar. Du vill förmodligen egentligen använda inställningen &quot;Default Style&quot; i stället"/>
-			<scintillaRenderingTechnology-tip value="Kan förbättra renderingen av specialtecken eller lösa några grafikproblem. Starta om Notepad++ för att tillämpa ändringarna."/>
+			<scintillaRenderingTechnology-tip value="Kan förbättra renderingen av specialtecken eller lösa några grafikproblem. Starta om macpad++ för att tillämpa ändringarna."/>
 
 			<!-- Due to the limited space on the status bar, if the translations for 'length' & 'lines' are much longer than the English words, please leave them in English instead of translating them. -->
 			<statusbar-length-lines value="längd: $STR_REPLACE1$    rader: $STR_REPLACE2$"/>
@@ -1957,7 +1957,7 @@ Om du väljer avancerat läge men inte redigerar filer i de omfattande språken 
 			<max-len-on-save-tip value="Din inmatning är riktigt lång och kanske inte kommer att sparas till nästa session."/>
 			<goto-setting-tip value="Hitta din inställning här"/>
 			<tabbar-tabcompactlabellen-tip value="Begränsar längden som syns på långa flikar. Tryck på Enter för att verkställa angivet värde. Värdesintervall: 1-257 tecken (0 inaktiverar trunkering)."/>
-			<networkpathwarning-serverwhitelist-tip value="Lägger till servern för den aktuella filen i Notepad++:s serverWhiteList.xml.
+			<networkpathwarning-serverwhitelist-tip value="Lägger till servern för den aktuella filen i macpad++:s serverWhiteList.xml.
 
 Klicka på knappen för att öppna webbplatsen med relevant användarhandboksavsnitt för mer information."/>
 		</MiscStrings>

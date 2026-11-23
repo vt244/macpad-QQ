@@ -439,8 +439,14 @@ rem replace ".Installer.exe" with nothing in "6.9.Installer.exe" - now VERSION i
 
 rem echo %VERSION%
 
+rem MSI requires a numeric product version. Preserve the release label separately.
+for /f "tokens=1 delims=-" %%v in ("%VERSION%") do set "MSI_VERSION=%%v"
+set "MSI_PATCH="
+for /f "tokens=3 delims=." %%v in ("%MSI_VERSION%") do set "MSI_PATCH=%%v"
+if not defined MSI_PATCH set "MSI_VERSION=%MSI_VERSION%.0"
+
 cd ..\msi\
-dotnet build -c release -p:OutputPath=..\build\ -p:DefineConstants=Version=%VERSION%
+dotnet build -c release -p:OutputPath=..\build\ -p:MacpadPackageVersion=%MSI_VERSION% -p:MacpadReleaseVersion=%VERSION%
 If ErrorLevel 1 goto End
 
 cd ..\build\

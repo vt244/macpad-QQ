@@ -1,7 +1,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-	<Package	Name="Notepad++ (x64)"
-				Manufacturer="Notepad++ team (MSI installer)"
+	<Package	Name="macpad++ (x64)"
+				Manufacturer="macpad++ contributors"
 				Version="$(var.Version)"
 				UpgradeCode="{CDB13460-04DF-4708-A7FD-4CB4A0684605}">
 
@@ -21,7 +21,10 @@
 		<!--
 		Write version information to Details' Comments field in Property of MSI file
 		-->
-		<SummaryInformation Comments="Notepad++ v$(var.Version) (x64)" />
+		<?ifndef ReleaseVersion ?>
+			<?define ReleaseVersion = "$(var.Version)" ?>
+		<?endif ?>
+		<SummaryInformation Comments="macpad++ v$(var.ReleaseVersion) (x64)" />
 
 		<!--
 		Consider the 4th digit of version number for the updating, with AllowSameVersionUpgrades="yes"
@@ -51,7 +54,7 @@
 		</StandardDirectory>
 
 		<StandardDirectory Id="ProgramMenuFolder">
-			<Directory Id="ApplicationProgramsFolder" Name="Notepad++" />
+			<Directory Id="ApplicationProgramsFolder" Name="macpad++" />
 		</StandardDirectory>
 
 	
@@ -61,7 +64,7 @@
 		<ComponentGroup Id="ShortcutComponentGroup" Directory="ApplicationProgramsFolder">
 			<Component Id="cmp_NppShortcut" Guid="{9DF5F816-BF4F-496B-9095-E1E8C01B89CE}"> 
 			<Shortcut	Id="startmenuShortcut"
-						Name="Notepad++"
+						Name="macpad++"
 						Target="[INSTALLFOLDER]notepad++.exe"
 						WorkingDirectory="INSTALLFOLDER" />
 
@@ -83,7 +86,7 @@
 
 			<Component Id="cmp_NppShellRegistry" Guid="{373DA2A0-EC23-41DC-A84D-48584FCC6619}">
 				<RegistryKey Root="HKCR" Key="*\shell\ANotepad++64">
-					<RegistryValue Type="string" Value="Notepad++ Context menu" KeyPath="yes" />
+					<RegistryValue Type="string" Value="macpad++ Context menu" KeyPath="yes" />
 					<RegistryValue Name="ExplorerCommandHandler" Type="string" Value="{B298D29A-A6ED-11DE-BA8C-A68E55D89593}" />
 					<RegistryValue Name="NeverDefault" Type="string" Value="" />
 				</RegistryKey>
@@ -114,7 +117,7 @@
 			</Component>
 		</ComponentGroup>
 
-		<Feature Id="MainApplication" Title="Notepad++ Files" Level="1">
+		<Feature Id="MainApplication" Title="macpad++ Files" Level="1">
 			<ComponentGroupRef Id="CoreComponentGroup" />
 
 			<ComponentGroupRef Id="ShortcutComponentGroup" />

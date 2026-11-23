@@ -355,8 +355,8 @@ bool PluginsAdminDlg::exitToInstallRemovePlugins(Operation op, const vector<Plug
 	NativeLangSpeaker *pNativeSpeaker = nppParameters.getNativeLangSpeaker();
 	auto res = pNativeSpeaker->messageBox("ExitToUpdatePlugins",
 		_hSelf,
-		L"If you click YES, you will quit Notepad++ to continue the operations.\nNotepad++ will be restarted after all the operations are terminated.\nContinue?",
-		L"Notepad++ is about to exit",
+		L"If you click YES, you will quit macpad++ to continue the operations.\nmacpad++ will be restarted after all the operations are terminated.\nContinue?",
+		L"macpad++ is about to exit",
 		MB_YESNO | MB_APPLMODAL);
 
 	if (res == IDYES)
@@ -437,8 +437,8 @@ bool PluginsAdminDlg::exitToDeactivateActivatePlugins(Operation op, const vector
 	NativeLangSpeaker* pNativeSpeaker = nppParameters.getNativeLangSpeaker();
 	auto res = pNativeSpeaker->messageBox("ExitToUpdatePlugins",
 		_hSelf,
-		L"If you click YES, you will quit Notepad++ to continue the operations.\nNotepad++ will be restarted after all the operations are terminated.\nContinue?",
-		L"Notepad++ is about to exit",
+		L"If you click YES, you will quit macpad++ to continue the operations.\nmacpad++ will be restarted after all the operations are terminated.\nContinue?",
+		L"macpad++ is about to exit",
 		MB_YESNO | MB_APPLMODAL);
 
 	if (res == IDYES)
@@ -892,11 +892,7 @@ bool PluginsAdminDlg::updateList()
 
 bool PluginsAdminDlg::initAvailablePluginsViewFromList()
 {
-	wchar_t nppFullPathName[MAX_PATH]{};
-	GetModuleFileName(NULL, nppFullPathName, MAX_PATH);
-
-	Version nppVer;
-	nppVer.setVersionFrom(nppFullPathName);
+	const Version nppVer(VERSION_NPP_COMPATIBILITY_VALUE);
 
 	for (const auto& i : _availableList._list)
 	{
@@ -921,12 +917,6 @@ bool PluginsAdminDlg::initAvailablePluginsViewFromList()
 
 bool PluginsAdminDlg::initIncompatiblePluginList()
 {
-	wchar_t nppFullPathName[MAX_PATH]{};
-	GetModuleFileName(NULL, nppFullPathName, MAX_PATH);
-
-	Version nppVer;
-	nppVer.setVersionFrom(nppFullPathName);
-
 	for (const auto& i : _incompatibleList._list)
 	{
 		vector<wstring> values2Add;

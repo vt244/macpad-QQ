@@ -1,0 +1,386 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "https://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>native-text:Select one or more files in Finder.</key><string>Выберите один или несколько файлов в Finder.</string>
+	<key>native-text:Leading zeros</key><string>Ведущие нули</string>
+	<key>native-text:Treat each line as a separate string</key><string>Обрабатывать каждую строку отдельно</string>
+	<key>pref-eolRepresentation</key><string>Обозначение конца строки</string>
+	<key>pref-eolRepresentation-0</key><string>Обычный текст</string>
+	<key>pref-eolRepresentation-1</key><string>В рамке</string>
+	<key>pref-eolRepresentation-2</key><string>Текст цветом темы</string>
+	<key>pref-eolRepresentation-3</key><string>Рамка цветом темы</string>
+	<key>42011</key><string>Поменять местами текущую и предыдущую строки</string>
+	<key>app-about</key><string>О программе macpad++</string>
+	<key>app-license</key><string>Лицензия macpad++…</string>
+	<key>app-license-title</key><string>Лицензия macpad++</string>
+	<key>app-hide</key><string>Скрыть macpad++</string>
+	<key>app-quit</key><string>Завершить macpad++</string>
+	<key>app-about-description</key><string>Нативный редактор текста и кода для macOS. Использует Scintilla и Lexilla. Распространяется по лицензии GNU GPL версии 3.</string>
+	<key>app-version</key><string>Версия %@ (сборка %@)</string>
+	<key>app-license-description</key><string>macpad++ распространяется по лицензии GNU GPL версии 3. Ниже приведён её оригинальный текст.</string>
+	<key>app-notices</key><string>Авторские права и уведомления…</string>
+	<key>app-notices-title</key><string>Авторские права и уведомления</string>
+	<key>app-license-unavailable</key><string>Не удалось открыть текст лицензии.</string>
+	<key>app-ok</key><string>ОК</string>
+	<key>native-findInProjects</key><string>Найти в проектах…</string>
+	<key>native-lineNumbers</key><string>Номера строк</string>
+	<key>native-zoomIn</key><string>Увеличить масштаб</string>
+	<key>native-zoomOut</key><string>Уменьшить масштаб</string>
+	<key>native-showHiddenLines</key><string>Показать скрытые строки</string>
+	<key>native-closeOtherView</key><string>Закрыть вторую область</string>
+	<key>native-theme</key><string>Тема оформления</string>
+	<key>native-default</key><string>По умолчанию</string>
+	<key>native-detectLanguage</key><string>Определять по расширению файла</string>
+	<key>native-normalText</key><string>Обычный текст</string>
+	<key>native-importUDL</key><string>Импортировать пользовательский синтаксис…</string>
+	<key>native-editUDL</key><string>Создать или изменить пользовательский синтаксис…</string>
+	<key>native-exportUDL</key><string>Экспортировать пользовательский синтаксис…</string>
+	<key>native-editEditorMenu</key><string>Изменить контекстное меню редактора…</string>
+	<key>native-editTabMenu</key><string>Изменить контекстное меню вкладок…</string>
+	<key>native-interfaceLanguage</key><string>Язык интерфейса</string>
+	<key>native-defaultLanguage</key><string>По умолчанию / nativeLang.xml</string>
+	<key>native-importMacros</key><string>Импортировать макросы…</string>
+	<key>native-deleteMacro</key><string>Удалить сохранённый макрос…</string>
+	<key>native-modifyMacroShortcut</key><string>Изменить сочетание клавиш макроса…</string>
+	<key>native-pluginCatalogSource</key><string>Источник каталога плагинов…</string>
+	<key>native-window</key><string>Окно</string>
+	<key>native-minimize</key><string>Свернуть</string>
+	<key>native-zoomWindow</key><string>Изменить размер окна</string>
+	<key>native-importXML</key><string>Импортировать XML…</string>
+	<key>native-apply</key><string>Применить</string>
+	<key>native-cancel</key><string>Отмена</string>
+	<key>native-closeNamedTab</key><string>Закрыть %@</string>
+	<key>native-untitled</key><string>новый %lu</string>
+	<key>native-showSelectionInFinder</key><string>Показать папку в Finder</string>
+	<key>native-importConfig</key><string>Импорт настроек Notepad++…</string>
+	<key>native-invalidConfig</key><string>Выберите действительный файл config.xml редактора Notepad++.</string>
+	<key>native-configImported</key><string>Настройки импортированы</string>
+	<key>native-configImportedInfo</key><string>Применены поддерживаемые настройки. Исходный файл сохранён в профиле как imported-config.xml.</string>
+	<key>pref-editor</key><string>Правка</string>
+	<key>pref-display</key><string>Вид</string>
+	<key>pref-files</key><string>Файлы и вкладки</string>
+	<key>pref-search</key><string>Поиск</string>
+	<key>pref-backup</key><string>Копии и сеансы</string>
+	<key>pref-insertSpaces</key><string>Вставлять пробелы для отступов</string>
+	<key>pref-backspaceUnindent</key><string>Уменьшать отступ клавишей Backspace</string>
+	<key>pref-virtualSpace</key><string>Разрешить курсор за концом строки</string>
+	<key>pref-multipleSelections</key><string>Разрешить несколько выделений</string>
+	<key>pref-autocomplete</key><string>Предлагать автодополнение при вводе</string>
+	<key>pref-autoPairs</key><string>Вставлять парные символы и закрывающие теги</string>
+	<key>pref-tabWidth</key><string>Ширина табуляции</string>
+	<key>pref-autocompleteMinimum</key><string>Символов до автодополнения</string>
+	<key>pref-wordWrap</key><string>Переносить длинные строки</string>
+	<key>pref-lineNumbers</key><string>Показывать номера строк</string>
+	<key>pref-bookmarkMargin</key><string>Показывать поле закладок</string>
+	<key>pref-indentGuide</key><string>Показывать направляющие отступов</string>
+	<key>pref-whitespace</key><string>Показывать пробелы и табуляцию</string>
+	<key>pref-showEOL</key><string>Показывать символы конца строки</string>
+	<key>pref-showWrapSymbol</key><string>Показывать символы переноса</string>
+	<key>pref-scrollBeyondLastLine</key><string>Прокручивать за последнюю строку</string>
+	<key>pref-toolbarStyle</key><string>Значки панели инструментов</string>
+	<key>pref-toolbarStyle-0</key><string>Контурные (малые)</string>
+	<key>pref-toolbarStyle-1</key><string>Контурные (большие)</string>
+	<key>pref-toolbarStyle-2</key><string>Сплошные (малые)</string>
+	<key>pref-toolbarStyle-3</key><string>Сплошные (большие)</string>
+	<key>pref-toolbarStyle-4</key><string>Классические</string>
+	<key>pref-autoReload</key><string>Автоматически перечитывать файлы без правок</string>
+	<key>pref-reloadToEnd</key><string>Переходить в конец при перечитывании</string>
+	<key>pref-hideToolbar</key><string>Скрыть панель инструментов</string>
+	<key>pref-hideStatusBar</key><string>Скрыть строку состояния</string>
+	<key>pref-hideTabBar</key><string>Скрыть панель вкладок</string>
+	<key>pref-tabCloseButtons</key><string>Показывать кнопки закрытия вкладок</string>
+	<key>pref-doubleClickClosesTab</key><string>Закрывать вкладку двойным щелчком</string>
+	<key>pref-fileStatusMode</key><string>Проверка изменений файла</string>
+	<key>pref-fileStatusMode-0</key><string>Отключена</string>
+	<key>pref-fileStatusMode-1</key><string>Активный документ</string>
+	<key>pref-fileStatusMode-2</key><string>Все открытые документы</string>
+	<key>pref-newDocumentEOL</key><string>Конец строки нового файла</string>
+	<key>pref-newDocumentEOL-1</key><string>Классический Mac (CR)</string>
+	<key>pref-newDocumentEncoding</key><string>Кодировка нового файла</string>
+	<key>pref-newDocumentEncoding-1</key><string>UTF-8 с BOM</string>
+	<key>pref-newDocumentEncoding-2</key><string>UTF-16 BE с BOM</string>
+	<key>pref-newDocumentEncoding-3</key><string>UTF-16 LE с BOM</string>
+	<key>pref-fillFindSelection</key><string>Подставлять выделение при открытии поиска</string>
+	<key>pref-fillFindWord</key><string>Без выделения подставлять слово под курсором</string>
+	<key>pref-findFilesOnDisk</key><string>Искать на диске, даже если в редакторе есть несохранённые правки</string>
+	<key>pref-rememberSession</key><string>Восстанавливать последний сеанс при запуске</string>
+	<key>pref-checkpointDrafts</key><string>Периодически сохранять несохранённые правки для восстановления</string>
+	<key>pref-instanceMode</key><string>Открывать файлы в</string>
+	<key>pref-instanceMode-0</key><string>Текущем экземпляре</string>
+	<key>pref-instanceMode-1</key><string>Новом экземпляре для сеансов</string>
+	<key>pref-instanceMode-2</key><string>Новом экземпляре для каждого файла</string>
+	<key>pref-backupMode</key><string>Резервные копии файлов</string>
+	<key>pref-backupMode-0</key><string>Нет</string>
+	<key>pref-backupMode-1</key><string>Одна копия .bak</string>
+	<key>pref-backupMode-2</key><string>Хранить копии с отметкой времени</string>
+	<key>pref-backupDirectory</key><string>Папка для копий (необязательно)</string>
+	<key>pref-checkpointMilliseconds</key><string>Интервал восстановления (мс)</string>
+	<key>search-selectRange</key><string>Сначала выделите текст.</string>
+	<key>search-selectDirectory</key><string>Выбрать папку поиска</string>
+	<key>search-cancelAction</key><string>Отменить поиск</string>
+	<key>search-absoluteDirectory</key><string>Укажите абсолютный путь к папке.</string>
+	<key>search-noProjectFiles</key><string>В выбранных проектах нет файлов.</string>
+	<key>search-searching</key><string>Выполняется поиск…</string>
+	<key>search-cancelled</key><string>Поиск отменён.</string>
+	<key>search-cancelling</key><string>Отмена поиска…</string>
+	<key>search-emptyQuery</key><string>Введите текст для поиска.</string>
+	<key>search-invalidRegex</key><string>Неверное регулярное выражение.</string>
+	<key>search-noMatches</key><string>Совпадений не найдено.</string>
+	<key>search-count</key><string>Совпадений: %lu</string>
+	<key>results-summary</key><string>Поиск «%@» (совпадений: %lu, файлов с совпадениями: %lu из %lu)</string>
+	<key>results-skipped</key><string> · пропущено: %lu</string>
+	<key>results-file-one</key><string>  %@ (%lu совпадение)&#10;</string>
+	<key>results-file-many</key><string>  %@ (совпадений: %lu)&#10;</string>
+	<key>results-line</key><string>&#9;Строка %lu: </string>
+	<key>panel-close</key><string>Закрыть %@</string>
+	<key>panel-addFolder</key><string>Добавить папку…</string>
+	<key>panel-openDocuments</key><string>Открытые документы</string>
+	<key>settings-Language</key><string>Язык</string>
+	<key>settings-Style</key><string>Стиль</string>
+	<key>settings-Font family</key><string>Шрифт</string>
+	<key>settings-Font size</key><string>Размер шрифта</string>
+	<key>settings-Shortcut key</key><string>Клавиши</string>
+	<key>panel-expandAll</key><string>Развернуть всё</string>
+	<key>panel-foldAll</key><string>Свернуть всё</string>
+	<key>panel-locateFile</key><string>Найти текущий файл в дереве</string>
+	<key>panel-removeAll</key><string>Удалить все папки</string>
+	<key>panel-copyPath</key><string>Копировать путь</string>
+	<key>panel-refresh</key><string>Обновить папку</string>
+	<key>panel-remove</key><string>Убрать из рабочей области</string>
+	<key>dock-edge-0</key><string>Закрепить слева</string>
+	<key>dock-edge-1</key><string>Закрепить справа</string>
+	<key>dock-edge-2</key><string>Закрепить сверху</string>
+	<key>dock-edge-3</key><string>Закрепить снизу</string>
+	<key>dock-edge-4</key><string>Отстыковать панель</string>
+	<key>dock-redock</key><string>Закрепить панель</string>
+	<key>dock-panelTabs</key><string>Закреплённые панели</string>
+	<key>panel-view1</key><string>Область 1</string>
+	<key>panel-view2</key><string>Область 2</string>
+	<key>status-normalText</key><string>Обычный текст</string>
+	<key>settings-Theme: %@</key><string>Тема: %@</string>
+	<key>settings-Global Styles</key><string>Общие стили</string>
+	<key>settings-Use foreground color</key><string>Использовать цвет текста</string>
+	<key>settings-Use background color</key><string>Использовать цвет фона</string>
+	<key>settings-Inherit</key><string>Унаследовать</string>
+	<key>settings-Apply</key><string>Применить</string>
+	<key>settings-Cancel</key><string>Отмена</string>
+	<key>settings-Restore Default</key><string>По умолчанию</string>
+	<key>settings-Enter a key or F1–F20. Leave the key empty to remove the shortcut.</key><string>Введите клавишу или F1–F20. Очистите поле, чтобы удалить сочетание.</string>
+	<key>chrome-new</key><string>Создать документ</string>
+	<key>chrome-openDocuments</key><string>Открытые документы</string>
+	<key>chrome-closeTab</key><string>Закрыть текущую вкладку</string>
+	<key>pref-tabs</key><string>Вкладки</string>
+	<key>pref-largeFiles</key><string>Большие файлы</string>
+	<key>pref-mruTabSwitcher</key><string>Переключать недавние документы через Control-Tab</string>
+	<key>pref-tabPreview</key><string>Показывать содержимое неактивной вкладки при наведении</string>
+	<key>pref-verticalTabs</key><string>Показывать вкладки слева</string>
+	<key>pref-multilineTabs</key><string>Размещать вкладки в несколько рядов</string>
+	<key>pref-dateTimeFormat</key><string>Формат даты и времени</string>
+	<key>pref-limitLargeFiles</key><string>Отключать подсветку синтаксиса в больших файлах</string>
+	<key>pref-largeFileCompletion</key><string>Разрешать автодополнение в больших файлах</string>
+	<key>pref-largeFileBraceMatch</key><string>Разрешать поиск парных скобок в больших файлах</string>
+	<key>pref-largeFileDisableWrap</key><string>Отключать перенос строк в больших файлах</string>
+	<key>pref-largeFileMegabytes</key><string>Порог размера файла (МиБ)</string>
+	<key>function-filter</key><string>Фильтр функций</string>
+	<key>native-text:Document map preview</key><string>Предпросмотр карты документа</string>
+	<key>view-tab-switcher</key><string>Открытые документы</string>
+	<key>character-range-find</key><string>Найти</string>
+	<key>character-range-backward</key><string>Искать назад</string>
+	<key>character-range-wrap</key><string>Зациклить поиск</string>
+	<key>character-range-first</key><string>Первый код Unicode</string>
+	<key>character-range-last</key><string>Последний код Unicode</string>
+	<key>character-range-invalid</key><string>Введите диапазон от 0 до 1114111 в порядке возрастания.</string>
+	<key>custom-search-engine</key><string>Пользовательский</string>
+	<key>custom-search-url</key><string>URL поисковика</string>
+	<key>custom-search-invalid</key><string>Введите URL с http или https и подстановкой $(CURRENT_WORD).</string>
+	<key>settings-Continue</key><string>Продолжить</string>
+	<key>settings-Create New Language…</key><string>Создать новый язык…</string>
+	<key>settings-User Defined Language</key><string>Пользовательский язык</string>
+	<key>settings-New User Defined Language</key><string>Новый пользовательский язык</string>
+	<key>settings-Export User Defined Language</key><string>Экспорт пользовательского языка</string>
+	<key>settings-Edit the language name, extensions, keywords, comments and styles in the UDL XML definition.</key><string>Имя языка, расширения, ключевые слова, комментарии и стили задаются в XML.</string>
+	<key>settings-The language could not be saved.</key><string>Не удалось сохранить язык.</string>
+	<key>settings-Save</key><string>Сохранить</string>
+	<key>project-Project</key><string>Проект</string>
+	<key>project-New Workspace</key><string>Новая рабочая область</string>
+	<key>project-Open Workspace…</key><string>Открыть рабочую область…</string>
+	<key>project-Save Workspace</key><string>Сохранить рабочую область</string>
+	<key>project-Save Workspace As…</key><string>Сохранить рабочую область как…</string>
+	<key>project-Add Project…</key><string>Добавить проект…</string>
+	<key>project-Add Folder…</key><string>Добавить папку…</string>
+	<key>project-Add Files…</key><string>Добавить файлы…</string>
+	<key>project-Rename…</key><string>Переименовать…</string>
+	<key>project-Rename</key><string>Переименовать</string>
+	<key>project-Open</key><string>Открыть</string>
+	<key>project-Show in Finder</key><string>Показать в Finder</string>
+	<key>project-Remove from Workspace</key><string>Убрать из рабочей области</string>
+	<key>project-Move Up</key><string>Переместить выше</string>
+	<key>project-Move Down</key><string>Переместить ниже</string>
+	<key>project-Discard unsaved changes to this project workspace?</key><string>Отменить несохранённые изменения рабочей области?</string>
+	<key>project-Discard Changes</key><string>Отменить изменения</string>
+	<key>project-Project name</key><string>Имя проекта</string>
+	<key>project-Folder name</key><string>Имя папки</string>
+	<key>native-openTabs</key><string>Управление открытыми вкладками…</string>
+	<key>native-openTabs-file</key><string>Файл</string>
+	<key>native-openTabs-path</key><string>Путь</string>
+	<key>native-openTabs-modified</key><string>Изменён</string>
+	<key>native-openTabs-activate</key><string>Перейти</string>
+	<key>native-openTabs-save</key><string>Сохранить выбранные</string>
+	<key>native-openTabs-close</key><string>Закрыть выбранные</string>
+	<key>native-openTabs-sort</key><string>Применить порядок вкладок</string>
+	<key>native-importShortcuts</key><string>Импорт сочетаний клавиш и команд запуска…</string>
+	<key>native-importShortcutsInfo</key><string>Импортируйте совместимые сочетания клавиш и команды. Команды сохраняются для запуска вручную.</string>
+	<key>native-invalidShortcuts</key><string>Выберите корректный файл shortcuts.xml.</string>
+	<key>native-shortcutsImported</key><string>Импорт сочетаний клавиш завершён</string>
+	<key>native-shortcutsSkipped</key><string>Пропущено дубликатов или несовместимых записей: %lu.</string>
+	<key>pref-lockTabs</key><string>Запретить перетаскивание вкладок</string>
+	<key>pref-caretWidth</key><string>Ширина курсора</string>
+	<key>pref-caretBlink</key><string>Период мигания курсора (мс)</string>
+	<key>pref-print</key><string>Печать</string>
+	<key>pref-printColorMode</key><string>Цветовой режим</string>
+	<key>pref-printColorMode-0</key><string>Цвета редактора</string>
+	<key>pref-printColorMode-1</key><string>Инвертировать цвета</string>
+	<key>pref-printColorMode-2</key><string>Чёрный на белом</string>
+	<key>pref-printColorMode-3</key><string>Цвета без фона</string>
+	<key>pref-printLineNumbers</key><string>Печатать номера строк</string>
+	<key>pref-printHeaderLeft</key><string>Верхний колонтитул слева</string>
+	<key>pref-printHeaderMiddle</key><string>Верхний колонтитул по центру</string>
+	<key>pref-printHeaderRight</key><string>Верхний колонтитул справа</string>
+	<key>pref-printFooterLeft</key><string>Нижний колонтитул слева</string>
+	<key>pref-printFooterMiddle</key><string>Нижний колонтитул по центру</string>
+	<key>pref-printFooterRight</key><string>Нижний колонтитул справа</string>
+	<key>pref-printMargins</key><string>Поля в мм (слева, сверху, справа, снизу)</string>
+	<key>native-text:Add</key><string>Добавить</string>
+	<key>native-text:Cancel</key><string>Отмена</string>
+	<key>native-text:Catalog…</key><string>Каталог…</string>
+	<key>native-text:Choose File…</key><string>Выбрать файл…</string>
+	<key>native-text:Close</key><string>Закрыть</string>
+	<key>native-text:Column Editor</key><string>Редактор столбцов</string>
+	<key>native-text:Command name</key><string>Имя команды</string>
+	<key>native-text:Copy</key><string>Копировать</string>
+	<key>native-text:Delete</key><string>Удалить</string>
+	<key>native-text:Delete a saved macro</key><string>Удалить сохранённый макрос</string>
+	<key>native-text:Disable</key><string>Отключить</string>
+	<key>native-text:Enter a single character or a function key from F1 to F20.</key><string>Введите один символ, название клавиши или F1–F20.</string>
+	<key>native-text:Enter valid numbers in the chosen base and a positive decimal repeat count.</key><string>Введите числа в выбранной системе счисления и положительное число повторов.</string>
+	<key>native-text:Find All</key><string>Найти все</string>
+	<key>native-text:Find in these search results</key><string>Искать в этих результатах</string>
+	<key>native-text:Find what</key><string>Найти</string>
+	<key>native-text:Generate</key><string>Вычислить</string>
+	<key>native-text:Go</key><string>Перейти</string>
+	<key>native-text:Insert</key><string>Вставить</string>
+	<key>native-text:Install or Update</key><string>Установить или обновить</string>
+	<key>native-text:Install or disable native macOS plugins. Restart macpad++ to apply changes.</key><string>Установите или отключите плагины macOS. Чтобы применить изменения, перезапустите macpad++.</string>
+	<key>native-text:Install…</key><string>Установить…</string>
+	<key>native-text:Keep Editor Contents</key><string>Сохранить содержимое редактора</string>
+	<key>native-text:Line number</key><string>Номер строки</string>
+	<key>native-text:Macro name</key><string>Имя макроса</string>
+	<key>native-text:Manage Saved Run Commands</key><string>Управление сохранёнными командами</string>
+	<key>native-text:Move to Trash</key><string>Переместить в корзину</string>
+	<key>native-text:Moving this file to the Trash will also discard its unsaved edits.</key><string>При перемещении файла в корзину несохранённые изменения будут потеряны.</string>
+	<key>native-text:No native plugins installed.</key><string>Плагины macOS не установлены.</string>
+	<key>native-text:Number of times</key><string>Число повторов</string>
+	<key>native-text:Plugin Catalog</key><string>Каталог плагинов</string>
+	<key>native-text:Plugin Catalog Source</key><string>Источник каталога плагинов</string>
+	<key>native-text:Plugins Admin</key><string>Управление плагинами</string>
+	<key>native-text:Program and arguments</key><string>Программа и аргументы</string>
+	<key>native-text:Reload</key><string>Перезагрузить</string>
+	<key>native-text:Remove</key><string>Удалить</string>
+	<key>native-text:Reopen</key><string>Открыть заново</string>
+	<key>native-text:Reopen the file in the selected character set?</key><string>Открыть файл заново в выбранной кодировке?</string>
+	<key>native-text:Reopening clears the undo history.</key><string>При повторном открытии история отмены будет очищена.</string>
+	<key>native-text:Replace</key><string>Заменить</string>
+	<key>native-text:Replace All</key><string>Заменить все</string>
+	<key>native-text:Restart macpad++ to load this version.</key><string>Перезапустите macpad++, чтобы загрузить эту версию.</string>
+	<key>native-text:Run</key><string>Выполнить</string>
+	<key>native-text:Run Until End of File</key><string>Выполнять до конца файла</string>
+	<key>native-text:Save</key><string>Сохранить</string>
+	<key>native-text:Save Run Command</key><string>Сохранить команду</string>
+	<key>native-text:Save…</key><string>Сохранить…</string>
+	<key>native-text:Use Bundled Catalog</key><string>Использовать встроенный каталог</string>
+	<key>native-text:Use URL</key><string>Использовать URL</string>
+	<key>native-text:Use the bundled catalog, choose a local JSON file, or enter an HTTPS catalog URL.</key><string>Выберите встроенный каталог, файл JSON или укажите HTTPS-адрес каталога.</string>
+	<key>native-text:General</key><string>Основные</string>
+	<key>native-text:Name</key><string>Имя</string>
+	<key>native-text:File extensions</key><string>Расширения файлов</string>
+	<key>native-text:Ignore case</key><string>Без учёта регистра</string>
+	<key>native-text:Fold comments</key><string>Сворачивать комментарии</string>
+	<key>native-text:Compact folding</key><string>Компактное сворачивание</string>
+	<key>native-text:Line comment position</key><string>Позиция комментария</string>
+	<key>native-text:Decimal separator</key><string>Десятичный разделитель</string>
+	<key>native-text:Keywords</key><string>Ключевые слова</string>
+	<key>native-text:Keyword group %d</key><string>Группа ключевых слов %d</string>
+	<key>native-text:Prefix</key><string>Префикс</string>
+	<key>native-text:Comments and numbers</key><string>Комментарии и числа</string>
+	<key>native-text:Comments</key><string>Комментарии</string>
+	<key>native-text:Operators</key><string>Операторы</string>
+	<key>native-text:Operators 1</key><string>Операторы 1</string>
+	<key>native-text:Operators 2</key><string>Операторы 2</string>
+	<key>native-text:Delimiters (UDL tokens)</key><string>Разделители (UDL)</string>
+	<key>native-text:Folding</key><string>Сворачивание</string>
+	<key>native-text:Styles</key><string>Стили</string>
+	<key>native-text:Foreground</key><string>Текст</string>
+	<key>native-text:Background</key><string>Фон</string>
+	<key>native-text:Font</key><string>Шрифт</string>
+	<key>native-text:Size</key><string>Размер</string>
+	<key>native-text:Flags</key><string>Флаги</string>
+	<key>native-text:Nesting</key><string>Вложенность</string>
+	<key>native-text:Edit the language definition. Changes are saved in the profile.</key><string>Измените определение языка. Правки сохраняются в профиле.</string>
+	<key>native-text:Filter commands</key><string>Фильтр команд</string>
+	<key>native-text:Scintilla commands</key><string>Команды Scintilla</string>
+	<key>native-text:Enter a key, a key name such as Left, or F1–F20. Leave it empty to remove the shortcut.</key><string>Введите символ, название клавиши (например, Left) или F1–F20. Чтобы убрать сочетание, оставьте поле пустым.</string>
+	<key>native-text:Enter one valid UDL 2.0 or 2.1 XML definition with a unique language name.</key><string>Укажите одно корректное определение UDL 2.0 или 2.1 с уникальным именем языка.</string>
+	<key>native-text:Numbers</key><string>Числа</string>
+	<key>native-text:Delimiters</key><string>Разделители</string>
+	<key>native-text:Line start</key><string>Начало строки</string>
+	<key>native-text:Line continuation</key><string>Продолжение строки</string>
+	<key>native-text:Line end</key><string>Конец строки</string>
+	<key>native-text:Block start</key><string>Начало блока</string>
+	<key>native-text:Block end</key><string>Конец блока</string>
+	<key>native-text:Start</key><string>Начало</string>
+	<key>native-text:Escape</key><string>Экранирование</string>
+	<key>native-text:End</key><string>Конец</string>
+	<key>pref-category</key><string>Раздел настроек</string>
+	<key>pref-detectEncoding</key><string>Определять старые кодировки автоматически</string>
+	<key>pref-guides</key><string>Направляющие</string>
+	<key>pref-currentLineMode</key><string>Текущая строка</string>
+	<key>pref-currentLineMode-0</key><string>Выкл.</string>
+	<key>pref-currentLineMode-1</key><string>Подсветка</string>
+	<key>pref-currentLineMode-2</key><string>Рамка</string>
+	<key>pref-currentLineFrameWidth</key><string>Ширина рамки</string>
+	<key>pref-wrapIndent</key><string>Отступ при переносе</string>
+	<key>pref-wrapIndent-0</key><string>По умолчанию</string>
+	<key>pref-wrapIndent-1</key><string>Выровнять</string>
+	<key>pref-wrapIndent-2</key><string>С отступом</string>
+	<key>pref-edgeColumns</key><string>Колонки вертикальных направляющих</string>
+	<key>pref-edgeBackground</key><string>Затемнять область за одной направляющей</string>
+	<key>pref-print-layout</key><string>Разметка печати</string>
+	<key>pref-printFormFeedBreak</key><string>Разрыв страницы по символу FF</string>
+	<key>pref-printHeaderFontName</key><string>Шрифт верхнего колонтитула</string>
+	<key>pref-printHeaderFontSize</key><string>Размер шрифта верхнего колонтитула</string>
+	<key>pref-printFooterFontName</key><string>Шрифт нижнего колонтитула</string>
+	<key>pref-printFooterFontSize</key><string>Размер шрифта нижнего колонтитула</string>
+	<key>native-text:Toggle User Language Panel</key><string>Показать или скрыть панель языков</string>
+	<key>native-text:Remove User Defined Language…</key><string>Удалить пользовательский язык…</string>
+	<key>native-text:Save User Defined Language As</key><string>Сохранить пользовательский язык как</string>
+	<key>native-text:Remove the language “%@”?</key><string>Удалить язык «%@»?</string>
+	<key>native-text:Saving is disabled for this instance.</key><string>В этом экземпляре сохранение отключено.</string>
+	<key>pref-monospacedFontFindDlg</key><string>Использовать моноширинный шрифт в окне поиска</string>
+	<key>pref-inSelectionHint</key><string>Установите порог 0, чтобы переключать «В выделении» вручную.</string>
+	<key>pref-styleOverride</key><string>Глобальное переопределение стилей</string>
+	<key>native-text:Assigned shortcuts</key><string>Назначенные сочетания</string>
+	<key>native-text:Unassigned</key><string>Не назначено</string>
+	<key>native-text:That shortcut is assigned to %@.</key><string>Это сочетание уже назначено команде «%@».</string>
+	<key>native-text:Choose an XML file with a named UDL 2.0 or 2.1 definition.</key><string>Выберите XML-файл с именованным определением UDL 2.0 или 2.1.</string>
+	<key>native-text:This file does not contain a macpad++ theme.</key><string>В файле нет темы оформления macpad++.</string>
+	<key>native-text:This file does not contain a macpad++ translation.</key><string>В файле нет перевода интерфейса macpad++.</string>
+	<key>native-text:The recovery file is not a supported workspace.</key><string>Формат файла восстановления рабочей области не поддерживается.</string>
+	<key>native-text:Choose a regular macOS .dylib plugin file.</key><string>Выберите обычный файл плагина macOS с расширением .dylib.</string>
+	<key>native-text:This XML file does not contain an editor session.</key><string>В XML-файле нет сессии редактора.</string>
+	<key>native-text:Some files in this session could not be opened.</key><string>Не удалось открыть некоторые файлы этой сессии.</string>
+	<key>native-text:The document contains characters that this encoding cannot represent.</key><string>Документ содержит символы, недоступные в выбранной кодировке.</string>
+	<key>native-text:The file cannot be decoded using the selected character set.</key><string>Не удалось прочитать файл в выбранной кодировке.</string>
+	<key>native-text:Open text encoded as UTF-8, UTF-16 with BOM, or Windows-1252.</key><string>Откройте текст в кодировке UTF-8, UTF-16 с BOM или Windows-1252.</string>
+</dict>
+</plist>

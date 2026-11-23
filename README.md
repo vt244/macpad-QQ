@@ -1,50 +1,107 @@
-What is Notepad++ ?
-===================
+# macpad++
 
-[![GitHub release](https://img.shields.io/github/release/notepad-plus-plus/notepad-plus-plus.svg)](../../releases/latest)&nbsp;&nbsp;&nbsp;&nbsp;[![Build Status](https://img.shields.io/github/actions/workflow/status/notepad-plus-plus/notepad-plus-plus/CI_build.yml)](https://github.com/notepad-plus-plus/notepad-plus-plus/actions/workflows/CI_build.yml)
-&nbsp;&nbsp;&nbsp;&nbsp;[![Join the discussions at https://community.notepad-plus-plus.org/](https://notepad-plus-plus.org/assets/images/NppCommunityBadge.svg)](https://community.notepad-plus-plus.org/)
+<a href="docs/assets/macpad-logo.png"><img src="docs/assets/macpad-logo.png" width="220" alt="macpad++ logo. Open the full-resolution 1254 × 1254 PNG."></a>
 
-Notepad++ is a free (free as in both "free speech" and "free beer") source code
-editor and Notepad replacement that supports several programming languages and
-natural languages. Running in the MS Windows environment, its use is governed by
-[GPL License](LICENSE).
+macpad++ is a native macOS code and text editor. It is an independent fork of
+Notepad++, originally created by Don Ho and developed by its contributors.
+The macOS port uses AppKit for the interface, Scintilla Cocoa for editing,
+and Lexilla for syntax highlighting. [Upstream project](https://github.com/notepad-plus-plus/notepad-plus-plus)
 
-See the [Notepad++ official site](https://notepad-plus-plus.org/) for more information.
+![macpad++ showing a Python file with syntax highlighting, two tabs, the document list, and the function list](docs/assets/macpad-screenshot.png)
 
+## Install on macOS
 
-Notepad++ GPG Release Key
--------------------------
-_Since the release of version 7.6.5 Notepad++ is signed using GPG with the following key:_
+The current version is `0.1-beta`.
 
-- **Signer:** Notepad++
-- **E-mail:** don.h@free.fr
-- **Key ID:** 0x8D84F46E
-- **Key fingerprint:** 14BC E436 2749 B2B5 1F8C 7122 6C42 9F1D 8D84 F46E
-- **Key type:** RSA 4096/4096
-- **Created:** 2019-03-11
-- **Expires:** 2027-03-13
+macpad++ runs natively on Apple silicon and Intel Macs with macOS 13 or later.
+It reads existing XML themes, translations and user-defined languages.
+Plugins use the [macOS plugin API](macos/MacpadPlugin.h). Windows DLLs need
+to be ported and rebuilt to run inside macpad++.
 
-https://github.com/notepad-plus-plus/notepad-plus-plus/blob/master/nppGpgPub.asc
+Check [GitHub Releases](https://github.com/vt244/macpad-plus-plus/releases)
+for a build for your Mac. Choose `macpad++-macOS-arm64.zip` for Apple silicon
+or `macpad++-macOS.zip` if a universal build is available. Download the matching
+`SHA256SUMS`, verify the archive, then unpack it and move `macpad++.app` to Applications.
 
+```sh
+shasum -a 256 macpad++-macOS-arm64.zip
+```
 
-Supported OS
-------------
+For a universal build, substitute `macpad++-macOS.zip` in the command.
+Compare the output with the matching entry in `SHA256SUMS`.
 
-All the Windows systems still supported by Microsoft are supported by Notepad++. However, not all Notepad++ users can or want to use the newest system. Here is the [Supported systems information](SUPPORTED_SYSTEM.md) you may need in case you are one of them.
+## Build from source
 
+To build from source, install the Apple Command Line Tools and CMake 3.20 or
+later, then run these commands from the repository root.
 
+```sh
+macos/build-app.sh
+open 'dist/macpad++.app'
+```
 
+Local and CI builds use ad hoc signing. The macOS workflow tests the native
+app and bundles it with matching source and SHA-256 checksums.
+[Build and release instructions](BUILD.md) · [macOS workflow](.github/workflows/macos.yml)
 
-Build Notepad++
----------------
+## What you can do
 
-Please follow [build guide](BUILD.md) to build Notepad++ from source.
+- Edit in two tabbed views, move tabs by dragging, and rotate the split from the divider's context menu. Use **View → Move/Clone Current Document** to open a second view.
+- Use **Window → Manage Open Tabs** to sort tabs by name, path or modification date, apply the order, and save or close a selection.
+- Move, resize or float panels such as **Document List**, **Folder as Workspace**, **Project Panels**, **Function List** and **Document Map**.
+- Find, replace, count and mark matches using literal, extended or regular expression search. Search within a selection, across open documents, in folders or in projects.
+- Under **Settings → Preferences → Searching**, set the character thresholds for automatic search within a selection and for filling the Find field. A selection threshold of 0 keeps **In selection** manual. You can also use a monospaced font for search fields.
+- Refine previous searches from the results panel and navigate between hits with **Search → Next Search Result** and **Previous Search Result**.
+- Use the **Edit** menu for column insertion, multiple selections, commenting, line sorting and autocompletion. **Clipboard History** keeps recent text entries in memory while its panel is open.
+- Open, save and convert UTF‑8, UTF‑16 and legacy text. Automatic detection of legacy encodings is available under **Files and Tabs** in Preferences.
+- Set or clear read-only mode for all open documents from **Edit**. **Save All** asks for confirmation by default. Change that setting under **Settings → Preferences → Files and Tabs**.
+- Reopen legacy text with its original encoding from **Encoding → Character Set**.
+- Follow log files with **View → Monitoring (tail -f)**. Configure detection of external changes in **Settings → Preferences**.
+- Record and replay editing, search and replace actions from the **Macro** menu. **Settings → Import Shortcuts and Run Commands…** reads compatible shortcuts, macros and commands from `shortcuts.xml`. Use **Shortcut Mapper** to assign shortcuts to menu actions or manage several bindings for one Scintilla command.
+- Set print colors, line numbers, margins and header or footer text under **Settings → Preferences → Printing**.
+- Use **Print Layout** in Preferences for header and footer fonts and form-feed page breaks. **File → Print Now** uses the selected printer.
+- Open **Language → Toggle User Language Panel** to edit, copy or remove definitions in a dockable panel.
+- Generate checksums from **Tools**, run macOS commands and save or open XML sessions.
+- Reopen the working session, including unsaved drafts, after quitting or restarting.
+- Import existing XML themes, translations and user-defined languages.
 
+Open files from **File → Open** or from Finder with **Open With → macpad++**.
+You can also select one or more files in Finder and choose **Open in macpad++**
+from the context menu’s **Services** section. If the action is hidden, enable
+it under **System Settings → Keyboard → Keyboard Shortcuts → Services**.
+Use the executable directly to open a file from the terminal at a specific line and column.
 
-Contribution
-------------
+```sh
+'dist/macpad++.app/Contents/MacOS/macpad++' -n20 -c4 -lpython example.py
+'dist/macpad++.app/Contents/MacOS/macpad++' -multiInst -r 'src/*.py'
+```
 
-Contributions are welcome. Be mindful of our [Contribution Rules](CONTRIBUTING.md) to increase the likelihood of your contribution getting accepted.
+[Compatibility and current limitations](SUPPORTED_SYSTEM.md)
 
-[Notepad++ Contributors](https://github.com/notepad-plus-plus/notepad-plus-plus/graphs/contributors)
+## Customize macpad++
 
+The profile folder is `~/Library/Application Support/macpad++/profile/`.
+
+| Resource | Where to install it | Where to use it |
+| --- | --- | --- |
+| XML theme | `themes/` | **View → Theme** selects a theme. **Settings → Style Configurator** edits colors and fonts. Enable individual attributes from the theme’s **Global override** style in **Preferences → Global style override**. |
+| XML translation | `localization/` | **Settings → Interface Language**. **Import XML…** copies the file into the profile. The default option also reads `nativeLang.xml` at the profile root. |
+| User Defined Language XML | `userDefineLangs/` or `userDefineLang.xml` | Create and edit definitions through the **Language** menu. The same menu imports, exports and applies UDL XML. |
+| Function and completion rules | `functionList/` and `autoCompletion/` | Override the supplied XML rules for **Function List** and **Auto-Completion**. |
+| Context menus | `contextMenu.xml` and `tabContextMenu.xml` | Edit the editor and tab menus from **Settings**. |
+| Toolbar | `toolbarButtonsConf.xml` and `toolbarIcons/` | Set built-in button visibility and supply icon overrides. Relaunch to apply changes. |
+| Windows project and session paths | `windowsPathMappings.plist` | Map drive letters and UNC shares to local directories. See [path mapping examples](SUPPORTED_SYSTEM.md#map-windows-paths). |
+| macOS plugin | `plugins/*.dylib` | Install from a local file or the catalog in **Plugins → Plugins Admin…**, then restart. Disabled files remain in `plugins/Disabled/`. |
+
+The native plugin API supports document access, selection and byte ranges,
+editor events, AppKit panels and multiple menu commands.
+[Native plugin API](macos/MacpadPlugin.h) · [Plugin build example](BUILD.md#native-plugins)
+
+## License and contributions
+
+The editor is distributed under the GNU General Public License version 3.
+The fork preserves upstream copyright notices. Third-party components, themes
+and artwork have their own attribution and distribution considerations.
+[GPLv3](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md)
+
+[Project repository](https://github.com/vt244/macpad-plus-plus) · [Contributing](CONTRIBUTING.md)

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>pref-category</key><string>Categoria de preferências</string>
+	<key>pref-detectEncoding</key><string>Detectar codificações antigas automaticamente</string>
+	<key>pref-guides</key><string>Guias do editor</string>
+	<key>pref-currentLineMode</key><string>Linha atual</string>
+	<key>pref-currentLineMode-0</key><string>Desativado</string>
+	<key>pref-currentLineMode-1</key><string>Realçar</string>
+	<key>pref-currentLineMode-2</key><string>Contornar</string>
+	<key>pref-currentLineFrameWidth</key><string>Largura do contorno</string>
+	<key>pref-wrapIndent</key><string>Recuo de linhas quebradas</string>
+	<key>pref-wrapIndent-0</key><string>Padrão</string>
+	<key>pref-wrapIndent-1</key><string>Alinhado</string>
+	<key>pref-wrapIndent-2</key><string>Recuado</string>
+	<key>pref-edgeColumns</key><string>Colunas das guias verticais</string>
+	<key>pref-edgeBackground</key><string>Sombrear após uma única guia</string>
+	<key>pref-print-layout</key><string>Layout de impressão</string>
+	<key>pref-printFormFeedBreak</key><string>Quebra de página ao encontrar FF</string>
+	<key>pref-printHeaderFontName</key><string>Fonte do cabeçalho</string>
+	<key>pref-printHeaderFontSize</key><string>Tamanho da fonte do cabeçalho</string>
+	<key>pref-printFooterFontName</key><string>Fonte do rodapé</string>
+	<key>pref-printFooterFontSize</key><string>Tamanho da fonte do rodapé</string>
+	<key>native-text:Toggle User Language Panel</key><string>Mostrar ou ocultar painel de linguagens</string>
+	<key>native-text:Remove User Defined Language…</key><string>Remover linguagem personalizada…</string>
+	<key>native-text:Save User Defined Language As</key><string>Salvar linguagem personalizada como</string>
+	<key>native-text:Remove the language “%@”?</key><string>Remover a linguagem “%@”?</string>
+	<key>native-text:Saving is disabled for this instance.</key><string>O salvamento está desativado nesta instância.</string>
+	<key>pref-monospacedFontFindDlg</key><string>Usar fonte monoespaçada na busca</string>
+	<key>pref-inSelectionHint</key><string>Use o limite 0 para manter manual a opção «Na seleção».</string>
+	<key>pref-styleOverride</key><string>Substituição global de estilos</string>
+	<key>native-text:Assigned shortcuts</key><string>Atalhos atribuídos</string>
+	<key>native-text:Unassigned</key><string>Sem atribuição</string>
+	<key>native-text:That shortcut is assigned to %@.</key><string>Esse atalho está atribuído a %@.</string>
+	<key>native-text:Enter a single character or a function key from F1 to F20.</key><string>Insira um único caractere ou uma tecla de função de F1 a F20.</string>
+</dict>
+</plist>

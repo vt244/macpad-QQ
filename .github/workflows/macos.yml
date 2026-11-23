@@ -1,0 +1,33 @@
+name: macpad++ macOS build
+
+on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build and verify the native app
+        run: |
+          macos/build-app.sh
+          macos/test-app.sh
+      - name: Archive the app and its corresponding source
+        run: |
+          /usr/bin/ditto -c -k --keepParent 'dist/macpad++.app' 'dist/macpad++-macOS.zip'
+          git archive --format=zip --prefix=macpad-plus-plus/ -o 'dist/macpad++-source.zip' HEAD
+          (
+            cd dist
+            shasum -a 256 macpad++-macOS.zip macpad++-source.zip > SHA256SUMS
+            shasum -a 256 -c SHA256SUMS
+          )
+      - uses: actions/upload-artifact@v7
+        with:
+          name: macpad-macOS-with-source
+          path: |
+            dist/macpad++-macOS.zip
+            dist/macpad++-source.zip
+            dist/SHA256SUMS
+          if-no-files-found: error

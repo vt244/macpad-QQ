@@ -17,16 +17,15 @@
 #pragma once
 
 
-//************ Notepad++ version **************************
+//************ macpad++ version ***************************
 
-#define NOTEPAD_PLUS_VERSION L"Notepad++ v8.9.9.1"
+#define NOTEPAD_PLUS_VERSION L"macpad++ v0.1-beta"
+#define VERSION_PRODUCT_VALUE L"0.1-beta\0"
+#define VERSION_DIGITALVALUE 0, 1, 0, 0
 
-// should be X.Y : ie. if VERSION_DIGITALVALUE == 4, 7, 1, 0 , then X = 4, Y = 71
-// ex : #define VERSION_VALUE L"5.63\0"
+// Upstream compatibility versions for Windows plugin checks, API and updater.
+#define VERSION_NPP_COMPATIBILITY_VALUE L"8.9.9.1"
 #define VERSION_INTERNAL_VALUE L"8.991\0"
-
-#define VERSION_PRODUCT_VALUE L"8.9.9.1\0"
-#define VERSION_DIGITALVALUE 8, 9, 9, 1
 
 //**********************************************************
 

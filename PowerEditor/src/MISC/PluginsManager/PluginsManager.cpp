@@ -50,7 +50,7 @@
 
 using namespace std;
 
-const wchar_t * USERMSG = L" is not compatible with the current version of Notepad++.\n\n\
+const wchar_t * USERMSG = L" is not compatible with the current version of macpad++.\n\n\
 Do you want to remove this plugin from the plugins directory to prevent this message from the next launch?";
 
 static WORD getBinaryArchitectureType(const wchar_t *filePath)
@@ -140,7 +140,7 @@ int PluginsManager::loadPluginFromPath(const wchar_t *pluginFilePath)
 
 		pi->_pFuncIsUnicode = reinterpret_cast<PFUNCISUNICODE>(::GetProcAddress(pi->_hLib, "isUnicode"));
 		if (!pi->_pFuncIsUnicode || !pi->_pFuncIsUnicode())
-			throw wstring(L"This ANSI plugin is not compatible with your Unicode Notepad++.");
+			throw wstring(L"This ANSI plugin is not compatible with your Unicode macpad++.");
 
 		pi->_pFuncSetInfo = reinterpret_cast<PFUNCSETINFO>(::GetProcAddress(pi->_hLib, "setInfo"));
 
@@ -341,17 +341,13 @@ bool PluginsManager::loadPlugins(const wchar_t* dir, const PluginViewList* plugi
 	HANDLE hFindFolder = ::FindFirstFile(pluginsFolderFilter.c_str(), &foundData);
 	HANDLE hFindDll = INVALID_HANDLE_VALUE;
 
-	// Get Notepad++ current version
-	wchar_t nppFullPathName[MAX_PATH];
-	GetModuleFileName(NULL, nppFullPathName, MAX_PATH);
-	Version nppVer;
-	nppVer.setVersionFrom(nppFullPathName);
+	const Version nppVer(VERSION_NPP_COMPATIBILITY_VALUE);
 
 	// get plugin folder
 	if (hFindFolder != INVALID_HANDLE_VALUE && (foundData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 	{
-		const wchar_t* incompatibleWarning = L"%s's version %s is not compatible to this version of Notepad++ (v%s).\r\nAs a result the plugin cannot be loaded.";
-		const wchar_t* incompatibleWarningWithSolution = L"%s's version %s is not compatible to this version of Notepad++ (v%s).\r\nAs a result the plugin cannot be loaded.\r\n\r\nGo to Updates section and update your plugin to %s for solving the compatibility issue.";
+		const wchar_t* incompatibleWarning = L"%s's version %s is not compatible to this version of macpad++ (v%s).\r\nAs a result the plugin cannot be loaded.";
+		const wchar_t* incompatibleWarningWithSolution = L"%s's version %s is not compatible to this version of macpad++ (v%s).\r\nAs a result the plugin cannot be loaded.\r\n\r\nGo to Updates section and update your plugin to %s for solving the compatibility issue.";
 
 		wstring foundFileName = foundData.cFileName;
 		// "Config" holds settings, not plugins; "disabled" holds deactivated plugins moved by
@@ -393,7 +389,7 @@ bool PluginsManager::loadPlugins(const wchar_t* dir, const PluginViewList* plugi
 								PluginUpdateInfo* incompatiblePlg = new PluginUpdateInfo(*pui);
 								incompatiblePlg->_version = v;
 								wchar_t msg[1024];
-								wsprintf(msg, incompatibleWarning, incompatiblePlg->_displayName.c_str(), v.toString().c_str(), nppVer.toString().c_str());
+								wsprintf(msg, incompatibleWarning, incompatiblePlg->_displayName.c_str(), v.toString().c_str(), VERSION_PRODUCT_VALUE);
 								incompatiblePlg->_description = msg;
 								pluginIncompatibleList->pushBack(incompatiblePlg);
 							}
@@ -411,7 +407,7 @@ bool PluginsManager::loadPlugins(const wchar_t* dir, const PluginViewList* plugi
 									PluginUpdateInfo* incompatiblePlg = new PluginUpdateInfo(*pui);
 									incompatiblePlg->_version = v;
 									wchar_t msg[1024];
-									wsprintf(msg, incompatibleWarningWithSolution, incompatiblePlg->_displayName.c_str(), v.toString().c_str(), nppVer.toString().c_str(), pui->_version.toString().c_str());
+									wsprintf(msg, incompatibleWarningWithSolution, incompatiblePlg->_displayName.c_str(), v.toString().c_str(), VERSION_PRODUCT_VALUE, pui->_version.toString().c_str());
 									incompatiblePlg->_description = msg;
 									pluginIncompatibleList->pushBack(incompatiblePlg);
 								}
@@ -470,7 +466,7 @@ bool PluginsManager::loadPlugins(const wchar_t* dir, const PluginViewList* plugi
 									PluginUpdateInfo* incompatiblePlg = new PluginUpdateInfo(*pui2);
 									incompatiblePlg->_version = v2;
 									wchar_t msg[1024];
-									wsprintf(msg, incompatibleWarning, incompatiblePlg->_displayName.c_str(), v2.toString().c_str(), nppVer.toString().c_str());
+									wsprintf(msg, incompatibleWarning, incompatiblePlg->_displayName.c_str(), v2.toString().c_str(), VERSION_PRODUCT_VALUE);
 									incompatiblePlg->_description = msg;
 									pluginIncompatibleList->pushBack(incompatiblePlg);
 								}
@@ -488,7 +484,7 @@ bool PluginsManager::loadPlugins(const wchar_t* dir, const PluginViewList* plugi
 										PluginUpdateInfo* incompatiblePlg = new PluginUpdateInfo(*pui2);
 										incompatiblePlg->_version = v2;
 										wchar_t msg[1024];
-										wsprintf(msg, incompatibleWarningWithSolution, incompatiblePlg->_displayName.c_str(), v2.toString().c_str(), nppVer.toString().c_str(), pui2->_version.toString().c_str());
+										wsprintf(msg, incompatibleWarningWithSolution, incompatiblePlg->_displayName.c_str(), v2.toString().c_str(), VERSION_PRODUCT_VALUE, pui2->_version.toString().c_str());
 										incompatiblePlg->_description = msg;
 										pluginIncompatibleList->pushBack(incompatiblePlg);
 									}

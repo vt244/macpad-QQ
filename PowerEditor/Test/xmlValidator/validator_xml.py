@@ -3,12 +3,11 @@
 import os
 import io
 import sys
+from pprint import pprint
 
-import requests
 from hashlib import sha256
 from lxml import etree
 
-api_url = os.environ.get('APPVEYOR_API_URL')
 has_error = False
 
 
@@ -17,17 +16,11 @@ def post_error(message):
 
     has_error = True
 
-    message = {
+    pprint({
         "message": message,
         "category": "error",
         "details": ""
-    }
-
-    if api_url:
-        requests.post(api_url + "api/build/messages", json=message)
-    else:
-        from pprint import pprint
-        pprint(message)
+    })
 
 
 def parse_xml_file(filename_xml, filename_xsd = None):

@@ -2654,7 +2654,7 @@ int Notepad_plus::doReloadOrNot(const wchar_t *fn, bool dirty)
 	if (dirty)
 		return _nativeLangSpeaker.messageBox("DoReloadOrNotAndLooseChange",
 			_pPublicInterface->getHSelf(),
-			L"\"$STR_REPLACE$\"\r\rThis file has been modified by another program.\rDo you want to reload it and lose the changes made in Notepad++?",
+			L"\"$STR_REPLACE$\"\r\rThis file has been modified by another program.\rDo you want to reload it and lose the changes made in macpad++?",
 			L"Reload",
 			MB_YESNO | MB_DEFBUTTON2 | MB_APPLMODAL | MB_ICONEXCLAMATION,
 			0, // not used
@@ -4381,7 +4381,7 @@ void Notepad_plus::setTitle()
 		result += buf->getFullPathName();
 	}
 	result += L" - ";
-	result += _pPublicInterface->getClassName();
+	result += L"macpad++";
 
 	if (_isAdministrator)
 		result += L" [Administrator]";

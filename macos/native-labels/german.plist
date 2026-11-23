@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>native-openTabs</key><string>Offene Tabs verwalten…</string>
+	<key>native-openTabs-file</key><string>Datei</string>
+	<key>native-openTabs-path</key><string>Pfad</string>
+	<key>native-openTabs-modified</key><string>Geändert</string>
+	<key>native-openTabs-activate</key><string>Aktivieren</string>
+	<key>native-openTabs-save</key><string>Auswahl speichern</string>
+	<key>native-openTabs-close</key><string>Auswahl schließen</string>
+	<key>native-openTabs-sort</key><string>Tab-Reihenfolge übernehmen</string>
+	<key>native-importShortcuts</key><string>Tastenkürzel und Befehle importieren…</string>
+	<key>native-invalidShortcuts</key><string>Wählen Sie eine gültige shortcuts.xml-Datei.</string>
+	<key>native-shortcutsImported</key><string>Tastenkürzel importiert</string>
+	<key>native-shortcutsSkipped</key><string>%lu doppelte oder nicht unterstützte Einträge wurden übersprungen.</string>
+	<key>pref-lockTabs</key><string>Tabs gegen Ziehen sperren</string>
+	<key>pref-caretWidth</key><string>Cursorbreite</string>
+	<key>pref-caretBlink</key><string>Cursor-Blinkintervall (ms)</string>
+	<key>pref-print</key><string>Drucken</string>
+	<key>pref-printColorMode</key><string>Farbmodus</string>
+	<key>pref-printColorMode-0</key><string>Editorfarben</string>
+	<key>pref-printColorMode-1</key><string>Farben invertieren</string>
+	<key>pref-printColorMode-2</key><string>Schwarz auf Weiß</string>
+	<key>pref-printColorMode-3</key><string>Farben ohne Hintergrund</string>
+	<key>pref-printLineNumbers</key><string>Zeilennummern drucken</string>
+	<key>pref-printHeaderLeft</key><string>Kopfzeile links</string>
+	<key>pref-printHeaderMiddle</key><string>Kopfzeile mittig</string>
+	<key>pref-printHeaderRight</key><string>Kopfzeile rechts</string>
+	<key>pref-printFooterLeft</key><string>Fußzeile links</string>
+	<key>pref-printFooterMiddle</key><string>Fußzeile mittig</string>
+	<key>pref-printFooterRight</key><string>Fußzeile rechts</string>
+	<key>pref-printMargins</key><string>Ränder in mm (links, oben, rechts, unten)</string>
+	<key>native-text:Filter commands</key><string>Befehle filtern</string>
+	<key>native-text:Scintilla commands</key><string>Scintilla-Befehle</string>
+	<key>native-text:Name</key><string>Name</string>
+	<key>native-text:File extensions</key><string>Dateiendungen</string>
+	<key>native-text:Ignore case</key><string>Groß-/Kleinschreibung ignorieren</string>
+	<key>native-text:Fold comments</key><string>Kommentare einklappen</string>
+	<key>native-text:Compact folding</key><string>Kompakt einklappen</string>
+	<key>native-text:Keywords</key><string>Schlüsselwörter</string>
+	<key>native-text:Keyword group %d</key><string>Schlüsselwortgruppe %d</string>
+	<key>native-text:Prefix</key><string>Präfix</string>
+	<key>native-text:Comments</key><string>Kommentare</string>
+	<key>native-text:Numbers</key><string>Zahlen</string>
+	<key>native-text:Operators</key><string>Operatoren</string>
+	<key>native-text:Delimiters</key><string>Begrenzer</string>
+	<key>native-text:Folding</key><string>Faltung</string>
+	<key>native-text:Styles</key><string>Stile</string>
+	<key>native-text:Line start</key><string>Zeilenanfang</string>
+	<key>native-text:Line continuation</key><string>Zeilenfortsetzung</string>
+	<key>native-text:Line end</key><string>Zeilenende</string>
+	<key>native-text:Block start</key><string>Blockanfang</string>
+	<key>native-text:Block end</key><string>Blockende</string>
+	<key>native-text:Start</key><string>Anfang</string>
+	<key>native-text:Escape</key><string>Escape-Zeichen</string>
+	<key>native-text:End</key><string>Ende</string>
+	<key>native-text:Foreground</key><string>Vordergrund</string>
+	<key>native-text:Background</key><string>Hintergrund</string>
+	<key>native-text:Font</key><string>Schrift</string>
+	<key>native-text:Size</key><string>Größe</string>
+	<key>native-text:Flags</key><string>Flags</string>
+	<key>native-text:Nesting</key><string>Verschachtelung</string>
+	<key>native-text:Program and arguments</key><string>Programm und Argumente</string>
+	<key>native-text:Save Run Command</key><string>Ausführungsbefehl speichern</string>
+	<key>native-text:Manage Saved Run Commands</key><string>Gespeicherte Befehle verwalten</string>
+	<key>native-text:Command name</key><string>Befehlsname</string>
+	<key>native-text:Macro name</key><string>Makroname</string>
+	<key>pref-category</key><string>Einstellungsbereich</string>
+	<key>pref-detectEncoding</key><string>Ältere Zeichencodierungen automatisch erkennen</string>
+	<key>pref-guides</key><string>Editorhilfen</string>
+	<key>pref-currentLineMode</key><string>Aktuelle Zeile</string>
+	<key>pref-currentLineMode-0</key><string>Aus</string>
+	<key>pref-currentLineMode-1</key><string>Hervorheben</string>
+	<key>pref-currentLineMode-2</key><string>Umranden</string>
+	<key>pref-currentLineFrameWidth</key><string>Rahmenbreite</string>
+	<key>pref-wrapIndent</key><string>Einzug bei Zeilenumbruch</string>
+	<key>pref-wrapIndent-0</key><string>Standard</string>
+	<key>pref-wrapIndent-1</key><string>Ausgerichtet</string>
+	<key>pref-wrapIndent-2</key><string>Eingerückt</string>
+	<key>pref-edgeColumns</key><string>Spalten der vertikalen Hilfslinien</string>
+	<key>pref-edgeBackground</key><string>Bereich hinter einer Hilfslinie einfärben</string>
+	<key>pref-print-layout</key><string>Drucklayout</string>
+	<key>pref-printFormFeedBreak</key><string>Seitenumbruch bei Formularvorschub</string>
+	<key>pref-printHeaderFontName</key><string>Schrift der Kopfzeile</string>
+	<key>pref-printHeaderFontSize</key><string>Schriftgröße der Kopfzeile</string>
+	<key>pref-printFooterFontName</key><string>Schrift der Fußzeile</string>
+	<key>pref-printFooterFontSize</key><string>Schriftgröße der Fußzeile</string>
+	<key>native-text:Toggle User Language Panel</key><string>Sprachbereich ein- oder ausblenden</string>
+	<key>native-text:Remove User Defined Language…</key><string>Benutzerdefinierte Sprache entfernen…</string>
+	<key>native-text:Save User Defined Language As</key><string>Benutzerdefinierte Sprache speichern unter</string>
+	<key>native-text:Remove the language “%@”?</key><string>Sprache „%@“ entfernen?</string>
+	<key>native-text:Saving is disabled for this instance.</key><string>Das Speichern ist in dieser Instanz deaktiviert.</string>
+	<key>pref-monospacedFontFindDlg</key><string>Nichtproportionale Schrift im Suchdialog verwenden</string>
+	<key>pref-inSelectionHint</key><string>Setze den Grenzwert auf 0, um „In Auswahl“ manuell zu steuern.</string>
+	<key>pref-styleOverride</key><string>Globale Stilüberschreibung</string>
+	<key>native-text:Assigned shortcuts</key><string>Zugewiesene Tastenkürzel</string>
+	<key>native-text:Unassigned</key><string>Nicht zugewiesen</string>
+	<key>native-text:That shortcut is assigned to %@.</key><string>Dieses Tastenkürzel ist %@ zugewiesen.</string>
+	<key>native-text:Enter a single character or a function key from F1 to F20.</key><string>Gib ein einzelnes Zeichen oder eine Funktionstaste von F1 bis F20 ein.</string>
+</dict>
+</plist>

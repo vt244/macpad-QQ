@@ -1,42 +1,20 @@
-What is Notepad++?
-******************
+macpad++
+========
 
-Notepad++ is a free (as in "free speech" and also as in "free beer") source code editor and Notepad replacement (https://npp-user-manual.org/docs/other-resources/#notepad-replacement) that supports several programming languages and natural languages. Running in the MS Windows environment, its use is governed by GPL (GNU General Public License).
+macpad++ is a native macOS code and text editor. It is an independent
+fork of Notepad++, originally created by Don Ho and developed by its
+contributors. The editor uses AppKit, Scintilla Cocoa and Lexilla.
 
+Open macpad++.app in Finder. Use File > Open to edit a file. Add themes
+in View > Theme and translations in Settings > Interface Language.
+The profile is under ~/Library/Application Support/macpad++/profile/.
 
-Why another source code editor?
-*******************************
+Source, build instructions, and issues:
+https://github.com/vt244/macpad-plus-plus
 
-The company I worked for used JEXT (another open source code editor in Java) as the production tool. Due to its poor performance, I began an investigation to find another solution (in C++ instead of in Java) in September 2003. I found Scintilla and built a prototype. This solution was not accepted. I removed the specific part and continued to develop it in my leisure time. On the 25th November 2003 it was made available on Sourceforge, hence the birth of Notepad++.
+The editor is distributed under GPL version 3. Choose License in the
+macpad++ menu or see LICENSE and THIRD_PARTY_NOTICES.md in the app
+bundle for license terms and attribution.
 
-
-How to install:
-***************
-
-From the installer:
-	Just follow the installation instructions.
-From the zip/7z package:
-	Unzip all the files into a directory you want then launch "notepad++.exe".
-
-	
-Web sites:
-***********
-
-Notepad++ official site:
-	https://notepad-plus-plus.org/
-
-Notepad++ project site:
-	https://github.com/notepad-plus-plus/notepad-plus-plus/
-
-Notepad++ user manual:
-	https://npp-user-manual.org/
-
-Notepad++ forum:
-	https://community.notepad-plus-plus.org/
-
-
-Author:
-*******
-
-Don Ho <don.h@free.fr>
-	https://notepad-plus-plus.org/author/
+Original project:
+https://github.com/notepad-plus-plus/notepad-plus-plus
