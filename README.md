@@ -1,6 +1,6 @@
 # macpadqq
 
-<a href="docs/assets/macpadqq-logo.png"><img src="docs/assets/macpadqq-logo.png" width="220" alt="macpadqq logo. Open the full-resolution 1254 × 1254 PNG."></a>
+[![macpadqq logo](docs/assets/macpadqq-logo.png)](docs/assets/macpadqq-logo.png)
 
 macpadqq is a native macOS code and text editor. It is an independent fork of
 Notepad++, originally created by Don Ho and developed by its contributors.
