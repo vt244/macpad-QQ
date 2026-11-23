@@ -12,6 +12,7 @@
 #import "EditorMacros.h"
 #import "EditorPlugins.h"
 #import "EditorPluginCatalog.h"
+#import "EditorPrinting.h"
 #import "EditorResources.h"
 #import "EditorRun.h"
 #import "EditorSettings.h"
@@ -210,7 +211,7 @@ static void AddCharacterSets(NSMenu *menu)
 
 - (void)applicationWillFinishLaunching:(NSNotification *)notification
 {
-	if (!self.launchOptions.noPlugins)
+	if (!self.launchOptions.noPlugins && !self.launchOptions.quickPrint)
 		_plugins = [[EditorPlugins alloc] initWithDirectory:[EditorResources.shared.profile URLByAppendingPathComponent:@"plugins"]];
 	if (self.launchOptions.translation.length)
 	{
@@ -228,7 +229,9 @@ static void AddCharacterSets(NSMenu *menu)
 	[self buildMenu];
 	[NSNotificationCenter.defaultCenter addObserver:self selector:@selector(macroLibraryChanged:)
 		name:EditorMacroLibraryDidChange object:EditorMacroLibrary.shared];
-	if (!self.launchOptions.noSession && [[EditorResources.shared setting:@"rememberSession" fallback:@YES] boolValue] &&
+	if (!self.launchOptions.noSession && !self.launchOptions.quickPrint &&
+		!(self.launchOptions.multiInstance && self.launchOptions.paths.count) &&
+		[[EditorResources.shared setting:@"rememberSession" fallback:@YES] boolValue] &&
 		![NSProcessInfo.processInfo.arguments containsObject:@"--smoke-test"])
 	{
 		EditorDocumentController *documents = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
@@ -239,7 +242,7 @@ static void AddCharacterSets(NSMenu *menu)
 - (BOOL)applicationShouldOpenUntitledFile:(NSApplication *)app
 {
 	return ![NSProcessInfo.processInfo.arguments containsObject:@"--smoke-test"] &&
-		!self.launchOptions.paths.count &&
+		!self.launchOptions.paths.count && !self.launchOptions.quickPrint &&
 		NSDocumentController.sharedDocumentController.documents.count == 0;
 }
 
@@ -250,7 +253,7 @@ static void AddCharacterSets(NSMenu *menu)
 	BOOL restore = [arguments containsObject:@"--smoke-workspace-restore"];
 	if (write || restore)
 		dispatch_async(dispatch_get_main_queue(), ^{ RunWorkspaceLifecycleTest(restore); });
-	else if (self.launchOptions.paths.count)
+	else if (self.launchOptions.paths.count && !self.launchOptions.quickPrint)
 		dispatch_async(dispatch_get_main_queue(), ^{ [self openLaunchPaths]; });
 }
 
@@ -258,7 +261,7 @@ static void AddCharacterSets(NSMenu *menu)
 {
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	EditorLaunchOptions *options = self.launchOptions;
-	for (NSURL *url in options.paths)
+	for (NSURL *url in options.expandedPaths)
 	{
 		NSNumber *directory = nil;
 		[url getResourceValue:&directory forKey:NSURLIsDirectoryKey error:nullptr];
@@ -286,10 +289,12 @@ static void AddCharacterSets(NSMenu *menu)
 				}
 				if (options.readOnly)
 					[document.editor message:SCI_SETREADONLY wParam:1];
-				if (options.monitor)
+				if (options.monitor && !document.isMonitoring)
 					[document monitorFile:nil];
 				if (options.hideTabs)
 					[document.chrome setTabsHidden:YES];
+				if (options.alwaysOnTop)
+					document.editor.window.level = NSFloatingWindowLevel;
 				ScintillaView *editor = document.editor;
 				if (options.position >= 0)
 					[editor message:SCI_GOTOPOS wParam:MIN(options.position, [editor message:SCI_GETLENGTH])];
@@ -1616,6 +1621,41 @@ static NSScrollView *LegalTextView(NSString *contents)
 }
 @end
 
+static int QuickPrint(EditorDocumentController *controller, EditorLaunchOptions *options)
+{
+	NSArray<NSURL *> *files = options.expandedPaths;
+	if (!files.count)
+	{
+		fputs("macpad++: -quickPrint requires a file\n", stderr);
+		return 1;
+	}
+	int result = 0;
+	for (NSURL *url in files)
+	{
+		NSError *error = nil;
+		NSString *type = [controller typeForContentsOfURL:url error:&error];
+		EditorDocument *document = type ? [controller makeDocumentWithContentsOfURL:url ofType:type error:&error] : nil;
+		[document makeWindowControllers];
+		if (options.language.length && document)
+		{
+			NSMenuItem *language = [NSMenuItem new];
+			language.representedObject = options.language;
+			[document selectLanguage:language];
+		}
+		NSPrintOperation *operation = document ? EditorPrintOperation(document, @{}) : nil;
+		operation.showsPrintPanel = NO;
+		operation.showsProgressPanel = NO;
+		if (![operation runOperation])
+		{
+			fprintf(stderr, "macpad++: %s: %s\n", url.fileSystemRepresentation,
+				error.localizedDescription.UTF8String ?: "print job failed");
+			result = 1;
+		}
+		[document close];
+	}
+	return result;
+}
+
 int main(int argc, const char *argv[])
 {
 	@autoreleasepool
@@ -1627,6 +1667,8 @@ int main(int argc, const char *argv[])
 		{
 			puts("macpad++ [-nLINE] [-cCOLUMN] [-pBYTE] [-lLANGUAGE] [-udl=NAME] [-LCODE]\n"
 				"         [-nosession] [-noPlugin] [-notabbar] [-ro] [-monitor]\n"
+				"         [-multiInst] [-r] [-quickPrint] [-alwaysOnTop] [-xLEFT] [-yTOP] [-titleAdd=TEXT]\n"
+				"         [-fullReadOnly] [-fullReadOnlySavingForbidden] [-monitoringMode]\n"
 				"         [-settingsDir=PATH] [-openSession] [-openFoldersAsWorkspace] [--] [file ...]");
 			return 0;
 		}
@@ -1634,10 +1676,16 @@ int main(int argc, const char *argv[])
 			setenv("MACPAD_DATA_DIR", options.settingsPath.fileSystemRepresentation, 1);
 		NSApplication *app = MacpadApplication.sharedApplication;
 		__attribute__((objc_precise_lifetime)) EditorDocumentController *documents = [[EditorDocumentController alloc] init];
+		documents.launchOptions = options;
 		__attribute__((objc_precise_lifetime)) MacpadApp *delegate = [[MacpadApp alloc] init];
 		delegate.launchOptions = options;
 		app.delegate = delegate;
 		[app setActivationPolicy:NSApplicationActivationPolicyRegular];
+		if (options.quickPrint)
+		{
+			[app finishLaunching];
+			return QuickPrint(documents, options);
+		}
 		if (argc == 2 && strcmp(argv[1], "--smoke-test") == 0)
 		{
 			[app finishLaunching];

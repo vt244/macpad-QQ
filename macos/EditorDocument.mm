@@ -12,6 +12,7 @@
 #import "EditorFunctionList.h"
 #import "EditorIncrementalSearch.h"
 #import "EditorInsertPanels.h"
+#import "EditorLaunchOptions.h"
 #import "EditorMacros.h"
 #import "EditorProjectPanel.h"
 #import "EditorPlugins.h"
@@ -45,6 +46,18 @@ static std::pair<sptr_t, sptr_t> TokenRange(ScintillaView *editor);
 static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end);
 static NSUInteger NextUntitledNumber = 1;
 static uint64_t NextRuntimeDocumentID = 1;
+
+@interface EditorWindowController : NSWindowController
+@property(nonatomic, copy) NSString *titleSuffix;
+@end
+
+@implementation EditorWindowController
+- (NSString *)windowTitleForDocumentDisplayName:(NSString *)displayName
+{
+	NSString *title = [super windowTitleForDocumentDisplayName:displayName];
+	return self.titleSuffix.length ? [NSString stringWithFormat:@"%@ — %@", title, self.titleSuffix] : title;
+}
+@end
 
 static void NotifyPlugins(EditorDocument *document, MacpadDocumentEventV2 event)
 {
@@ -1860,6 +1873,19 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	window.releasedWhenClosed = NO;
 	window.restorable = NO;
 	[window center];
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	EditorLaunchOptions *launch = controller.launchOptions;
+	if (launch.leftPosition || launch.topPosition)
+	{
+		NSRect frame = window.frame;
+		if (launch.leftPosition)
+			frame.origin.x = launch.leftPosition.doubleValue;
+		if (launch.topPosition)
+			frame.origin.y = NSMaxY(NSScreen.screens.firstObject.frame) - launch.topPosition.doubleValue - frame.size.height;
+		[window setFrameOrigin:frame.origin];
+	}
+	if (launch.alwaysOnTop)
+		window.level = NSFloatingWindowLevel;
 
 	NSView *content = window.contentView;
 	EditorContextView *primary = [[EditorContextView alloc] initWithFrame:content.bounds];
@@ -1871,7 +1897,6 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	_chrome = [[EditorChrome alloc] initWithDocument:self commands:[self toolbarCommands]];
 	[_chrome refreshAppearancePreferences];
 	NSView *statusBar = _chrome.statusBar;
-	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	__weak EditorDocumentController *weakController = controller;
 	void (^dismissResults)(void) = ^{ weakController.searchResultsVisible = NO; };
 	void (^dismissDocuments)(void) = ^{
@@ -2009,9 +2034,15 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[self displaySearchReports:nil purge:NO match:nil visible:NO];
 	window.initialFirstResponder = _editor.content;
 
-	[self addWindowController:[[NSWindowController alloc] initWithWindow:window]];
+	EditorWindowController *windowController = [[EditorWindowController alloc] initWithWindow:window];
+	windowController.titleSuffix = launch.titleSuffix;
+	[self addWindowController:windowController];
 	[self applyTheme];
 	[self loadEditor];
+	if (launch.fullReadOnly)
+		[_editor message:SCI_SETREADONLY wParam:1];
+	if (launch.monitoringMode && self.fileURL && !_monitoring)
+		[self monitorFile:nil];
 }
 
 - (void)applyPresentationMode:(NSInteger)mode
@@ -2688,6 +2719,11 @@ static void ApplyPreferencesToView(ScintillaView *view)
 
 - (IBAction)saveCopyAs:(id)sender
 {
+	if (((EditorDocumentController *)NSDocumentController.sharedDocumentController).launchOptions.savingForbidden)
+	{
+		NSBeep();
+		return;
+	}
 	NSSavePanel *panel = NSSavePanel.savePanel;
 	panel.nameFieldStringValue = self.displayName;
 	panel.directoryURL = self.fileURL.URLByDeletingLastPathComponent;
@@ -2866,6 +2902,10 @@ static void ApplyPreferencesToView(ScintillaView *view)
 - (BOOL)validateMenuItem:(NSMenuItem *)item
 {
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	if (controller.launchOptions.savingForbidden &&
+		(item.action == @selector(saveDocument:) || item.action == @selector(saveDocumentAs:) ||
+		 item.action == @selector(saveDocumentTo:) || item.action == @selector(saveCopyAs:)))
+		return NO;
 	if (item.action == @selector(toggleZoomSync:))
 	{
 		item.state = controller.syncZoom ? NSControlStateValueOn : NSControlStateValueOff;
@@ -3472,6 +3512,14 @@ static void ApplyPreferencesToView(ScintillaView *view)
 - (BOOL)writeSafelyToURL:(NSURL *)url ofType:(NSString *)typeName forSaveOperation:(NSSaveOperationType)operation
 	error:(NSError **)error
 {
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	if (controller.launchOptions.savingForbidden)
+	{
+		if (error)
+			*error = [NSError errorWithDomain:NSCocoaErrorDomain code:NSFileWriteNoPermissionError
+				userInfo:@{NSURLErrorKey: url, NSLocalizedDescriptionKey: EditorUIString(@"Saving is disabled for this instance.")}];
+		return NO;
+	}
 	EditorResources *resources = EditorResources.shared;
 	const NSInteger backup = [[resources setting:@"backupMode" fallback:@0] integerValue];
 	if (backup && (operation == NSSaveOperation || operation == NSSaveAsOperation) &&
@@ -4729,6 +4777,11 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 
 - (void)applyFileReplacement:(EditorSearchReport *)report
 {
+	if (((EditorDocumentController *)NSDocumentController.sharedDocumentController).launchOptions.savingForbidden)
+	{
+		NSBeep();
+		return;
+	}
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	NSMutableArray<NSString *> *failures = [NSMutableArray array];
 	NSUInteger replaced = 0;

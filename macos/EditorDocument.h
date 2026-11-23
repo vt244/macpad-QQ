@@ -4,6 +4,7 @@
 @class ScintillaView;
 @class EditorChrome;
 @class EditorMacro;
+@class EditorLaunchOptions;
 
 @interface EditorDocument : NSDocument
 @property(nonatomic, readonly) ScintillaView *editor;
@@ -85,6 +86,7 @@
 @end
 
 @interface EditorDocumentController : NSDocumentController
+@property(nonatomic, strong) EditorLaunchOptions *launchOptions;
 @property(nonatomic, readonly) EditorDocument *focusedDocument;
 @property(nonatomic, readonly) NSArray<EditorDocument *> *tabDocuments;
 @property(nonatomic, readonly) BOOL canReopenClosedTab;

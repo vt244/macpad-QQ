@@ -62,6 +62,7 @@ Use the executable directly to open a file from the terminal at a specific line 
 
 ```sh
 'dist/macpad++.app/Contents/MacOS/macpad++' -n20 -c4 -lpython example.py
+'dist/macpad++.app/Contents/MacOS/macpad++' -multiInst -r 'src/*.py'
 ```
 
 [Compatibility and current limitations](SUPPORTED_SYSTEM.md)
