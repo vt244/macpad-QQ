@@ -7,6 +7,24 @@
 
 static NSPasteboardType const TabPasteboardType = @"io.github.vt244.macpad-plus-plus.tab";
 
+static CGFloat RelativeLuminance(NSColor *color)
+{
+	color = [color colorUsingColorSpace:NSColorSpace.sRGBColorSpace];
+	auto linear = [](CGFloat component) {
+		return component <= 0.04045 ? component / 12.92 : pow((component + 0.055) / 1.055, 2.4);
+	};
+	return 0.2126 * linear(color.redComponent) + 0.7152 * linear(color.greenComponent) + 0.0722 * linear(color.blueComponent);
+}
+
+static NSColor *ReadableTabText(NSColor *foreground, NSColor *background)
+{
+	const CGFloat text = RelativeLuminance(foreground) + 0.05;
+	const CGFloat fill = RelativeLuminance(background) + 0.05;
+	if (MAX(text, fill) / MIN(text, fill) >= 4.5)
+		return foreground;
+	return 1.05 / fill >= fill / 0.05 ? NSColor.whiteColor : NSColor.blackColor;
+}
+
 @interface DocumentTabView : NSView <NSDraggingSource>
 @property(nonatomic, weak) EditorDocument *document;
 @property(nonatomic) BOOL otherView;
@@ -601,7 +619,9 @@ static EditorTabStrip *TabStrip(BOOL other)
 		tab.translatesAutoresizingMaskIntoConstraints = YES;
 		tab.layer.borderWidth = 1;
 		tab.layer.borderColor = _edgeColor.CGColor;
-		tab.layer.backgroundColor = (EditorTabColor(document.tabColorIndex) ?: (active ? _activeTabColor : _inactiveTabColor)).CGColor;
+		NSColor *background = EditorTabColor(document.tabColorIndex) ?: (active ? _activeTabColor : _inactiveTabColor);
+		NSColor *foreground = ReadableTabText(active ? _activeTabText : _inactiveTabText, background);
+		tab.layer.backgroundColor = background.CGColor;
 		NSStackView *contents = HorizontalStack();
 		contents.edgeInsets = NSEdgeInsetsMake(0, 6, 0, 4);
 		contents.spacing = 4;
@@ -609,7 +629,9 @@ static EditorTabStrip *TabStrip(BOOL other)
 		select.document = document;
 		select.tag = other;
 		select.toolTip = document.fileURL.path ?: document.displayName;
-		select.contentTintColor = active ? _activeTabText : _inactiveTabText;
+		select.attributedTitle = [[NSAttributedString alloc] initWithString:select.title
+			attributes:@{NSForegroundColorAttributeName: foreground, NSFontAttributeName: select.font}];
+		select.contentTintColor = foreground;
 		select.lineBreakMode = NSLineBreakByTruncatingMiddle;
 		select.image = EditorTabStateIcon(document.isDocumentEdited, [document.editor message:SCI_GETREADONLY] != 0,
 			document.isMonitoring, dark);
@@ -648,7 +670,7 @@ static EditorTabStrip *TabStrip(BOOL other)
 			close.action = @selector(closeTab:);
 			close.bordered = NO;
 			close.translatesAutoresizingMaskIntoConstraints = NO;
-			close.contentTintColor = active ? _activeTabText : _inactiveTabText;
+			close.contentTintColor = foreground;
 			close.toolTip = [NSString stringWithFormat:[EditorResources.shared label:@"native-closeNamedTab" fallback:@"Close %@"],
 				document.displayName];
 			[close setAccessibilityLabel:close.toolTip];
