@@ -269,6 +269,11 @@ struct ProjectXMLWriter final : pugi::xml_writer
 	return self;
 }
 
+- (void)refreshDockLabels:(NSString *)title
+{
+	[_outline setAccessibilityLabel:title];
+}
+
 - (void)reload
 {
 	BOOL reset = _loadedRoot != _workspace.root;

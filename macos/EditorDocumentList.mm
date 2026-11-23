@@ -138,6 +138,17 @@
 	return self;
 }
 
+- (void)refreshDockLabels:(NSString *)title
+{
+	EditorResources *resources = EditorResources.shared;
+	[_table setAccessibilityLabel:[resources label:@"panel-openDocuments" fallback:@"Open Documents"]];
+	[_table tableColumnWithIdentifier:@"document"].title = [resources label:@"docList:ColumnName" fallback:@"Name"];
+	_extensionColumn.title = [resources label:@"docList:ColumnExt" fallback:@"Ext."];
+	_pathColumn.title = [resources label:@"docList:ColumnPath" fallback:@"Path"];
+	_table.headerView.needsDisplay = YES;
+	[_table reloadData];
+}
+
 static NSPointerArray *WeakList(NSArray<EditorDocument *> *documents)
 {
 	NSPointerArray *list = NSPointerArray.weakObjectsPointerArray;

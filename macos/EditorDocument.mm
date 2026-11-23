@@ -1636,6 +1636,7 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	NSInteger _searchFlags;
 	sptr_t _lastEmptyMatch;
 	NSPanel *_searchPanel;
+	NSArray<dispatch_block_t> *_searchLabelUpdates;
 	NSComboBox *_searchInput;
 	NSComboBox *_replaceInput;
 	NSTextField *_searchStatus;
@@ -2011,9 +2012,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	dock.translatesAutoresizingMaskIntoConstraints = NO;
 	dock.placementChanged = ^{ [weakController workspaceChanged]; };
 	EditorResources *resources = EditorResources.shared;
-	_resultsPane = [dock addPanel:_resultsView title:[resources label:@"find-result-caption" fallback:@"Search results"]
+	_resultsPane = [dock addPanel:_resultsView titleKey:@"find-result-caption" fallback:@"Search results"
 		placement:controller.searchResultsPlacement dismiss:dismissResults];
-	_documentListPane = [dock addPanel:_documentList title:[resources label:@"docList:PanelTitle" fallback:@"Document List"]
+	_documentListPane = [dock addPanel:_documentList titleKey:@"docList:PanelTitle" fallback:@"Document List"
 		placement:controller.documentListPlacement dismiss:dismissDocuments];
 	void (^dismissFolder)(void) = ^{ [weakController toggleFolderWorkspace:nil]; };
 	void (^openFromPanel)(NSURL *) = ^(NSURL *url) {
@@ -2025,18 +2026,19 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	} changeRoots:^(NSArray<NSURL *> *folders) {
 		[weakController setWorkspaceFolders:folders];
 	} dismiss:dismissFolder];
-	_folderPane = [dock addPanel:_folderWorkspace title:[resources label:@"44085" fallback:@"Folder as Workspace"]
+	_folderPane = [dock addPanel:_folderWorkspace titleKey:@"FolderAsWorkspace:PanelTitle" fallback:@"Folder as Workspace"
 		placement:controller.folderWorkspacePlacement dismiss:dismissFolder];
 	NSMutableArray *panels = [NSMutableArray array], *panes = [NSMutableArray array];
 	for (NSUInteger index = 0; index < controller.projectWorkspaces.count; ++index)
 	{
-		NSString *title = [resources label:[@(44081 + index) stringValue]
-			fallback:[NSString stringWithFormat:@"Project Panel %lu", index + 1]];
+		NSString *key = [@(44081 + index) stringValue];
+		NSString *fallback = [NSString stringWithFormat:@"Project Panel %lu", index + 1];
+		NSString *title = [resources label:key fallback:fallback];
 		void (^dismiss)(void) = ^{ [weakController setProjectPanel:index visible:NO]; };
 		EditorProjectPanel *panel = [[EditorProjectPanel alloc] initWithTitle:title workspace:controller.projectWorkspaces[index]
 			open:openFromPanel changed:^{ [weakController workspaceChanged]; } dismiss:dismiss];
 		[panels addObject:panel];
-		[panes addObject:[dock addPanel:panel title:title placement:controller.projectPlacements[index] dismiss:dismiss]];
+		[panes addObject:[dock addPanel:panel titleKey:key fallback:fallback placement:controller.projectPlacements[index] dismiss:dismiss]];
 	}
 	_projectPanes = [panes copy];
 	_projectPanels = [panels copy];
@@ -2047,20 +2049,20 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		[focused.editor message:SCI_GOTOPOS wParam:MIN(position, [focused.editor message:SCI_GETLENGTH])];
 		[focused.editor message:SCI_SCROLLCARET];
 	} dismiss:dismissFunctions];
-	_functionListPane = [dock addPanel:_functionList title:[resources label:@"44084" fallback:@"Function List"]
+	_functionListPane = [dock addPanel:_functionList titleKey:@"FunctionList:PanelTitle" fallback:@"Function List"
 		placement:controller.functionListPlacement dismiss:dismissFunctions];
 	void (^dismissMap)(void) = ^{ [weakController toggleDocumentMap:nil]; };
 	_documentMap = [[EditorDocumentMap alloc] initWithDismiss:dismissMap];
-	_documentMapPane = [dock addPanel:_documentMap title:[resources label:@"44080" fallback:@"Document Map"]
+	_documentMapPane = [dock addPanel:_documentMap titleKey:@"DocumentMap:PanelTitle" fallback:@"Document Map"
 		placement:controller.documentMapPlacement dismiss:dismissMap];
 	void (^insert)(NSString *) = ^(NSString *text) { [weakController insertPanelText:text]; };
 	void (^dismissClipboard)(void) = ^{ [weakController setInsertPanel:0 visible:NO]; };
 	void (^dismissCharacters)(void) = ^{ [weakController setInsertPanel:1 visible:NO]; };
 	_clipboardHistory = [[EditorClipboardHistory alloc] initWithInsert:insert dismiss:dismissClipboard];
 	_characterPanel = [[EditorCharacterPanel alloc] initWithInsert:insert dismiss:dismissCharacters];
-	_clipboardPane = [dock addPanel:_clipboardHistory title:[resources label:@"42052" fallback:@"Clipboard History"]
+	_clipboardPane = [dock addPanel:_clipboardHistory titleKey:@"ClipboardHistory:PanelTitle" fallback:@"Clipboard History"
 		placement:controller.insertPlacements[0] dismiss:dismissClipboard];
-	_characterPane = [dock addPanel:_characterPanel title:[resources label:@"42051" fallback:@"Character Panel"]
+	_characterPane = [dock addPanel:_characterPanel titleKey:@"AsciiInsertion:PanelTitle" fallback:@"ASCII Codes Insertion Panel"
 		placement:controller.insertPlacements[1] dismiss:dismissCharacters];
 	[content addSubview:_chrome];
 	[content addSubview:dock];
@@ -2669,8 +2671,19 @@ static void ApplyPreferencesToView(ScintillaView *view)
 - (void)refreshChromeMenus
 {
 	[self.chrome refreshMenus];
-	[_searchPanel close];
-	_searchPanel = nil;
+}
+
+- (void)refreshLocalization
+{
+	[_chrome refreshToolbarLabels:[self toolbarCommands]];
+	[_chrome refreshTabs];
+	[_dockArea refreshLocalization];
+	[_incremental refreshLocalization];
+	[self updateStatus];
+	for (dispatch_block_t update in _searchLabelUpdates)
+		update();
+	if (_searchPanel)
+		[self updateSearchMode:nil];
 }
 
 - (void)setFileURL:(NSURL *)fileURL
@@ -3990,7 +4003,8 @@ static NSData *DocumentBytes(ScintillaView *editor, sptr_t start, sptr_t end)
 		EditorDockPlacement *placement = [[EditorDockPlacement alloc] initWithEdge:EditorDockRight];
 		[placement restore:@{@"width": @500}];
 		__weak EditorDocument *weakSelf = self;
-		_udlPane = [_dockArea addPanel:view title:EditorUIString(@"User Defined Language") placement:placement dismiss:^{
+		_udlPane = [_dockArea addPanel:view titleKey:@"settings-User Defined Language" fallback:@"User Defined Language"
+			placement:placement dismiss:^{
 			[weakSelf toggleUDLPanel:nil];
 		}];
 	}
@@ -4409,10 +4423,29 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	_searchPanel.appearance = self.chrome.appearance;
 	NSView *form = _searchPanel.contentView;
 	EditorResources *resources = EditorResources.shared;
-	auto label = ^NSString *(NSString *key, NSString *fallback) { return [resources findLabel:key fallback:fallback]; };
-	_searchMode = [NSSegmentedControl segmentedControlWithLabels:@[label(@"titleFind", @"Find"), label(@"titleReplace", @"Replace"),
-		label(@"titleFindInFiles", @"Find in Files"), label(@"titleMark", @"Mark"), label(@"titleFindInProjects", @"Find in Projects")]
+	NSMutableArray<dispatch_block_t> *updates = [NSMutableArray array];
+	auto localize = ^(NSString *key, NSString *fallback, void (^apply)(NSString *)) {
+		dispatch_block_t update = ^{
+			apply([resources findLabel:key fallback:[resources label:key fallback:fallback]]);
+		};
+		update();
+		[updates addObject:update];
+	};
+	auto buttonTitle = ^(NSButton *button, NSString *key, NSString *fallback) {
+		localize(key, fallback, ^(NSString *text) { button.title = text; });
+	};
+	auto checkbox = ^NSButton *(NSString *key, NSString *fallback, id target, SEL action) {
+		NSButton *button = [NSButton checkboxWithTitle:@"" target:target action:action];
+		buttonTitle(button, key, fallback);
+		return button;
+	};
+	NSSegmentedControl *modeControl = [NSSegmentedControl segmentedControlWithLabels:@[@"", @"", @"", @"", @""]
 		trackingMode:NSSegmentSwitchTrackingSelectOne target:self action:@selector(updateSearchMode:)];
+	_searchMode = modeControl;
+	NSArray *modes = @[@[@"titleFind", @"Find"], @[@"titleReplace", @"Replace"], @[@"titleFindInFiles", @"Find in Files"],
+		@[@"titleMark", @"Mark"], @[@"titleFindInProjects", @"Find in Projects"]];
+	for (NSUInteger index = 0; index < modes.count; ++index)
+		localize(modes[index][0], modes[index][1], ^(NSString *text) { [modeControl setLabel:text forSegment:index]; });
 	PlaceSearchControl(form, _searchMode, NSMakeRect(12, 269, 594, 26));
 
 	_searchInput = [[NSComboBox alloc] initWithFrame:NSZeroRect];
@@ -4423,35 +4456,45 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	LoadSearchHistory(_replaceInput, @"replaceHistory");
 	_searchInput.stringValue = _query ?: [[resources setting:@"findHistory" fallback:@[]] firstObject] ?: @"";
 	_replaceInput.stringValue = [[resources setting:@"replaceHistory" fallback:@[]] firstObject] ?: @"";
-	NSArray<NSString *> *titles = @[label(@"1620", @"Find what:"), label(@"1611", @"Replace with:")];
+	NSArray *titles = @[@[@"1620", @"Find what:"], @[@"1611", @"Replace with:"]];
 	for (NSUInteger i = 0; i < titles.count; ++i)
 	{
 		CGFloat y = 236 - 31 * i;
-		NSTextField *fieldLabel = [NSTextField labelWithString:titles[i]];
+		NSTextField *fieldLabel = [NSTextField labelWithString:@""];
 		if (i == 1)
 			_replaceLabel = fieldLabel;
 		PlaceSearchControl(form, fieldLabel, NSMakeRect(14, y + 2, 126, 21));
 		NSTextField *input = i == 0 ? _searchInput : _replaceInput;
-		[input setAccessibilityLabel:titles[i]];
+		localize(titles[i][0], titles[i][1], ^(NSString *text) {
+			fieldLabel.stringValue = text;
+			[input setAccessibilityLabel:text];
+		});
 		PlaceSearchControl(form, input, NSMakeRect(143, y, 275, 24));
 	}
 
 	NSString *folder = self.fileURL.URLByDeletingLastPathComponent.path ?: NSHomeDirectory();
 	_searchFolder = [NSTextField textFieldWithString:folder];
 	_searchFilters = [NSTextField textFieldWithString:@"*.*"];
-	NSTextField *directoryLabel = [NSTextField labelWithString:label(@"1655", @"Directory:")];
-	NSTextField *filtersLabel = [NSTextField labelWithString:label(@"1654", @"Filters:")];
-	[_searchFolder setAccessibilityLabel:directoryLabel.stringValue];
-	[_searchFilters setAccessibilityLabel:filtersLabel.stringValue];
+	NSTextField *directoryLabel = [NSTextField labelWithString:@""];
+	NSTextField *filtersLabel = [NSTextField labelWithString:@""];
+	NSTextField *directoryField = _searchFolder, *filtersField = _searchFilters;
+	localize(@"1655", @"Directory:", ^(NSString *text) {
+		directoryLabel.stringValue = text;
+		[directoryField setAccessibilityLabel:text];
+	});
+	localize(@"1654", @"Filters:", ^(NSString *text) {
+		filtersLabel.stringValue = text;
+		[filtersField setAccessibilityLabel:text];
+	});
 	NSButton *browse = [NSButton buttonWithTitle:@"…" target:self action:@selector(browseSearchDirectory:)];
-	[browse setAccessibilityLabel:@"Select Search Directory"];
+	localize(@"search-selectDirectory", @"Select Search Directory", ^(NSString *text) { [browse setAccessibilityLabel:text]; });
 	PlaceSearchControl(form, filtersLabel, NSMakeRect(14, 173, 126, 21));
 	PlaceSearchControl(form, _searchFilters, NSMakeRect(143, 171, 275, 24));
 	PlaceSearchControl(form, directoryLabel, NSMakeRect(14, 142, 126, 21));
 	PlaceSearchControl(form, _searchFolder, NSMakeRect(143, 140, 243, 24));
 	PlaceSearchControl(form, browse, NSMakeRect(385, 137, 35, 28));
-	_recursive = [NSButton checkboxWithTitle:label(@"1658", @"In all sub-folders") target:nil action:nil];
-	_includeHidden = [NSButton checkboxWithTitle:label(@"1659", @"In hidden folders") target:nil action:nil];
+	_recursive = checkbox(@"1658", @"In all sub-folders", nil, nullptr);
+	_includeHidden = checkbox(@"1659", @"In hidden folders", nil, nullptr);
 	_recursive.state = [[EditorResources.shared setting:@"findRecursive" fallback:@YES] boolValue];
 	PlaceSearchControl(form, _recursive, NSMakeRect(14, 62, 220, 21));
 	PlaceSearchControl(form, _includeHidden, NSMakeRect(14, 38, 220, 21));
@@ -4461,19 +4504,20 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	for (NSUInteger index = 0; index < 3; ++index)
 	{
 		NSString *panelName = [NSString stringWithFormat:@"Project Panel %lu", index + 1];
-		NSButton *checkbox = [NSButton checkboxWithTitle:label([@(1662 + index) stringValue], panelName) target:nil action:nil];
-		checkbox.state = NSControlStateValueOn;
-		PlaceSearchControl(form, checkbox, NSMakeRect(14 + index * 142, 138, 140, 21));
-		[projectControls addObject:checkbox];
+		NSButton *project = checkbox([@(1662 + index) stringValue], panelName, nil, nullptr);
+		project.state = NSControlStateValueOn;
+		PlaceSearchControl(form, project, NSMakeRect(14 + index * 142, 138, 140, 21));
+		[projectControls addObject:project];
 	}
 	_projectSearchControls = [projectControls copy];
-	_matchCase = [NSButton checkboxWithTitle:label(@"1604", @"Match case") target:nil action:nil];
-	_wholeWord = [NSButton checkboxWithTitle:label(@"1603", @"Match whole word only") target:nil action:nil];
-	_wrapSearch = [NSButton checkboxWithTitle:label(@"1606", @"Wrap around") target:nil action:nil];
-	_regularExpression = [NSButton checkboxWithTitle:label(@"1605", @"Regular expression") target:self action:@selector(toggleRegex:)];
-	_extendedSearch = [NSButton checkboxWithTitle:label(@"1626", @"Extended (\\n, \\t, …)") target:self action:@selector(toggleExtended:)];
-	_inSelection = [NSButton checkboxWithTitle:label(@"1632", @"In selection") target:self action:@selector(captureSearchSelection:)];
-	_matchNewline = [NSButton checkboxWithTitle:label(@"1703", @". matches newline") target:nil action:nil];
+	_matchCase = checkbox(@"1604", @"Match case", nil, nullptr);
+	_wholeWord = checkbox(@"1603", @"Match whole word only", nil, nullptr);
+	_wrapSearch = checkbox(@"1606", @"Wrap around", nil, nullptr);
+	_regularExpression = checkbox(@"1605", @"Regular expression", self, @selector(toggleRegex:));
+	_extendedSearch = checkbox(@"1626", @"Extended (\\n, \\t, …)", self, @selector(toggleExtended:));
+	_inSelection = checkbox(@"1632", @"In selection", self, @selector(captureSearchSelection:));
+	_inSelection.accessibilityIdentifier = @"find-in-selection";
+	_matchNewline = checkbox(@"1703", @". matches newline", nil, nullptr);
 	_matchCase.state = _query.length ? (_searchFlags & SCFIND_MATCHCASE) != 0 :
 		[[EditorResources.shared setting:@"findMatchCase" fallback:@NO] boolValue];
 	_wholeWord.state = _query.length ? (_searchFlags & SCFIND_WHOLEWORD) != 0 :
@@ -4488,20 +4532,21 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	PlaceSearchControl(form, _matchNewline, NSMakeRect(240, 86, 180, 21));
 	PlaceSearchControl(form, _extendedSearch, NSMakeRect(240, 62, 185, 21));
 	PlaceSearchControl(form, _inSelection, NSMakeRect(14, 143, 220, 21));
-	_bookmarkMatches = [NSButton checkboxWithTitle:label(@"1616", @"Bookmark line") target:nil action:nil];
-	_purgeMarks = [NSButton checkboxWithTitle:label(@"1618", @"Purge for each search") target:nil action:nil];
+	_bookmarkMatches = checkbox(@"1616", @"Bookmark line", nil, nullptr);
+	_purgeMarks = checkbox(@"1618", @"Purge for each search", nil, nullptr);
 	_purgeMarks.state = NSControlStateValueOn;
 	PlaceSearchControl(form, _bookmarkMatches, NSMakeRect(14, 62, 220, 21));
 	PlaceSearchControl(form, _purgeMarks, NSMakeRect(14, 38, 220, 21));
 
-	NSArray<NSString *> *actions = @[label(@"1", @"Find Next"), [resources label:@"43010" fallback:@"Find Previous"],
-		label(@"1608", @"Replace"), label(@"1609", @"Replace All"), label(@"2", @"Close"), label(@"1656", @"Find All"),
-		label(@"1660", @"Replace in Files"), label(@"1615", @"Mark All"), label(@"1633", @"Clear All Marks"),
-		label(@"1725", @"Copy Marked Text"), label(@"1614", @"Count")];
+	NSArray *actions = @[@[@"1", @"Find Next"], @[@"43010", @"Find Previous"], @[@"1608", @"Replace"],
+		@[@"1609", @"Replace All"], @[@"2", @"Close"], @[@"1656", @"Find All"], @[@"1660", @"Replace in Files"],
+		@[@"1615", @"Mark All"], @[@"1633", @"Clear All Marks"], @[@"1725", @"Copy Marked Text"], @[@"1614", @"Count"]];
 	NSMutableArray *markControls = [NSMutableArray arrayWithArray:@[_bookmarkMatches, _purgeMarks]];
 	for (NSUInteger i = 0; i < actions.count; ++i)
 	{
-		NSButton *button = [NSButton buttonWithTitle:actions[i] target:self action:@selector(performSearch:)];
+		NSButton *button = [NSButton buttonWithTitle:@"" target:self action:@selector(performSearch:)];
+		if (i != 5 && i != 6)
+			buttonTitle(button, actions[i][0], actions[i][1]);
 		button.tag = i;
 		if (i == 0)
 			_findForward = button;
@@ -4525,9 +4570,12 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		PlaceSearchControl(form, button, NSMakeRect(432, 232 - 30 * row, 172, 29));
 	}
 	_markControls = [markControls copy];
-	_findInDocument = [NSButton buttonWithTitle:label(@"1641", @"Find All in Current Document") target:self action:@selector(performSearch:)];
-	_findInOpenDocuments = [NSButton buttonWithTitle:label(@"1636", @"Find All in All Opened Documents") target:self action:@selector(performSearch:)];
-	_replaceInOpenDocuments = [NSButton buttonWithTitle:label(@"1635", @"Replace All in All Opened Documents") target:self action:@selector(performSearch:)];
+	_findInDocument = [NSButton buttonWithTitle:@"" target:self action:@selector(performSearch:)];
+	_findInOpenDocuments = [NSButton buttonWithTitle:@"" target:self action:@selector(performSearch:)];
+	_replaceInOpenDocuments = [NSButton buttonWithTitle:@"" target:self action:@selector(performSearch:)];
+	buttonTitle(_findInDocument, @"1641", @"Find All in Current Document");
+	buttonTitle(_findInOpenDocuments, @"1636", @"Find All in All Opened Documents");
+	buttonTitle(_replaceInOpenDocuments, @"1635", @"Replace All in All Opened Documents");
 	_findInDocument.tag = 11;
 	_findInOpenDocuments.tag = 12;
 	_replaceInOpenDocuments.tag = 13;
@@ -4536,6 +4584,7 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	PlaceSearchControl(form, _replaceInOpenDocuments, NSMakeRect(354, 42, 250, 28));
 	_searchStatus = [NSTextField labelWithString:@""];
 	PlaceSearchControl(form, _searchStatus, NSMakeRect(14, 12, 408, 22));
+	_searchLabelUpdates = [updates copy];
 	[_searchPanel center];
 }
 
@@ -4612,6 +4661,8 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	_replaceButton.hidden = _replaceAllButton.hidden = !replace;
 	_wrapSearch.hidden = _findForward.hidden = _findBackward.hidden = multiFile || mark;
 	_findAll.hidden = !multiFile;
+	_findAll.title = _fileSearch ? [EditorResources.shared label:@"search-cancelAction" fallback:@"Cancel Search"] :
+		[EditorResources.shared findLabel:@"1656" fallback:@"Find All"];
 	_replaceFiles.hidden = !multiFile;
 	_replaceFiles.title = projectSearch ? [EditorResources.shared findLabel:@"1665" fallback:@"Replace in Projects"] :
 		[EditorResources.shared findLabel:@"1660" fallback:@"Replace in Files"];
@@ -4829,7 +4880,6 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 	NSProgress *progress = [NSProgress progressWithTotalUnitCount:-1];
 	progress.cancellable = YES;
 	_fileSearch = progress;
-	_findAll.title = @"Cancel Search";
 	[self updateSearchMode:nil];
 	_searchStatus.stringValue = [EditorResources.shared label:@"search-searching" fallback:@"Searching…"];
 	__weak EditorDocument *weakSelf = self;
@@ -4838,7 +4888,6 @@ static void RememberSearchHistory(NSString *value, NSString *key)
 		if (!document || document->_fileSearch != progress)
 			return;
 		document->_fileSearch = nil;
-		document->_findAll.title = [EditorResources.shared findLabel:@"1656" fallback:@"Find All"];
 		[document updateSearchMode:nil];
 		if (progress.cancelled)
 			document->_searchStatus.stringValue = [EditorResources.shared label:@"search-cancelled" fallback:@"Search cancelled."];

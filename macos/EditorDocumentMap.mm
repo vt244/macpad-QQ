@@ -39,6 +39,11 @@
 	void (^_dismiss)(void);
 }
 
+- (void)refreshDockLabels:(NSString *)title
+{
+	[_viewport setAccessibilityLabel:EditorUIString(@"Document map preview")];
+}
+
 - (instancetype)initWithDismiss:(void (^)(void))dismiss
 {
 	if (!(self = [super initWithFrame:NSZeroRect]))
@@ -62,7 +67,7 @@
 	_map.accessibilityChildren = @[];
 	[_viewport setAccessibilityElement:YES];
 	[_viewport setAccessibilityRole:NSAccessibilityImageRole];
-	[_viewport setAccessibilityLabel:@"Document map preview"];
+	[self refreshDockLabels:nil];
 	__weak EditorDocumentMap *weakSelf = self;
 	_viewport.navigate = ^(CGFloat y) { [weakSelf navigateToY:y]; };
 	[self addSubview:caption];

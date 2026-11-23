@@ -1537,6 +1537,8 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 {
 	[EditorResources.shared chooseTranslation:sender.representedObject];
 	[self buildMenu];
+	for (EditorDocument *document in NSDocumentController.sharedDocumentController.documents)
+		[document refreshLocalization];
 }
 
 - (void)importXML:(NSMenuItem *)sender

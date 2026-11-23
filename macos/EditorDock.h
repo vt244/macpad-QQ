@@ -13,6 +13,10 @@ typedef NS_ENUM(NSInteger, EditorDockEdge) {
 
 @class EditorDockArea;
 
+@protocol EditorDockLabels <NSObject>
+- (void)refreshDockLabels:(NSString *)title;
+@end
+
 @interface EditorDockPane : NSView
 - (NSMenu *)placementMenu;
 - (void)toggleFloating;
@@ -22,8 +26,9 @@ typedef NS_ENUM(NSInteger, EditorDockEdge) {
 
 @interface EditorDockArea : NSView
 - (instancetype)initWithEditor:(NSView *)editor;
-- (EditorDockPane *)addPanel:(NSView *)panel title:(NSString *)title
+- (EditorDockPane *)addPanel:(NSView *)panel titleKey:(NSString *)key fallback:(NSString *)fallback
 	placement:(EditorDockPlacement *)placement dismiss:(void (^)(void))dismiss;
 - (void)refreshPanelPlacements;
+- (void)refreshLocalization;
 @property(nonatomic, copy) void (^placementChanged)(void);
 @end

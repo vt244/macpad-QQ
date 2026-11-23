@@ -16,6 +16,7 @@
 - (void)refreshMenus;
 - (void)refreshTabs;
 - (void)refreshToolbar;
+- (void)refreshToolbarLabels:(NSArray<NSToolbarItem *> *)commands;
 - (void)refreshColors;
 - (void)refreshAppearancePreferences;
 - (void)setStatusFields:(NSArray<NSString *> *)fields;

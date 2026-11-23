@@ -565,10 +565,27 @@ static EditorTabStrip *TabStrip(BOOL other)
 - (void)refreshToolbar
 {
 	for (ChromeButton *button in self.toolbarButtons)
-		{
+	{
 		const BOOL enabled = [_document isToolbarCommandEnabled:button.command];
 		button.enabled = enabled;
 		[self updateIconForButton:button];
+	}
+}
+
+- (void)refreshToolbarLabels:(NSArray<NSToolbarItem *> *)commands
+{
+	NSMutableDictionary<NSString *, NSString *> *labels = [NSMutableDictionary dictionary];
+	for (NSToolbarItem *command in commands)
+		if (command.action)
+			labels[command.itemIdentifier] = command.label;
+	for (ChromeButton *button in self.toolbarButtons)
+	{
+		NSString *label = labels[button.command.itemIdentifier];
+		if (label)
+		{
+			button.command.label = button.command.toolTip = button.toolTip = label;
+			[button setAccessibilityLabel:label];
+		}
 	}
 }
 

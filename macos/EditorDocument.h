@@ -20,6 +20,7 @@
 - (id)targetForToolbarCommand:(NSToolbarItem *)command;
 - (IBAction)closeEditorTab:(id)sender;
 - (void)refreshChromeMenus;
+- (void)refreshLocalization;
 - (void)applyTheme;
 - (void)applyPreferences;
 - (IBAction)selectLanguage:(NSMenuItem *)sender;

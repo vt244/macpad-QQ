@@ -86,6 +86,7 @@ BOOL EditorIsWorkspaceDirectory(NSURL *url)
 {
 	NSArray<WorkspaceFile *> *_roots;
 	WorkspaceOutline *_outline;
+	NSArray<NSButton *> *_toolButtons;
 	void (^_open)(NSURL *);
 	void (^_add)(void);
 	void (^_changeRoots)(NSArray<NSURL *> *);
@@ -134,12 +135,11 @@ BOOL EditorIsWorkspaceDirectory(NSURL *url)
 	tools.spacing = 2;
 	[tools addArrangedSubview:[NSView new]];
 	NSString *scheme = EditorResources.shared.usesDarkColors ? @"panels/dark" : @"panels/standard";
-	for (NSArray<NSString *> *entry in @[@[@"fb_expand_all", @"panel-expandAll", @"Unfold All", @"expandAll:"],
-		@[@"fb_fold_all", @"panel-foldAll", @"Fold All", @"collapseAll:"],
-		@[@"fb_select_current_file", @"panel-locateFile", @"Locate Current File", @"locateCurrentFile:"]])
+	NSMutableArray<NSButton *> *toolButtons = [NSMutableArray array];
+	for (NSArray<NSString *> *entry in @[@[@"fb_expand_all", @"expandAll:"],
+		@[@"fb_fold_all", @"collapseAll:"], @[@"fb_select_current_file", @"locateCurrentFile:"]])
 	{
-		NSString *title = [EditorResources.shared label:entry[1] fallback:entry[2]];
-		NSButton *button = [NSButton buttonWithTitle:title target:self action:NSSelectorFromString(entry[3])];
+		NSButton *button = [NSButton buttonWithTitle:@"" target:self action:NSSelectorFromString(entry[1])];
 		NSURL *icon = [NSBundle.mainBundle URLForResource:entry[0] withExtension:@"ico" subdirectory:scheme];
 		if (icon)
 		{
@@ -148,11 +148,12 @@ BOOL EditorIsWorkspaceDirectory(NSURL *url)
 			button.imagePosition = NSImageOnly;
 			button.bordered = NO;
 		}
-		button.toolTip = title;
-		[button setAccessibilityLabel:title];
 		[button.widthAnchor constraintEqualToConstant:24].active = YES;
 		[tools addArrangedSubview:button];
+		[toolButtons addObject:button];
 	}
+	_toolButtons = [toolButtons copy];
+	[self refreshDockLabels:[EditorResources.shared label:@"FolderAsWorkspace:PanelTitle" fallback:@"Folder as Workspace"]];
 	[self addSubview:caption];
 	[self addSubview:tools];
 	[self addSubview:scroll];
@@ -170,6 +171,20 @@ BOOL EditorIsWorkspaceDirectory(NSURL *url)
 		[scroll.bottomAnchor constraintEqualToAnchor:self.bottomAnchor],
 	]];
 	return self;
+}
+
+- (void)refreshDockLabels:(NSString *)title
+{
+	[_outline setAccessibilityLabel:title];
+	EditorResources *resources = EditorResources.shared;
+	NSArray<NSString *> *labels = @[[resources label:@"panel-expandAll" fallback:@"Unfold All"],
+		[resources label:@"panel-foldAll" fallback:@"Fold All"], [resources label:@"panel-locateFile" fallback:@"Locate Current File"]];
+	for (NSUInteger i = 0; i < _toolButtons.count; ++i)
+	{
+		NSButton *button = _toolButtons[i];
+		button.title = button.toolTip = labels[i];
+		[button setAccessibilityLabel:labels[i]];
+	}
 }
 
 - (void)setDirectories:(NSArray<NSURL *> *)directories

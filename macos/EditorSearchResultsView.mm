@@ -116,6 +116,40 @@ static NSString *Inline(NSString *value)
 	if (_reports == reports || [_reports isEqualToArray:reports])
 		return;
 	_reports = [reports copy];
+	[self renderReports];
+}
+
+- (void)refreshDockLabels:(NSString *)title
+{
+	[_results.content setAccessibilityLabel:title];
+	if (!_rows.count)
+		return;
+	std::vector<sptr_t> headings;
+	std::vector<bool> expanded;
+	for (NSUInteger line = 0; line < _rows.count; ++line)
+		if ([_results message:SCI_GETFOLDLEVEL wParam:line] & SC_FOLDLEVELHEADERFLAG)
+		{
+			headings.push_back(line);
+			expanded.push_back([_results message:SCI_GETFOLDEXPANDED wParam:line] != 0);
+		}
+	const auto currentLine = self.currentLine;
+	const auto visibleLine = [_results message:SCI_GETFIRSTVISIBLELINE];
+	const auto firstLine = [_results message:SCI_DOCLINEFROMVISIBLE wParam:visibleLine];
+	const auto xOffset = [_results message:SCI_GETXOFFSET];
+	[self renderReports];
+	for (size_t i = 0; i < headings.size(); ++i)
+		if (expanded[i])
+			[_results message:SCI_FOLDLINE wParam:headings[i] lParam:SC_FOLDACTION_EXPAND];
+	for (size_t i = headings.size(); i > 0; --i)
+		if (!expanded[i - 1])
+			[_results message:SCI_FOLDLINE wParam:headings[i - 1] lParam:SC_FOLDACTION_CONTRACT];
+	[_results message:SCI_GOTOLINE wParam:currentLine];
+	[_results message:SCI_SETFIRSTVISIBLELINE wParam:[_results message:SCI_VISIBLEFROMDOCLINE wParam:firstLine]];
+	[_results message:SCI_SETXOFFSET wParam:xOffset];
+}
+
+- (void)renderReports
+{
 	[_results message:SCI_SETREADONLY wParam:0];
 	[_results message:SCI_CLEARALL];
 	[_results message:SCI_SHOWLINES wParam:0 lParam:[_results message:SCI_GETLINECOUNT] - 1];
@@ -134,7 +168,7 @@ static NSString *Inline(NSString *value)
 		}
 	};
 	EditorResources *resources = EditorResources.shared;
-	for (EditorSearchReport *report in reports)
+	for (EditorSearchReport *report in self.reports)
 	{
 		headingLines.push_back(rows.count);
 		NSString *summary = [NSString localizedStringWithFormat:[resources label:@"results-summary" fallback:@"Search \"%@\" (%lu hits in %lu files of %lu searched)"],

@@ -96,6 +96,11 @@ static NSTextField *Cell(NSString *value)
 	[_table reloadData];
 }
 
+- (void)refreshDockLabels:(NSString *)title
+{
+	[_table setAccessibilityLabel:title];
+}
+
 - (void)activateCell:(id)sender { [self insertRow:_table.clickedRow]; }
 - (void)dismiss:(id)sender { _dismiss(); }
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)table { return _entries.count; }
@@ -125,6 +130,17 @@ static NSTextField *Cell(NSString *value)
 	void (^_dismiss)(void);
 }
 
+static NSArray<NSString *> *CharacterColumns(void)
+{
+	EditorResources *resources = EditorResources.shared;
+	NSArray *keys = @[@"ColumnVal", @"ColumnHex", @"ColumnChar", @"ColumnHtmlName", @"ColumnHtmlNumber", @"ColumnHtmlHexNb"];
+	NSArray *defaults = @[@"Value", @"Hex", @"Character", @"HTML Name", @"HTML Decimal", @"HTML Hexadecimal"];
+	NSMutableArray *titles = [NSMutableArray array];
+	for (NSUInteger index = 0; index < keys.count; ++index)
+		[titles addObject:[resources label:[@"AsciiInsertion:" stringByAppendingString:keys[index]] fallback:defaults[index]]];
+	return titles;
+}
+
 - (instancetype)initWithInsert:(void (^)(NSString *))insert dismiss:(void (^)(void))dismiss
 {
 	if (!(self = [super initWithFrame:NSZeroRect]))
@@ -133,15 +149,19 @@ static NSTextField *Cell(NSString *value)
 	_dismiss = [dismiss copy];
 	_encoding = NSWindowsCP1252StringEncoding;
 	EditorResources *resources = EditorResources.shared;
-	NSArray *keys = @[@"ColumnVal", @"ColumnHex", @"ColumnChar", @"ColumnHtmlName", @"ColumnHtmlNumber", @"ColumnHtmlHexNb"];
-	NSArray *defaults = @[@"Value", @"Hex", @"Character", @"HTML Name", @"HTML Decimal", @"HTML Hexadecimal"];
-	NSMutableArray *columns = [NSMutableArray array];
-	for (NSUInteger index = 0; index < keys.count; ++index)
-		[columns addObject:[resources label:[@"AsciiInsertion:" stringByAppendingString:keys[index]] fallback:defaults[index]]];
-	_table = InstallTable(self, [resources label:@"AsciiInsertion:PanelTitle" fallback:@"ASCII Codes Insertion Panel"], columns, self);
+	_table = InstallTable(self, [resources label:@"AsciiInsertion:PanelTitle" fallback:@"ASCII Codes Insertion Panel"], CharacterColumns(), self);
 	__weak EditorCharacterPanel *weakSelf = self;
 	_table.activate = ^(NSInteger row, NSInteger column) { [weakSelf insertRow:row column:column]; };
 	return self;
+}
+
+- (void)refreshDockLabels:(NSString *)title
+{
+	[_table setAccessibilityLabel:title];
+	NSArray<NSString *> *titles = CharacterColumns();
+	for (NSUInteger i = 0; i < titles.count; ++i)
+		_table.tableColumns[i].title = titles[i];
+	_table.headerView.needsDisplay = YES;
 }
 
 - (void)useEncoding:(NSStringEncoding)encoding

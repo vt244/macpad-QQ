@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #import "EditorDock.h"
 #import "EditorResources.h"
+#import "EditorPanelChrome.h"
 
 static BOOL IsSide(EditorDockEdge edge) { return edge == EditorDockLeft || edge == EditorDockRight; }
 
@@ -105,10 +106,13 @@ static BOOL IsSide(EditorDockEdge edge) { return edge == EditorDockLeft || edge 
 @property(nonatomic, strong) EditorDockPlacement *placement;
 @property(nonatomic, copy) void (^dismiss)(void);
 @property(nonatomic, copy) NSString *title;
+@property(nonatomic, copy) NSString *titleKey;
+@property(nonatomic, copy) NSString *titleFallback;
 @property(nonatomic, strong) NSView *panel;
 @property(nonatomic, strong) EditorDockGrip *grip;
 - (void)updatePresentation;
 - (void)placeAtEdge:(EditorDockEdge)edge;
+- (void)refreshLocalization;
 @end
 
 @implementation EditorDockPane
@@ -124,6 +128,15 @@ static BOOL IsSide(EditorDockEdge edge) { return edge == EditorDockLeft || edge 
 }
 
 - (BOOL)isShown { return _shown; }
+- (void)refreshLocalization
+{
+	self.title = [EditorResources.shared label:self.titleKey fallback:self.titleFallback];
+	_floating.title = self.title;
+	EditorSetPanelCaption(self.panel, self.title);
+	if ([self.panel respondsToSelector:@selector(refreshDockLabels:)])
+		[(id<EditorDockLabels>)self.panel refreshDockLabels:self.title];
+}
+
 - (void)setShown:(BOOL)shown
 {
 	if (_shown == shown)
@@ -403,15 +416,17 @@ static BOOL IsSide(EditorDockEdge edge) { return edge == EditorDockLeft || edge 
 	return self;
 }
 
-- (EditorDockPane *)addPanel:(NSView *)panel title:(NSString *)title
+- (EditorDockPane *)addPanel:(NSView *)panel titleKey:(NSString *)key fallback:(NSString *)fallback
 	placement:(EditorDockPlacement *)placement dismiss:(void (^)(void))dismiss
 {
 	EditorDockPane *pane = [[EditorDockPane alloc] initWithFrame:NSZeroRect];
 	pane.area = self;
 	pane.placement = placement;
 	pane.dismiss = dismiss;
-	pane.title = title;
+	pane.titleKey = key;
+	pane.titleFallback = fallback;
 	pane.panel = panel;
+	[pane refreshLocalization];
 	panel.translatesAutoresizingMaskIntoConstraints = YES;
 	pane.grip = [[EditorDockGrip alloc] initWithFrame:NSZeroRect];
 	[pane addSubview:panel];
@@ -444,6 +459,13 @@ static BOOL IsSide(EditorDockEdge edge) { return edge == EditorDockLeft || edge 
 {
 	[super viewDidMoveToWindow];
 	[self refreshPanelPlacements];
+}
+
+- (void)refreshLocalization
+{
+	for (EditorDockPane *pane in _panes)
+		[pane refreshLocalization];
+	[self setNeedsLayout:YES];
 }
 
 - (void)refreshPanelPlacements

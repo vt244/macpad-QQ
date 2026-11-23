@@ -276,7 +276,7 @@ static bool CheckSearchScopes(EditorDocument *document, NSURL *test)
 	[editor setStringProperty:SCI_SETTEXT parameter:0 value:text];
 	[document incrementalSearch:nil];
 	NSSearchField *field = (NSSearchField *)ViewMatching(editor.window.contentView, ^BOOL(NSView *view) {
-		return [view isKindOfClass:NSSearchField.class] && [[view accessibilityLabel] isEqualToString:@"Incremental Search"];
+		return [view isKindOfClass:NSSearchField.class] && [[view accessibilityIdentifier] isEqualToString:@"incremental-search"];
 	});
 	field.stringValue = @"other";
 	[field.delegate controlTextDidChange:[NSNotification notificationWithName:NSControlTextDidChangeNotification object:field]];

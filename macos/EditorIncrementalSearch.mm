@@ -2,6 +2,7 @@
 #import "EditorIncrementalSearch.h"
 #import "EditorFileSearch.h"
 #import "EditorPanelChrome.h"
+#import "EditorResources.h"
 #import "ScintillaView.h"
 
 @interface EditorIncrementalSearch () <NSSearchFieldDelegate>
@@ -14,6 +15,9 @@ static constexpr int IncrementalMark = 9;
 	NSSearchField *_search;
 	NSButton *_matchCase;
 	NSButton *_highlight;
+	NSButton *_previous;
+	NSButton *_next;
+	EditorCrossButton *_close;
 	NSTextField *_status;
 	__weak ScintillaView *_editor;
 	NSInteger _origin;
@@ -28,28 +32,27 @@ static constexpr int IncrementalMark = 9;
 	self.translatesAutoresizingMaskIntoConstraints = NO;
 	_search = [[NSSearchField alloc] initWithFrame:NSZeroRect];
 	_search.controlSize = NSControlSizeSmall;
-	_search.placeholderString = @"Incremental Search";
-	[_search setAccessibilityLabel:@"Incremental Search"];
+	_search.accessibilityIdentifier = @"incremental-search";
 	_search.delegate = self;
 	[_search.widthAnchor constraintEqualToConstant:200].active = YES;
-	NSButton *previous = [NSButton buttonWithTitle:@"Previous" target:self action:@selector(step:)];
-	NSButton *next = [NSButton buttonWithTitle:@"Next" target:self action:@selector(step:)];
-	previous.tag = -1;
-	next.tag = 1;
-	previous.controlSize = next.controlSize = NSControlSizeSmall;
-	_matchCase = [NSButton checkboxWithTitle:@"Match case" target:self action:@selector(queryChanged:)];
-	_highlight = [NSButton checkboxWithTitle:@"Highlight all" target:self action:@selector(queryChanged:)];
+	_previous = [NSButton buttonWithTitle:@"" target:self action:@selector(step:)];
+	_next = [NSButton buttonWithTitle:@"" target:self action:@selector(step:)];
+	_previous.tag = -1;
+	_next.tag = 1;
+	_previous.controlSize = _next.controlSize = NSControlSizeSmall;
+	_matchCase = [NSButton checkboxWithTitle:@"" target:self action:@selector(queryChanged:)];
+	_highlight = [NSButton checkboxWithTitle:@"" target:self action:@selector(queryChanged:)];
 	_status = [NSTextField labelWithString:@""];
 	_status.font = [NSFont systemFontOfSize:11];
-	EditorCrossButton *close = [[EditorCrossButton alloc] initWithFrame:NSZeroRect];
-	close.translatesAutoresizingMaskIntoConstraints = NO;
-	close.bordered = NO;
-	close.target = self;
-	close.action = @selector(close:);
-	[close setAccessibilityLabel:@"Close Incremental Search"];
-	[close.widthAnchor constraintEqualToConstant:16].active = YES;
-	[close.heightAnchor constraintEqualToConstant:16].active = YES;
-	NSStackView *row = [NSStackView stackViewWithViews:@[close, _search, previous, next, _matchCase, _highlight, _status]];
+	_close = [[EditorCrossButton alloc] initWithFrame:NSZeroRect];
+	_close.translatesAutoresizingMaskIntoConstraints = NO;
+	_close.bordered = NO;
+	_close.target = self;
+	_close.action = @selector(close:);
+	[_close.widthAnchor constraintEqualToConstant:16].active = YES;
+	[_close.heightAnchor constraintEqualToConstant:16].active = YES;
+	[self refreshLocalization];
+	NSStackView *row = [NSStackView stackViewWithViews:@[_close, _search, _previous, _next, _matchCase, _highlight, _status]];
 	row.orientation = NSUserInterfaceLayoutOrientationHorizontal;
 	row.alignment = NSLayoutAttributeCenterY;
 	row.spacing = 5;
@@ -61,6 +64,21 @@ static constexpr int IncrementalMark = 9;
 		[row.trailingAnchor constraintLessThanOrEqualToAnchor:self.trailingAnchor constant:-4],
 	]];
 	return self;
+}
+
+- (void)refreshLocalization
+{
+	EditorResources *resources = EditorResources.shared;
+	NSString *title = [resources label:@"43011" fallback:@"Incremental Search"];
+	_search.placeholderString = title;
+	[_search setAccessibilityLabel:title];
+	[_close setAccessibilityLabel:[NSString stringWithFormat:[resources label:@"panel-close" fallback:@"Close %@"], title]];
+	_previous.title = [resources label:@"43010" fallback:@"Previous"];
+	_next.title = [resources label:@"43002" fallback:@"Next"];
+	_matchCase.title = [resources label:@"IncrementalFind:1685" fallback:@"Match case"];
+	_highlight.title = [resources label:@"IncrementalFind:1690" fallback:@"Highlight all"];
+	if (_status.stringValue.length)
+		_status.stringValue = [resources label:@"IncrementalFind-FSNotFound" fallback:@"No matches found"];
 }
 
 - (void)beginInEditor:(ScintillaView *)editor
@@ -119,7 +137,7 @@ static constexpr int IncrementalMark = 9;
 		_status.stringValue = @"";
 	}
 	else
-		_status.stringValue = @"No matches found";
+		_status.stringValue = [EditorResources.shared label:@"IncrementalFind-FSNotFound" fallback:@"No matches found"];
 }
 
 - (void)queryChanged:(id)sender

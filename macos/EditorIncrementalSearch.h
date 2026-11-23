@@ -7,4 +7,5 @@
 - (instancetype)initWithDismiss:(void (^)(void))dismiss;
 - (void)beginInEditor:(ScintillaView *)editor;
 - (void)end;
+- (void)refreshLocalization;
 @end

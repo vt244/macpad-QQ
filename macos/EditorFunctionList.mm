@@ -304,6 +304,12 @@ static NSURL *RuleFile(NSURL *profile, NSURL *installed, NSString *language)
 	return self;
 }
 
+- (void)refreshDockLabels:(NSString *)title
+{
+	_filter.placeholderString = [EditorResources.shared label:@"function-filter" fallback:@"Filter functions"];
+	[_table setAccessibilityLabel:title];
+}
+
 - (void)cancel { [_task cancel]; _task = nil; }
 - (void)dealloc { [_task cancel]; }
 

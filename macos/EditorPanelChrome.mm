@@ -55,6 +55,9 @@
 @end
 
 @interface EditorDockCaption : NSView
+@property(nonatomic, strong) NSTextField *label;
+@property(nonatomic, strong) EditorCrossButton *closeButton;
+- (void)setTitle:(NSString *)title;
 @end
 
 @implementation EditorDockCaption
@@ -78,6 +81,12 @@
 }
 
 - (NSMenu *)menuForEvent:(NSEvent *)event { return [self.dockPane placementMenu]; }
+
+- (void)setTitle:(NSString *)title
+{
+	self.label.stringValue = title;
+	[self.closeButton setAccessibilityLabel:[NSString stringWithFormat:[EditorResources.shared label:@"panel-close" fallback:@"Close %@"], title]];
+}
 
 - (void)mouseDown:(NSEvent *)event
 {
@@ -125,7 +134,9 @@ NSView *EditorPanelCaption(NSString *title, id target, SEL closeAction)
 	close.bordered = NO;
 	close.target = target;
 	close.action = closeAction;
-	[close setAccessibilityLabel:[NSString stringWithFormat:[EditorResources.shared label:@"panel-close" fallback:@"Close %@"], title]];
+	caption.label = label;
+	caption.closeButton = close;
+	[caption setTitle:title];
 	[caption addSubview:label];
 	[caption addSubview:close];
 	[NSLayoutConstraint activateConstraints:@[
@@ -139,6 +150,13 @@ NSView *EditorPanelCaption(NSString *title, id target, SEL closeAction)
 		[close.heightAnchor constraintEqualToConstant:16],
 	]];
 	return caption;
+}
+
+void EditorSetPanelCaption(NSView *panel, NSString *title)
+{
+	for (NSView *view in panel.subviews)
+		if ([view isKindOfClass:EditorDockCaption.class])
+			[(EditorDockCaption *)view setTitle:title];
 }
 
 NSImage *EditorTabStateIcon(BOOL edited, BOOL readOnly, BOOL monitoring, BOOL dark)
