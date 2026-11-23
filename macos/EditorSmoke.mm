@@ -81,6 +81,35 @@ static bool CheckControlFrames(NSView *form, const char *description)
 	return Check(controls.count > 0, description);
 }
 
+@interface EditorDocument (LayoutSmoke)
+- (void)showSearchMode:(NSInteger)mode;
+@end
+
+static bool CheckFindLayouts(EditorDocument *document)
+{
+	EditorResources *resources = EditorResources.shared;
+	NSURL *original = resources.selectedTranslation;
+	bool passed = true;
+	for (NSString *locale in @[@"english", @"russian", @"french", @"german", @"japanese"])
+	{
+		NSURL *url = [NSBundle.mainBundle URLForResource:locale withExtension:@"xml" subdirectory:@"localization"];
+		[resources chooseTranslation:url];
+		[document refreshLocalization];
+		for (NSInteger mode = 0; mode < 5; ++mode)
+		{
+			[document showSearchMode:mode];
+			NSWindow *panel = document.windowForSheet.childWindows.lastObject;
+			passed &= CheckControlFrames(panel.contentView, "fit visible controls without overlaps in every Find mode");
+			if (!passed)
+				fprintf(stderr, "Search layout: %s mode %ld\n", locale.UTF8String, (long)mode);
+		}
+		[document.windowForSheet.childWindows.lastObject close];
+	}
+	[resources chooseTranslation:original];
+	[document refreshLocalization];
+	return passed;
+}
+
 static bool CheckPreferencesLayout(void)
 {
 	__block bool passed = false;
@@ -1232,7 +1261,7 @@ int RunSmokeTest(void)
 		"show file and search commands and honor toolbarButtonsConf.xml"))
 		return 1;
 	[document showWindows];
-	if (!CheckTabWindowHandoff(controller, document) || !CheckPreferencesLayout())
+	if (!CheckTabWindowHandoff(controller, document) || !CheckFindLayouts(document) || !CheckPreferencesLayout())
 		return 1;
 	EditorDocument *second = [controller makeUntitledDocumentOfType:controller.defaultType error:&error];
 	if (!Check(second != nil, "create a second document tab"))
