@@ -794,6 +794,12 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	}
 	if (auto action = config("auto-completion").attribute("autoCAction"))
 		settings[@"autocomplete"] = @(action.as_int() != 0);
+	if (auto detector = config("DetectEncoding"))
+	{
+		const std::string_view value = detector.child_value();
+		if (value == "yes" || value == "no")
+			settings[@"detectEncoding"] = @(value == "yes");
+	}
 	if (auto snapshotMode = config("Backup").attribute("isSnapshotMode"))
 		settings[@"checkpointDrafts"] = @(std::string_view(snapshotMode.value()) == "yes");
 	if (auto format = config("insertDateTime").attribute("customizedFormat"))

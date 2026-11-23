@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 #import "EditorText.h"
+#import "EditorResources.h"
+#include "uchardet.h"
 
 #include <vector>
 
@@ -60,6 +62,47 @@ NSString *DecodeEditorTextWithEncoding(NSData *data, NSStringEncoding encoding)
 	return text && [text rangeOfString:[NSString stringWithCharacters:&zero length:1]].location == NSNotFound ? text : nil;
 }
 
+static NSStringEncoding DetectLegacyEncoding(NSData *data)
+{
+	if (![[EditorResources.shared setting:@"detectEncoding" fallback:@YES] boolValue] || data.length < 4)
+		return 0;
+	uchardet_t detector = uchardet_new();
+	if (!detector)
+		return 0;
+	const size_t sampleLength = MIN(data.length, 256 * 1024);
+	if (!(data.length & 1))
+	{
+		const auto *bytes = static_cast<const unsigned char *>(data.bytes);
+		const size_t pairs = sampleLength / 2;
+		size_t zeroEven = 0, zeroOdd = 0;
+		for (size_t i = 0; i < pairs; ++i)
+		{
+			zeroEven += !bytes[i * 2];
+			zeroOdd += !bytes[i * 2 + 1];
+		}
+		if (zeroOdd * 3 >= pairs && zeroEven * 8 < pairs)
+		{
+			uchardet_delete(detector);
+			return NSUTF16LittleEndianStringEncoding;
+		}
+		if (zeroEven * 3 >= pairs && zeroOdd * 8 < pairs)
+		{
+			uchardet_delete(detector);
+			return NSUTF16BigEndianStringEncoding;
+		}
+	}
+	CFStringEncoding encoding = kCFStringEncodingInvalidId;
+	if (uchardet_handle_data(detector, static_cast<const char *>(data.bytes), sampleLength) == 0)
+	{
+		uchardet_data_end(detector);
+		const char *name = uchardet_get_charset(detector);
+		if (name && *name)
+			encoding = CFStringConvertIANACharSetNameToEncoding((__bridge CFStringRef)[NSString stringWithUTF8String:name]);
+	}
+	uchardet_delete(detector);
+	return encoding == kCFStringEncodingInvalidId ? 0 : CFStringConvertEncodingToNSStringEncoding(encoding);
+}
+
 NSString *DecodeEditorText(NSData *data, NSStringEncoding *encoding, NSData **bom)
 {
 	if (!data)
@@ -81,6 +124,16 @@ NSString *DecodeEditorText(NSData *data, NSStringEncoding *encoding, NSData **bo
 	}
 	NSData *payload = offset ? [data subdataWithRange:NSMakeRange(offset, data.length - offset)] : data;
 	NSString *text = DecodeEditorTextWithEncoding(payload, detected);
+	if (!text && !offset)
+		if (NSStringEncoding candidate = DetectLegacyEncoding(payload))
+		{
+			NSString *decoded = DecodeEditorTextWithEncoding(payload, candidate);
+			if (decoded && [[decoded dataUsingEncoding:candidate] isEqualToData:payload])
+			{
+				text = decoded;
+				detected = candidate;
+			}
+		}
 	if (!text && !offset)
 	{
 		detected = NSWindowsCP1252StringEncoding;

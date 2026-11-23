@@ -32,8 +32,10 @@ add_executable(macpad macos-main.mm EditorDocument.mm EditorChrome.mm EditorReso
 	EditorDocumentList.mm EditorPanelChrome.mm EditorContextMenus.mm EditorDock.mm EditorFolderPanel.mm EditorProjectPanel.mm
 	EditorFunctionList.mm EditorDocumentMap.mm EditorInsertPanels.mm EditorIncrementalSearch.mm EditorEditActions.mm
 	EditorCompletion.mm EditorTabManager.mm EditorSettings.mm EditorLaunchOptions.mm EditorPluginCatalog.mm)
+file(GLOB detector_sources CONFIGURE_DEPENDS "${root}/PowerEditor/src/uchardet/*.cpp")
+target_sources(macpad PRIVATE ${detector_sources})
 set_target_properties(macpad PROPERTIES OUTPUT_NAME "macpad++")
 target_compile_options(macpad PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
-target_include_directories(macpad PRIVATE "${root}/PowerEditor/src/pugixml" "${sci}/src")
+target_include_directories(macpad PRIVATE "${root}/PowerEditor/src/pugixml" "${root}/PowerEditor/src/uchardet" "${sci}/src")
 target_link_libraries(macpad PRIVATE editor "-framework Cocoa" "-framework QuartzCore" "-framework CoreText"
 	"-framework CoreGraphics" "-framework UniformTypeIdentifiers")

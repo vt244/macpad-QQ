@@ -45,7 +45,7 @@ app and bundles it with matching source and SHA-256 checksums.
 - Find, replace, count and mark matches using literal, extended or regular expression search. Search within a selection, across open documents, in folders or in projects.
 - Refine previous searches from the results panel and navigate between hits with **Search → Next Search Result** and **Previous Search Result**.
 - Use the **Edit** menu for column insertion, multiple selections, commenting, line sorting and autocompletion. **Clipboard History** keeps recent text entries in memory while its panel is open.
-- Open, save and convert UTF‑8, BOM-marked UTF‑16 and Windows‑1252 text.
+- Open, save and convert UTF‑8, UTF‑16 and legacy text. Automatic detection of legacy encodings is available under **Files and Tabs** in Preferences.
 - Reopen legacy text with its original encoding from **Encoding → Character Set**.
 - Follow log files with **View → Monitoring (tail -f)**. Configure detection of external changes in **Settings → Preferences**.
 - Record and replay editing, search and replace actions from the **Macro** menu. **Import Macros…** reads compatible actions from `shortcuts.xml`. Assign keys to macros and named **Run** commands in **Settings → Shortcut Mapper**.

@@ -113,6 +113,7 @@ void EditorShowPreferences(void)
 		@[@"styleOverrideUnderline", @"Force underline choice for all styles", @NO]], 248);
 
 	NSView *files = tab(@"pref-files", @"Files and tabs");
+	checks(files, @[@[@"detectEncoding", @"Automatically detect legacy encodings", @YES]], 266);
 	checks(files, @[@[@"autoReload", @"Reload unchanged buffers automatically", @NO],
 		@[@"reloadToEnd", @"Go to the end after reloading", @NO], @[@"hideToolbar", @"Hide the toolbar", @NO],
 		@[@"hideTabBar", @"Hide the tab bar", @NO], @[@"tabCloseButtons", @"Show close buttons on tabs", @YES],
