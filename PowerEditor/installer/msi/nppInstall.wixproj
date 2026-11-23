@@ -4,6 +4,8 @@
 		<OutputType>Package</OutputType>
 		<Platform>x64</Platform>
 		<SuppressValidation>true</SuppressValidation>
+		<DefineConstants Condition="'$(MacpadPackageVersion)' != ''">$(DefineConstants);Version=$(MacpadPackageVersion)</DefineConstants>
+		<DefineConstants Condition="'$(MacpadReleaseVersion)' != ''">$(DefineConstants);ReleaseVersion=$(MacpadReleaseVersion)</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'Release'">

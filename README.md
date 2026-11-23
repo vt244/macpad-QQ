@@ -11,21 +11,24 @@ and Lexilla for syntax highlighting. [Upstream project](https://github.com/notep
 
 ## Install on macOS
 
+The current version is `0.1-beta`.
+
 macpad++ runs natively on Apple silicon and Intel Macs with macOS 13 or later.
 It reads existing XML themes, translations and user-defined languages.
 Plugins use the [macOS plugin API](macos/MacpadPlugin.h). Windows DLLs need
 to be ported and rebuilt to run inside macpad++.
 
-Check [GitHub Releases](https://github.com/vt244/macpad-plus-plus/releases) for
-published builds. When a macOS release is available, download
-`macpad++-macOS.zip` and `SHA256SUMS`, verify the archive, then unpack it
-and move `macpad++.app` to Applications.
+Check [GitHub Releases](https://github.com/vt244/macpad-plus-plus/releases)
+for a build for your Mac. Choose `macpad++-macOS-arm64.zip` for Apple silicon
+or `macpad++-macOS.zip` if a universal build is available. Download the matching
+`SHA256SUMS`, verify the archive, then unpack it and move `macpad++.app` to Applications.
 
 ```sh
-shasum -a 256 macpad++-macOS.zip
+shasum -a 256 macpad++-macOS-arm64.zip
 ```
 
-Compare the output with the app archive entry in `SHA256SUMS`.
+For a universal build, substitute `macpad++-macOS.zip` in the command.
+Compare the output with the matching entry in `SHA256SUMS`.
 
 ## Build from source
 

@@ -217,13 +217,6 @@ jobs:
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
 
-    - name: Modify resource.h N++ version to avoid confusion
-      working-directory: PowerEditor\src\
-      run: |
-           $content = Get-Content -Path 'resource.h'
-           $newContent = $content -replace 'TEXT\(\"Notepad\+\+ v.*\"\)', 'TEXT("macpad++ GH_BUILD")'
-           $newContent | Set-Content -Path 'resource.h'
-
     - name: MSBuild of n++ exe
       working-directory: PowerEditor\visual.net\
       run: msbuild notepadPlus.sln /m /p:configuration="${{ matrix.build_configuration }}" /p:platform="${{ matrix.build_platform }}"
@@ -299,13 +292,6 @@ jobs:
     # - name: Add msbuild to PATH
       # uses: microsoft/setup-msbuild@v3
 
-    # - name: Modify resource.h N++ version to avoid confusion
-      # working-directory: PowerEditor\src\
-      # run: |
-           # $content = Get-Content -Path 'resource.h'
-           # $newContent = $content -replace 'TEXT\(\"Notepad\+\+ v.*\"\)', 'TEXT("macpad++ GH_BUILD")'
-           # $newContent | Set-Content -Path 'resource.h'
-
     # - name: MSBuild of n++ exe
       # working-directory: PowerEditor\visual.net\
       # run: msbuild notepadPlus.sln /m /p:configuration="${{ matrix.build_configuration }}" /p:platform="${{ matrix.build_platform }}" /p:PlatformToolset="ClangCL"
@@ -329,13 +315,6 @@ jobs:
 
     - name: Add msbuild to PATH
       uses: microsoft/setup-msbuild@v3
-
-    - name: Modify resource.h N++ version to avoid confusion
-      working-directory: PowerEditor\src\
-      run: |
-           $content = Get-Content -Path 'resource.h'
-           $newContent = $content -replace 'TEXT\(\"Notepad\+\+ v.*\"\)', 'TEXT("macpad++ GH_BUILD")'
-           $newContent | Set-Content -Path 'resource.h'
 
     - name: Add nmake to PATH
       uses: TheMrMilchmann/setup-msvc-dev@v4
@@ -415,14 +394,6 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v7
-
-    - name: Modify resource.h N++ version to avoid confusion
-      working-directory: PowerEditor\src\
-      shell: pwsh
-      run: |
-           $content = Get-Content -Path 'resource.h'
-           $newContent = $content -replace 'TEXT\(\"Notepad\+\+ v.*\"\)', 'TEXT("macpad++ GH_BUILD")'
-           $newContent | Set-Content -Path 'resource.h'
 
     - name: Install and update MSYS2 tools
       uses: msys2/setup-msys2@v2

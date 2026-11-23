@@ -1670,7 +1670,8 @@ static NSScrollView *LegalTextView(NSString *contents)
 - (void)showAbout:(id)sender
 {
 	NSBundle *bundle = NSBundle.mainBundle;
-	NSString *version = [bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+	NSString *version = [bundle objectForInfoDictionaryKey:@"MacpadReleaseVersion"] ?:
+		[bundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
 	NSString *build = [bundle objectForInfoDictionaryKey:@"CFBundleVersion"];
 	NSAlert *about = [NSAlert new];
 	about.icon = NSApp.applicationIconImage;

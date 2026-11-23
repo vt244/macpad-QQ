@@ -892,11 +892,7 @@ bool PluginsAdminDlg::updateList()
 
 bool PluginsAdminDlg::initAvailablePluginsViewFromList()
 {
-	wchar_t nppFullPathName[MAX_PATH]{};
-	GetModuleFileName(NULL, nppFullPathName, MAX_PATH);
-
-	Version nppVer;
-	nppVer.setVersionFrom(nppFullPathName);
+	const Version nppVer(VERSION_NPP_COMPATIBILITY_VALUE);
 
 	for (const auto& i : _availableList._list)
 	{
@@ -921,12 +917,6 @@ bool PluginsAdminDlg::initAvailablePluginsViewFromList()
 
 bool PluginsAdminDlg::initIncompatiblePluginList()
 {
-	wchar_t nppFullPathName[MAX_PATH]{};
-	GetModuleFileName(NULL, nppFullPathName, MAX_PATH);
-
-	Version nppVer;
-	nppVer.setVersionFrom(nppFullPathName);
-
 	for (const auto& i : _incompatibleList._list)
 	{
 		vector<wstring> values2Add;

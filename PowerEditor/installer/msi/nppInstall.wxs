@@ -21,7 +21,10 @@
 		<!--
 		Write version information to Details' Comments field in Property of MSI file
 		-->
-		<SummaryInformation Comments="macpad++ v$(var.Version) (x64)" />
+		<?ifndef ReleaseVersion ?>
+			<?define ReleaseVersion = "$(var.Version)" ?>
+		<?endif ?>
+		<SummaryInformation Comments="macpad++ v$(var.ReleaseVersion) (x64)" />
 
 		<!--
 		Consider the 4th digit of version number for the updating, with AllowSameVersionUpgrades="yes"

@@ -56,7 +56,7 @@ OutFile ".\build\npp.${APPVERSION}.Installer.exe"
    VIAddVersionKey	"CompanyName"		"${CompanyName}"
    VIAddVersionKey	"LegalCopyright"	"${LegalCopyright}"
    VIAddVersionKey	"FileDescription"	"${Description}"
-   VIAddVersionKey	"FileVersion"		"${Version}"
+   VIAddVersionKey	"FileVersion"		"${ProdVer}"
    VIAddVersionKey	"ProductVersion"	"${ProdVer}"
 ; ------------------------------------------------------------------------
 

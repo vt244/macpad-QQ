@@ -30,22 +30,16 @@
 	!getdllversion "..\bin\notepad++.exe" nppVer_
 !endif
 
-!define APPVERSION		${nppVer_1}.${nppVer_2}		; 7.5
+!define APPVERSION		"0.1-beta"
 !define VERSION_MAJOR		${nppVer_1}			; 7
 !define VERSION_MINOR		${nppVer_2}			; 5
 
 !if ${nppVer_3} != 0
-	!undef APPVERSION
-	!define APPVERSION	${nppVer_1}.${nppVer_2}.${nppVer_3}	; 7.5.1
-
 	!undef VERSION_MINOR
 	!define VERSION_MINOR	${nppVer_2}${nppVer_3}			; 51
 !endif
 
 !if ${nppVer_4} != 0
-	!undef APPVERSION
-	!define APPVERSION	${nppVer_1}.${nppVer_2}.${nppVer_3}.${nppVer_4}	; 7.5.1.3
-
 	!undef VERSION_MINOR
 	!define VERSION_MINOR	${nppVer_2}${nppVer_3}${nppVer_4}		; 513
 !endif
