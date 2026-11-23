@@ -63,7 +63,7 @@ app and bundles it with matching source and SHA-256 checksums.
 - Open **Language → Toggle User Language Panel** to edit, copy or remove definitions in a dockable panel.
 - Generate checksums from **Tools**, run macOS commands and save or open XML sessions.
 - Double-click the empty space to the right of the tabs to open a new document.
-- Reopen the working session, including unsaved drafts, after quitting or restarting.
+- Close the editor window with the red button and click the Dock icon to bring back the same tabs. The working session, including unsaved edits and drafts, is also restored on the next launch when session recovery is enabled.
 - Import existing XML themes, translations and user-defined languages.
 
 Open files from **File → Open** or from Finder with **Open With → macpadqq**.

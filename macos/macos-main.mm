@@ -260,6 +260,18 @@ static void AddCharacterSets(NSMenu *menu)
 		NSDocumentController.sharedDocumentController.documents.count == 0;
 }
 
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)app hasVisibleWindows:(BOOL)hasVisibleWindows
+{
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	NSWindow *window = [controller selectedTabInOtherView:NO].windowControllers.firstObject.window;
+	if (window && !window.visible && !window.miniaturized)
+	{
+		[window makeKeyAndOrderFront:nil];
+		return NO;
+	}
+	return YES;
+}
+
 - (void)applicationDidFinishLaunching:(NSNotification *)notification
 {
 	NSArray<NSString *> *arguments = NSProcessInfo.processInfo.arguments;

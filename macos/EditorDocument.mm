@@ -1260,7 +1260,9 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 	delegate:(id)delegate didReviewAllSelector:(SEL)selector contextInfo:(void *)context
 {
 	// AppKit calls this before quitting. Keep its save prompts if recovery cannot write the workspace.
-	if (delegate && selector && [delegate respondsToSelector:selector] && [_workspace checkpoint])
+	BOOL canRecoverEdits = [[EditorResources.shared setting:@"checkpointDrafts" fallback:@YES] boolValue] ||
+		!self.hasEditedDocuments;
+	if (canRecoverEdits && delegate && selector && [delegate respondsToSelector:selector] && [_workspace checkpoint])
 	{
 		_workspaceSavedForQuit = YES;
 		using ReviewCallback = void (*)(id, SEL, NSDocumentController *, BOOL, void *);
@@ -1658,6 +1660,15 @@ static void ReadSessionView(pugi::xml_node file, ScintillaView *editor)
 @end
 
 @implementation EditorDocumentWindow
+- (void)performClose:(id)sender
+{
+	if (self.attachedSheet)
+		return;
+	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
+	[controller finishWorkspaceRecovery];
+	[self orderOut:sender];
+}
+
 - (void)close
 {
 	// The window's close notification can precede NSDocument's close callback.
@@ -1983,6 +1994,9 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	window.tabbingMode = NSWindowTabbingModeDisallowed;
 	window.releasedWhenClosed = NO;
 	window.restorable = NO;
+	NSButton *closeButton = [window standardWindowButton:NSWindowCloseButton];
+	closeButton.target = window;
+	closeButton.action = @selector(performClose:);
 	[window center];
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
 	EditorLaunchOptions *launch = controller.launchOptions;
@@ -2690,14 +2704,10 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		[self close];
 		return;
 	}
-	if (_editor.window && _editor.window != window)
-	{
-		[self canCloseDocumentWithDelegate:self shouldCloseSelector:@selector(document:shouldCloseOtherTab:contextInfo:) contextInfo:nullptr];
-		return;
-	}
-	if (!window.visible)
+	if (!window.visible && (!_editor.window || _editor.window == window))
 		[self showWindows];
-	[window performClose:sender];
+	if (!self.windowForSheet.attachedSheet)
+		[self canCloseDocumentWithDelegate:self shouldCloseSelector:@selector(document:shouldCloseTab:contextInfo:) contextInfo:nullptr];
 }
 
 - (void)changeTabPin
@@ -2716,7 +2726,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[controller workspaceChanged];
 }
 
-- (void)document:(NSDocument *)document shouldCloseOtherTab:(BOOL)shouldClose contextInfo:(void *)context
+- (void)document:(NSDocument *)document shouldCloseTab:(BOOL)shouldClose contextInfo:(void *)context
 {
 	if (shouldClose)
 		[self close];
