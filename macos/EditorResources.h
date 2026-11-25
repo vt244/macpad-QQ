@@ -3,6 +3,7 @@
 
 @class ScintillaView;
 NSString *EditorUIString(NSString *english);
+NSString *EditorSyntaxExtension(NSURL *fileURL);
 
 @interface EditorResources : NSObject
 @property(nonatomic, readonly) NSURL *profile;

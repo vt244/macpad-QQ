@@ -1309,6 +1309,35 @@ static bool CheckFinderService(NSURL *test, EditorDocumentController *controller
 	return Check(refused && opened, "open multiple local files through the Finder service and reject folders and non-file URLs");
 }
 
+static bool CheckPreviewLanguages()
+{
+	if (!Check([EditorSyntaxExtension([NSURL fileURLWithPath:@"/SConstruct"]) isEqualToString:@"py"] &&
+		[EditorSyntaxExtension([NSURL fileURLWithPath:@"/Vagrantfile"]) isEqualToString:@"rb"] &&
+		[EditorSyntaxExtension([NSURL fileURLWithPath:@"/APKBUILD"]) isEqualToString:@"sh"],
+		"recognize documented filenames without extensions"))
+		return false;
+	NSURL *model = [NSBundle.mainBundle URLForResource:@"langs.model" withExtension:@"xml"];
+	NSXMLDocument *xml = [[NSXMLDocument alloc] initWithContentsOfURL:model options:NSXMLNodeLoadExternalEntitiesNever error:nullptr];
+	NSArray<NSXMLNode *> *languages = [xml nodesForXPath:@"/NotepadPlus/Languages/Language/@name" error:nullptr];
+	if (!Check(languages.count > 0, "load the bundled syntax model for preview"))
+		return false;
+	ScintillaView *view = [[ScintillaView alloc] initWithFrame:NSMakeRect(0, 0, 300, 150)];
+	NSSet *plain = [NSSet setWithArray:@[@"normal", @"nfo", @"searchResult"]];
+	for (NSXMLNode *language in languages)
+	{
+		NSString *name = language.stringValue;
+		if ([plain containsObject:name])
+			continue;
+		[EditorResources.shared configure:view extension:@"" language:name syntaxHighlighting:YES identifier:nullptr];
+		if ([view message:SCI_GETLEXER] <= SCLEX_NULL)
+		{
+			fprintf(stderr, "No lexer for bundled syntax: %s\n", name.UTF8String);
+			return false;
+		}
+	}
+	return true;
+}
+
 int RunSmokeTest(void)
 {
 	NSString *directory = NSProcessInfo.processInfo.environment[@"MACPAD_DATA_DIR"];
@@ -1841,7 +1870,7 @@ int RunSmokeTest(void)
 	if (!Check([workspace startAtDirectory:recoveryDirectory] && ![otherInstance startAtDirectory:recoveryDirectory],
 		"prevent another instance from overwriting the same recovery workspace"))
 		return 1;
-	if (!CheckExtendedPort(test, controller) || !CheckFinderService(test, controller))
+	if (!CheckExtendedPort(test, controller) || !CheckFinderService(test, controller) || !CheckPreviewLanguages())
 		return 1;
 	puts("Passed: toolbar XML, localized dialogs, shortcuts import, Windows path mappings, print-to-PDF and plugin ABI v3.");
 	puts("Passed: dockable panels, tab transfers and split rotation, editing commands, monitoring, search and history, settings, XML, macros, terminal options, Run, native plugins and catalog updates.");

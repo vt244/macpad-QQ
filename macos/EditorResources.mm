@@ -104,6 +104,24 @@ static void CollectSharedStrings(pugi::xml_node english, pugi::xml_node localize
 
 NSString *EditorUIString(NSString *english) { return [EditorResources.shared text:english]; }
 
+NSString *EditorSyntaxExtension(NSURL *fileURL)
+{
+	NSString *name = fileURL.lastPathComponent.lowercaseString;
+	static NSDictionary<NSString *, NSString *> *const namedFiles = @{
+		@"makefile": @"mak", @"gnumakefile": @"mak", @"cmakelists.txt": @"cmake",
+		@"sconstruct": @"py", @"sconscript": @"py", @"wscript": @"py",
+		@"rakefile": @"rb", @"vagrantfile": @"rb",
+		@"crontab": @"sh", @"pkgbuild": @"sh", @"apkbuild": @"sh"
+	};
+	NSString *namedExtension = name.length ? namedFiles[name] : nil;
+	if (namedExtension)
+		return namedExtension;
+	NSString *extension = fileURL.pathExtension.lowercaseString;
+	if (!extension.length && [name hasPrefix:@"."])
+		return [name substringFromIndex:1];
+	return extension ?: @"";
+}
+
 static std::optional<int> Color(pugi::xml_attribute attribute)
 {
 	std::string_view value = attribute.value();
@@ -1457,14 +1475,27 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	if (identifier)
 		*identifier = name.length ? name : @"normal";
 	if (!lexerStyles && name.length)
-		lexerStyles = root.child("LexerStyles").find_child_by_attribute("LexerType", "name", name.UTF8String);
+	{
+		NSString *styleName = [name isEqualToString:@"json5"] ? @"json" : ([name isEqualToString:@"jsp"] ? @"html" : name);
+		lexerStyles = root.child("LexerStyles").find_child_by_attribute("LexerType", "name", styleName.UTF8String);
+	}
 	NSDictionary *aliases = @{@"c": @"cpp", @"cs": @"cpp", @"java": @"cpp", @"javascript": @"cpp", @"javascript.js": @"cpp",
 		@"rc": @"cpp", @"objc": @"cpp", @"go": @"cpp", @"php": @"hypertext", @"html": @"hypertext", @"sh": @"bash",
-		@"batch": @"batch", @"tex": @"latex", @"js": @"cpp", @"typescript": @"cpp", @"shell": @"bash"};
+		@"tex": @"latex", @"js": @"cpp", @"typescript": @"cpp", @"shell": @"bash",
+		@"actionscript": @"cpp", @"asp": @"hypertext", @"autoit": @"au3", @"baanc": @"baan", @"cobol": @"COBOL",
+		@"fortran77": @"f77", @"ini": @"props", @"json5": @"json", @"jsp": @"hypertext", @"postscript": @"ps",
+		@"scheme": @"lisp", @"swift": @"cpp"};
 	NSString *lexerName = aliases[name] ?: name;
 	Scintilla::ILexer5 *lexer = highlight && lexerName.length ? CreateLexer(lexerName.UTF8String) : nullptr;
 	[view message:SCI_SETILEXER wParam:0 lParam:reinterpret_cast<sptr_t>(lexer)];
 	SetProperty(view, "fold", @"1");
+	if ([lexerName isEqualToString:@"json"])
+	{
+		SetProperty(view, "lexer.json.escape.sequence", @"1");
+		SetProperty(view, "lexer.json.allow.comments", [name isEqualToString:@"json5"] ? @"1" : @"0");
+		if ([name isEqualToString:@"json5"])
+			language = _languages.child("NotepadPlus").child("Languages").find_child_by_attribute("Language", "name", "json");
+	}
 	NSArray<NSString *> *keywords = @[@"instre1", @"instre2", @"type1", @"type2", @"type3", @"type4", @"type5", @"type6", @"type7", @"type8"];
 	for (NSUInteger i = 0; i < keywords.count; ++i)
 	{

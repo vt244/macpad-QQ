@@ -2932,7 +2932,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 {
 	if (!_editor)
 		return;
-	NSString *extension = self.fileURL.pathExtension.lowercaseString ?: @"";
+	NSString *extension = EditorSyntaxExtension(self.fileURL);
 	NSString *identifier = nil;
 	const BOOL large = self.largeFileMode;
 	_statusLanguage = [EditorResources.shared configure:_editor extension:extension language:_languageOverride
