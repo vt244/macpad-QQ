@@ -344,6 +344,10 @@ static bool CheckFolderWorkspace(EditorDocumentController *controller, EditorDoc
 	if (!Check(outline.numberOfRows == 3 &&
 		[[controller captureWorkspace][@"workspaceFolders"] isEqual:@[folder.path]], "expand the workspace tree and save its root"))
 		return false;
+	EditorResources *resources = EditorResources.shared;
+	NSURL *previousTheme = resources.selectedTheme;
+	[resources chooseTheme:nil];
+	[document applyTheme];
 	[outline selectRowIndexes:[NSIndexSet indexSetWithIndex:2] byExtendingSelection:NO];
 	[outline keyDown:[NSEvent keyEventWithType:NSEventTypeKeyDown location:NSZeroPoint modifierFlags:0 timestamp:0
 		windowNumber:outline.window.windowNumber context:nil characters:@" " charactersIgnoringModifiers:@" " isARepeat:NO keyCode:49]];
@@ -355,8 +359,13 @@ static bool CheckFolderWorkspace(EditorDocumentController *controller, EditorDoc
 	const BOOL displayed = [content.string isEqualToString:csv] && [content message:SCI_GETREADONLY] &&
 		[content message:SCI_GETMARGINTYPEN wParam:0] == SC_MARGIN_NUMBER &&
 		[content message:SCI_GETMARGINWIDTHN wParam:0] > 0 && ![controller documentForURL:file];
+	const BOOL defaultSize = [content message:SCI_STYLEGETSIZE wParam:STYLE_DEFAULT] == 15 &&
+		[document.editor message:SCI_STYLEGETSIZE wParam:STYLE_DEFAULT] == 15;
 	[preview close];
-	if (!Check(displayed, "preview raw CSV with line numbers on Space without opening a document"))
+	[resources chooseTheme:previousTheme];
+	[document applyTheme];
+	if (!Check(displayed, "preview raw CSV with line numbers on Space without opening a document") ||
+		!Check(defaultSize, "use the bundled 15 point font in the editor and preview"))
 		return false;
 	[controller toggleFolderWorkspace:nil];
 	return true;
@@ -1648,7 +1657,8 @@ int RunSmokeTest(void)
 			[editor message:SCI_GETLEXER], [editor message:SCI_GETSTYLEAT wParam:0]);
 	if (!Check([[document dataOfType:controller.defaultType error:&error] isEqualToData:encoded], "round trip UTF-16 BOM and CRLF") ||
 		!Check([editor message:SCI_GETEOLMODE] == SC_EOL_CRLF, "detect CRLF for new lines") ||
-		!Check([editor message:SCI_STYLEGETBACK wParam:STYLE_DEFAULT] == 0x563412, "apply imported XML theme") ||
+		!Check([editor message:SCI_STYLEGETBACK wParam:STYLE_DEFAULT] == 0x563412 &&
+			[editor message:SCI_STYLEGETSIZE wParam:STYLE_DEFAULT] == 10, "preserve the imported XML theme's explicit size") ||
 		!Check([editor message:SCI_GETLEXER] == SCLEX_PYTHON && [editor message:SCI_GETSTYLEAT wParam:0] == SCE_P_WORD,
 			"highlight a Python keyword with Lexilla"))
 		return 1;

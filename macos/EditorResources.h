@@ -4,6 +4,7 @@
 @class ScintillaView;
 NSString *EditorUIString(NSString *english);
 NSString *EditorSyntaxExtension(NSURL *fileURL);
+NSInteger EditorLineNumberMarginWidth(ScintillaView *view);
 
 @interface EditorResources : NSObject
 @property(nonatomic, readonly) NSURL *profile;

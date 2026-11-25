@@ -122,6 +122,13 @@ NSString *EditorSyntaxExtension(NSURL *fileURL)
 	return extension ?: @"";
 }
 
+NSInteger EditorLineNumberMarginWidth(ScintillaView *view)
+{
+	NSString *lastLine = [NSString stringWithFormat:@"%ld", [view message:SCI_GETLINECOUNT]];
+	const auto width = [view message:SCI_TEXTWIDTH wParam:STYLE_LINENUMBER lParam:reinterpret_cast<sptr_t>(lastLine.UTF8String)];
+	return MAX(32, width + 10);
+}
+
 static std::optional<int> Color(pugi::xml_attribute attribute)
 {
 	std::string_view value = attribute.value();
@@ -648,7 +655,16 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 		_selectedTheme = nil;
 		LoadXML(_theme, [_bundle URLForResource:@"stylers.model" withExtension:@"xml"]);
 	}
-
+	NSURL *bundledThemes = [_bundle.resourceURL URLByAppendingPathComponent:@"themes" isDirectory:YES];
+	if (!_selectedTheme || [bundledThemes.URLByStandardizingPath.path
+		isEqualToString:_selectedTheme.URLByDeletingLastPathComponent.URLByStandardizingPath.path])
+	{
+		auto size = _theme.child("NotepadPlus").child("GlobalStyles")
+			.find_child_by_attribute("WidgetStyle", "styleID", "32").attribute("fontSize");
+		const int points = size.as_int();
+		if (points > 0 && points <= 96)
+			size.set_value((points * 3 + 1) / 2);
+	}
 }
 
 - (void)loadTranslation:(NSURL *)url
@@ -1383,7 +1399,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 				overrides |= 1U << i;
 	[view message:SCI_STYLERESETDEFAULT];
 	[view setStringProperty:SCI_STYLESETFONT parameter:STYLE_DEFAULT value:@"Menlo"];
-	[view message:SCI_STYLESETSIZE wParam:STYLE_DEFAULT lParam:12];
+	[view message:SCI_STYLESETSIZE wParam:STYLE_DEFAULT lParam:18];
 	ApplyStyle(view, STYLE_DEFAULT, widgets.find_child_by_attribute("WidgetStyle", "styleID", "32"), overrideStyle, overrides);
 	[view message:SCI_STYLECLEARALL];
 	for (auto style : widgets.children("WidgetStyle"))

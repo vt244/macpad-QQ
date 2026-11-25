@@ -47,9 +47,7 @@ BOOL LoadEditorPreview(ScintillaView *view, NSURL *fileURL, EditorResources *res
 	for (int margin = 1; margin <= 4; ++margin)
 		[view message:SCI_SETMARGINWIDTHN wParam:margin lParam:0];
 	[resources configure:view extension:EditorSyntaxExtension(fileURL) language:nil syntaxHighlighting:YES identifier:nullptr];
-	NSString *lastLine = [NSString stringWithFormat:@"%ld", [view message:SCI_GETLINECOUNT]];
-	const auto width = [view message:SCI_TEXTWIDTH wParam:STYLE_LINENUMBER lParam:reinterpret_cast<sptr_t>(lastLine.UTF8String)];
-	[view message:SCI_SETMARGINWIDTHN wParam:0 lParam:MAX(32, width + 10)];
+	[view message:SCI_SETMARGINWIDTHN wParam:0 lParam:EditorLineNumberMarginWidth(view)];
 	[view message:SCI_SETCARETLINEVISIBLE wParam:0];
 	[view message:SCI_SETREADONLY wParam:1];
 	return YES;

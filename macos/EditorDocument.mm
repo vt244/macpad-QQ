@@ -1893,6 +1893,17 @@ static void ApplyEditorGuides(ScintillaView *view)
 	}
 }
 
+static void RefreshLineNumberMargin(ScintillaView *view)
+{
+	const auto current = [view message:SCI_GETMARGINWIDTHN wParam:0];
+	if (current > 0)
+	{
+		const auto width = EditorLineNumberMarginWidth(view);
+		if (width != current)
+			[view message:SCI_SETMARGINWIDTHN wParam:0 lParam:width];
+	}
+}
+
 static void ApplyPreferencesToView(ScintillaView *view)
 {
 	EditorResources *resources = EditorResources.shared;
@@ -1900,7 +1911,7 @@ static void ApplyPreferencesToView(ScintillaView *view)
 	[view message:SCI_SETTABWIDTH wParam:MIN(32, MAX(1, [[resources setting:@"tabWidth" fallback:@4] integerValue]))];
 	[view message:SCI_SETUSETABS wParam:!enabled(@"insertSpaces", NO)];
 	[view message:SCI_SETWRAPMODE wParam:enabled(@"wordWrap", NO) ? SC_WRAP_WORD : SC_WRAP_NONE];
-	[view message:SCI_SETMARGINWIDTHN wParam:0 lParam:enabled(@"lineNumbers", YES) ? 32 : 0];
+	[view message:SCI_SETMARGINWIDTHN wParam:0 lParam:enabled(@"lineNumbers", YES) ? EditorLineNumberMarginWidth(view) : 0];
 	[view message:SCI_SETMARGINWIDTHN wParam:1 lParam:enabled(@"bookmarkMargin", YES) ? 16 : 0];
 	[view message:SCI_SETWRAPVISUALFLAGS wParam:enabled(@"showWrapSymbol", NO) ? SC_WRAPVISUALFLAG_END : SC_WRAPVISUALFLAG_NONE];
 	[view message:SCI_SETENDATLASTLINE wParam:!enabled(@"scrollBeyondLastLine", NO)];
@@ -2939,11 +2950,13 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		syntaxHighlighting:!large identifier:&identifier];
 	_languageIdentifier = identifier;
 	[_editor message:SCI_SETMARGINWIDTHN wParam:2 lParam:[_editor message:SCI_GETLEXER] <= SCLEX_NULL ? 0 : 14];
+	RefreshLineNumberMargin(_editor);
 	if (_clone)
 	{
 		[EditorResources.shared configure:_clone extension:extension language:_languageOverride
 			syntaxHighlighting:!large identifier:nullptr];
 		[_clone message:SCI_SETMARGINWIDTHN wParam:2 lParam:[_clone message:SCI_GETLEXER] <= SCLEX_NULL ? 0 : 14];
+		RefreshLineNumberMargin(_clone);
 	}
 	ApplyEditorGuides(_editor);
 	if (_clone)
@@ -3513,6 +3526,8 @@ static void ApplyPreferencesToView(ScintillaView *view)
 		eolMode = endings[std::clamp<NSInteger>(choice, 0, 2)];
 	}
 	[_editor message:SCI_SETEOLMODE wParam:eolMode];
+	RefreshLineNumberMargin(_editor);
+	RefreshLineNumberMargin(_clone);
 	_loading = NO;
 	_loadedUTF8 = nil;
 	[self updateStatus];
@@ -3831,6 +3846,11 @@ static void HighlightPair(ScintillaView *view, bool enabled)
 			NotifyPlugins(self, MACPAD_DOCUMENT_ACTIVATED);
 			break;
 		case SCN_MODIFIED:
+			if (notification->linesAdded)
+			{
+				RefreshLineNumberMargin(_editor);
+				RefreshLineNumberMargin(_clone);
+			}
 			if (_selectionStart && notification->position < *_selectionStart)
 			{
 				if (notification->modificationType & SC_MOD_INSERTTEXT)
@@ -3873,6 +3893,7 @@ static void HighlightPair(ScintillaView *view, bool enabled)
 			[_chrome refreshToolbar];
 			break;
 		case SCN_ZOOM:
+			RefreshLineNumberMargin(view);
 			[(EditorDocumentController *)NSDocumentController.sharedDocumentController syncZoomFromDocument:self];
 			break;
 		case SCN_UPDATEUI:
@@ -4448,7 +4469,8 @@ static sptr_t DeleteWhitespace(ScintillaView *editor, NSString *pattern, sptr_t 
 
 - (IBAction)toggleLineNumbers:(id)sender
 {
-	[self.editor message:SCI_SETMARGINWIDTHN wParam:0 lParam:[self.editor message:SCI_GETMARGINWIDTHN wParam:0] ? 0 : 32];
+	ScintillaView *view = self.editor;
+	[view message:SCI_SETMARGINWIDTHN wParam:0 lParam:[view message:SCI_GETMARGINWIDTHN wParam:0] ? 0 : EditorLineNumberMarginWidth(view)];
 }
 
 - (IBAction)toggleAlwaysOnTop:(id)sender
