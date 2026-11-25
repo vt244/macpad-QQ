@@ -39,3 +39,10 @@ target_compile_options(macpad PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
 target_include_directories(macpad PRIVATE "${root}/PowerEditor/src/pugixml" "${root}/PowerEditor/src/uchardet" "${sci}/src")
 target_link_libraries(macpad PRIVATE editor "-framework Cocoa" "-framework QuartzCore" "-framework CoreText"
 	"-framework CoreGraphics" "-framework UniformTypeIdentifiers")
+
+add_executable(TextPreview quick-look/TextPreview.mm EditorPreview.mm EditorResources.mm EditorText.mm ${detector_sources})
+target_compile_options(TextPreview PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc;-fapplication-extension>)
+target_include_directories(TextPreview PRIVATE "${root}/PowerEditor/src/pugixml" "${root}/PowerEditor/src/uchardet")
+target_link_options(TextPreview PRIVATE "-Wl,-e,_NSExtensionMain" "-Wl,-application_extension")
+target_link_libraries(TextPreview PRIVATE editor "-framework Cocoa" "-framework QuickLookUI" "-framework QuartzCore"
+	"-framework CoreText" "-framework CoreGraphics")

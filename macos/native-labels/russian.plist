@@ -3,6 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>native-text:Select one or more files in Finder.</key><string>Выберите один или несколько файлов в Finder.</string>
+	<key>native-text:Select one file in Finder.</key><string>Выберите один файл в Finder.</string>
 	<key>native-text:Leading zeros</key><string>Ведущие нули</string>
 	<key>native-text:Treat each line as a separate string</key><string>Обрабатывать каждую строку отдельно</string>
 	<key>pref-eolRepresentation</key><string>Обозначение конца строки</string>

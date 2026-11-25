@@ -310,6 +310,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 
 @implementation EditorResources
 {
+	NSBundle *_bundle;
 	NSDictionary<NSString *, NSString *> *_labels;
 	NSDictionary<NSString *, NSString *> *_englishLabels;
 	NSDictionary<NSString *, NSString *> *_findLabels;
@@ -334,6 +335,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	self = [super init];
 	if (self)
 	{
+		_bundle = NSBundle.mainBundle;
 		NSFileManager *fm = NSFileManager.defaultManager;
 		NSString *override = NSProcessInfo.processInfo.environment[@"MACPAD_DATA_DIR"];
 		NSURL *support = [fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
@@ -348,7 +350,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 				_profile = legacyProfile;
 		}
 		LoadXML(_toolbar, [_profile URLByAppendingPathComponent:@"toolbarButtonsConf.xml"]);
-		LoadXML(_languages, [NSBundle.mainBundle URLForResource:@"langs.model" withExtension:@"xml"]);
+		LoadXML(_languages, [_bundle URLForResource:@"langs.model" withExtension:@"xml"]);
 		NSMutableDictionary *englishLabels = [NSMutableDictionary dictionary];
 		if (LoadXML(_english, [NSBundle.mainBundle URLForResource:@"english" withExtension:@"xml" subdirectory:@"localization"]))
 			CollectLabels(TranslationRoot(_english).child("Menu").child("Main"), englishLabels);
@@ -364,10 +366,25 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	return self;
 }
 
+- (instancetype)initForPreviewWithBundle:(NSBundle *)bundle
+{
+	self = [super init];
+	if (self)
+	{
+		_bundle = bundle;
+		_settings = [NSMutableDictionary dictionary];
+		LoadXML(_languages, [_bundle URLForResource:@"langs.model" withExtension:@"xml"]);
+		[self loadTheme:nil];
+		[self loadUserLanguages];
+	}
+	return self;
+}
+
 - (NSDictionary<NSString *, NSURL *> *)catalog:(NSString *)folder
 {
 	NSMutableDictionary<NSString *, NSURL *> *files = [NSMutableDictionary dictionary];
-	for (NSURL *base in @[NSBundle.mainBundle.resourceURL, _profile])
+	NSURL *resources = _bundle.resourceURL;
+	for (NSURL *base in _profile ? @[resources, _profile] : (resources ? @[resources] : @[]))
 	{
 		NSURL *directory = [base URLByAppendingPathComponent:folder isDirectory:YES];
 		NSArray<NSURL *> *urls = [NSFileManager.defaultManager contentsOfDirectoryAtURL:directory
@@ -398,7 +415,9 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	_userLanguages.reset();
 	_userLanguageFiles = [NSMutableDictionary dictionary];
 	auto root = _userLanguages.append_child("NotepadPlus");
-	NSMutableArray<NSURL *> *files = [NSMutableArray arrayWithObject:[_profile URLByAppendingPathComponent:@"userDefineLang.xml"]];
+	NSMutableArray<NSURL *> *files = [NSMutableArray array];
+	if (_profile)
+		[files addObject:[_profile URLByAppendingPathComponent:@"userDefineLang.xml"]];
 	NSDictionary *catalog = [self catalog:@"userDefineLangs"];
 	NSArray *filenames = [catalog.allKeys sortedArrayUsingSelector:@selector(compare:)];
 	for (NSString *file in filenames)
@@ -429,7 +448,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 
 - (BOOL)isProfileLanguageFile:(NSURL *)url
 {
-	if (!url.isFileURL)
+	if (!_profile || !url.isFileURL)
 		return NO;
 	NSString *profile = _profile.URLByResolvingSymlinksInPath.URLByStandardizingPath.path;
 	NSString *file = url.URLByResolvingSymlinksInPath.URLByStandardizingPath.path;
@@ -627,8 +646,9 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	if (!LoadXML(_theme, url) || !_theme.child("NotepadPlus").child("GlobalStyles"))
 	{
 		_selectedTheme = nil;
-		LoadXML(_theme, [NSBundle.mainBundle URLForResource:@"stylers.model" withExtension:@"xml"]);
+		LoadXML(_theme, [_bundle URLForResource:@"stylers.model" withExtension:@"xml"]);
 	}
+
 }
 
 - (void)loadTranslation:(NSURL *)url

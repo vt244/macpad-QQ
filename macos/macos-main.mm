@@ -1608,7 +1608,7 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 	[self openDocuments:urls];
 }
 
-- (void)openFinderSelection:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)error
+static NSArray<NSURL *> *FinderFiles(NSPasteboard *pasteboard)
 {
 	NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[NSURL.class]
 		options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
@@ -1620,6 +1620,12 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 			regular.boolValue)
 			[files addObject:url.URLByStandardizingPath];
 	}
+	return files.array;
+}
+
+- (void)openFinderSelection:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)error
+{
+	NSArray<NSURL *> *files = FinderFiles(pasteboard);
 	if (!files.count)
 	{
 		if (error)
@@ -1627,7 +1633,7 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 		return;
 	}
 	[NSApp activateIgnoringOtherApps:YES];
-	[self openDocuments:files.array];
+	[self openDocuments:files];
 }
 
 static BOOL ShowTextPreview(NSURL *file, NSError **error)
@@ -1658,6 +1664,21 @@ void PreviewEditorFile(NSURL *fileURL)
 	NSError *error = nil;
 	if (!ShowTextPreview(fileURL, &error) && error)
 		[NSApp presentError:error];
+}
+
+- (void)previewFinderSelection:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)message
+{
+	NSArray<NSURL *> *files = FinderFiles(pasteboard);
+	if (files.count != 1)
+	{
+		if (message)
+			*message = EditorUIString(@"Select one file in Finder.");
+		return;
+	}
+	[NSApp activateIgnoringOtherApps:YES];
+	NSError *error = nil;
+	if (!ShowTextPreview(files.firstObject, &error) && message)
+		*message = error.localizedDescription;
 }
 
 - (void)openDocuments:(NSArray<NSURL *> *)urls
