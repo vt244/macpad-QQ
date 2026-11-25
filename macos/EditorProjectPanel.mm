@@ -2,6 +2,7 @@
 #import "EditorProjectPanel.h"
 #import "EditorResources.h"
 #import "EditorPanelChrome.h"
+#import "EditorPreview.h"
 
 #include "pugiconfig.hpp"
 #undef PUGIXML_CHARCONV_FLOAT
@@ -210,6 +211,17 @@ struct ProjectXMLWriter final : pugi::xml_writer
 - (NSMenu *)menuForEvent:(NSEvent *)event
 {
 	return self.menuForEntry([self itemAtRow:[self rowAtPoint:[self convertPoint:event.locationInWindow fromView:nil]]]);
+}
+- (void)keyDown:(NSEvent *)event
+{
+	if (IsEditorPreviewKey(event))
+	{
+		ProjectEntry *entry = [self itemAtRow:self.selectedRow];
+		if (entry.url && !event.isARepeat)
+			PreviewEditorFile(entry.url);
+		return;
+	}
+	[super keyDown:event];
 }
 @end
 

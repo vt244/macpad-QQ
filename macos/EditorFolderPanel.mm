@@ -3,6 +3,7 @@
 #import "EditorContextMenus.h"
 #import "EditorDocument.h"
 #import "EditorPanelChrome.h"
+#import "EditorPreview.h"
 #import "EditorResources.h"
 
 static BOOL URLFlag(NSURL *url, NSURLResourceKey key)
@@ -72,6 +73,13 @@ BOOL EditorIsWorkspaceDirectory(NSURL *url)
 
 - (void)keyDown:(NSEvent *)event
 {
+	if (IsEditorPreviewKey(event))
+	{
+		WorkspaceFile *file = [self itemAtRow:self.selectedRow];
+		if (file && !file.directory && !event.isARepeat)
+			PreviewEditorFile(file.url);
+		return;
+	}
 	if (event.keyCode == 36 || event.keyCode == 76)
 		[NSApp sendAction:self.doubleAction to:self.target from:self];
 	else

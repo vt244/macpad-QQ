@@ -328,10 +328,11 @@ static bool CheckFolderWorkspace(EditorDocumentController *controller, EditorDoc
 {
 	NSURL *folder = [test URLByAppendingPathComponent:@"workspace-fixture" isDirectory:YES];
 	NSURL *nested = [folder URLByAppendingPathComponent:@"nested" isDirectory:YES];
-	NSURL *file = [nested URLByAppendingPathComponent:@"example.txt"];
+	NSURL *file = [nested URLByAppendingPathComponent:@"example.csv"];
+	NSString *csv = @"name,value\r\nexample,\"a,b\"\r\n";
 	NSFileManager *files = NSFileManager.defaultManager;
 	if (!Check([files createDirectoryAtURL:nested withIntermediateDirectories:YES attributes:nil error:nullptr] &&
-		[@"workspace" writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:nullptr], "create a workspace source tree"))
+		[csv writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:nullptr], "create a workspace source tree"))
 		return false;
 	[controller addWorkspaceFolders:@[folder, folder]];
 	NSOutlineView *outline = (NSOutlineView *)ViewMatching(document.editor.window.contentView, ^BOOL(NSView *view) {
@@ -343,6 +344,20 @@ static bool CheckFolderWorkspace(EditorDocumentController *controller, EditorDoc
 	if (!Check(outline.numberOfRows == 3 &&
 		[[controller captureWorkspace][@"workspaceFolders"] isEqual:@[folder.path]], "expand the workspace tree and save its root"))
 		return false;
+	[outline selectRowIndexes:[NSIndexSet indexSetWithIndex:2] byExtendingSelection:NO];
+	[outline keyDown:[NSEvent keyEventWithType:NSEventTypeKeyDown location:NSZeroPoint modifierFlags:0 timestamp:0
+		windowNumber:outline.window.windowNumber context:nil characters:@" " charactersIgnoringModifiers:@" " isARepeat:NO keyCode:49]];
+	NSWindow *preview = nil;
+	for (NSWindow *window in NSApp.windows)
+		if (window.visible && [window.representedURL isEqual:file])
+			preview = window;
+	ScintillaView *content = (ScintillaView *)preview.contentView;
+	const BOOL displayed = [content.string isEqualToString:csv] && [content message:SCI_GETREADONLY] &&
+		[content message:SCI_GETMARGINTYPEN wParam:0] == SC_MARGIN_NUMBER &&
+		[content message:SCI_GETMARGINWIDTHN wParam:0] > 0 && ![controller documentForURL:file];
+	[preview close];
+	if (!Check(displayed, "preview raw CSV with line numbers on Space without opening a document"))
+		return false;
 	[controller toggleFolderWorkspace:nil];
 	return true;
 }
@@ -352,7 +367,7 @@ static bool CheckProjectWorkspace(EditorDocumentController *controller, EditorDo
 	NSURL *input = [test URLByAppendingPathComponent:@"project.xml"];
 	NSURL *exported = [test URLByAppendingPathComponent:@"exported-project.xml"];
 	NSString *xml = @"<NotepadPlus><Project name=\"Example\"><Folder name=\"Sources\">"
-		"<File name=\"workspace-fixture\\nested\\example.txt\"/><File name=\"X:\\other.txt\"/>"
+		"<File name=\"workspace-fixture\\nested\\example.csv\"/><File name=\"X:\\other.txt\"/>"
 		"</Folder></Project></NotepadPlus>";
 	EditorProjectWorkspace *workspace = [EditorProjectWorkspace new];
 	EditorProjectWorkspace *restored = [EditorProjectWorkspace new];

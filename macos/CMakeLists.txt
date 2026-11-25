@@ -31,7 +31,7 @@ add_executable(macpad macos-main.mm EditorDocument.mm EditorChrome.mm EditorReso
 	EditorText.mm EditorFileSearch.mm EditorSearchResultsView.mm EditorWorkspace.mm EditorMacros.mm EditorHash.mm EditorRun.mm
 	EditorDocumentList.mm EditorPanelChrome.mm EditorContextMenus.mm EditorDock.mm EditorFolderPanel.mm EditorProjectPanel.mm
 	EditorFunctionList.mm EditorDocumentMap.mm EditorInsertPanels.mm EditorIncrementalSearch.mm EditorEditActions.mm
-	EditorCompletion.mm EditorTabManager.mm EditorPrinting.mm EditorShortcuts.mm EditorSettings.mm EditorLaunchOptions.mm EditorPluginCatalog.mm)
+	EditorCompletion.mm EditorTabManager.mm EditorPrinting.mm EditorPreview.mm EditorShortcuts.mm EditorSettings.mm EditorLaunchOptions.mm EditorPluginCatalog.mm)
 file(GLOB detector_sources CONFIGURE_DEPENDS "${root}/PowerEditor/src/uchardet/*.cpp")
 target_sources(macpad PRIVATE ${detector_sources})
 set_target_properties(macpad PROPERTIES OUTPUT_NAME "macpadqq")
