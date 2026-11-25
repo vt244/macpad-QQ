@@ -3923,6 +3923,23 @@ static void HighlightPair(ScintillaView *view, bool enabled)
 	}
 }
 
+static NSArray<NSString *> *StatusPair(NSString *format, NSString *fallback, long first, long second)
+{
+	NSString *firstToken = @"$STR_REPLACE1$";
+	NSString *secondToken = @"$STR_REPLACE2$";
+	NSRange split = [format rangeOfString:firstToken];
+	NSRange end = [format rangeOfString:secondToken];
+	if (split.location == NSNotFound || end.location == NSNotFound || end.location < NSMaxRange(split))
+	{
+		format = fallback;
+		split = [format rangeOfString:firstToken];
+	}
+	NSString *firstField = [[format substringToIndex:split.location] stringByAppendingString:[@(first) stringValue]];
+	NSString *secondField = [[format substringFromIndex:NSMaxRange(split)]
+		stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+	return @[firstField, [secondField stringByReplacingOccurrencesOfString:secondToken withString:[@(second) stringValue]]];
+}
+
 - (void)updateStatus
 {
 	EditorDocumentController *controller = (EditorDocumentController *)NSDocumentController.sharedDocumentController;
@@ -3952,28 +3969,34 @@ static void HighlightPair(ScintillaView *view, bool enabled)
 	auto start = [self.editor message:SCI_GETSELECTIONSTART];
 	auto end = [self.editor message:SCI_GETSELECTIONEND];
 	EditorResources *resources = EditorResources.shared;
-	auto status = ^NSString *(NSString *key, NSString *fallback, long first, long second) {
-		NSString *text = [resources label:key fallback:fallback];
-		text = [text stringByReplacingOccurrencesOfString:@"$STR_REPLACE1$" withString:[@(first) stringValue]];
-		return [text stringByReplacingOccurrencesOfString:@"$STR_REPLACE2$" withString:[@(second) stringValue]];
+	auto status = ^NSArray<NSString *> *(NSString *key, NSString *fallback, long first, long second) {
+		return StatusPair([resources label:key fallback:fallback], fallback, first, second);
+	};
+	auto tip = ^NSString *(NSString *title, id value) {
+		return [NSString stringWithFormat:@"%@: %@", [resources text:title], value];
 	};
 	NSString *positionText = [[resources label:@"statusbar-Pos" fallback:@"Pos: "] stringByAppendingString:[@(position + 1) stringValue]];
+	NSString *positionTip = tip(@"Caret byte position", @(position + 1));
 	if (start != end)
 	{
 		auto selected = [self.editor message:SCI_COUNTCHARACTERS wParam:start lParam:end];
 		auto selectedLines = [self.editor message:SCI_LINEFROMPOSITION wParam:end - 1] -
 			[self.editor message:SCI_LINEFROMPOSITION wParam:start] + 1;
 		positionText = [[resources label:@"statusbar-Sel" fallback:@"Sel: "] stringByAppendingFormat:@"%ld | %ld", selected, selectedLines];
+		positionTip = [NSString stringWithFormat:@"%@\n%@", tip(@"Selected characters", @(selected)), tip(@"Selected lines", @(selectedLines))];
 	}
+	NSString *language = !_statusLanguage || [_statusLanguage isEqualToString:@"Normal text file"] ?
+		[resources label:@"status-normalText" fallback:@"Normal text file"] : _statusLanguage;
+	NSArray<NSString *> *counts = status(@"statusbar-length-lines", @"Length: $STR_REPLACE1$   Lines: $STR_REPLACE2$", length, lines);
+	NSArray<NSString *> *caret = status(@"statusbar-Ln-Col", @"Ln: $STR_REPLACE1$   Col: $STR_REPLACE2$", line + 1, column + 1);
+	const BOOL overwrite = [self.editor message:SCI_GETOVERTYPE] != 0;
 	[chrome setStatusFields:@[
-		!_statusLanguage || [_statusLanguage isEqualToString:@"Normal text file"] ?
-			[resources label:@"status-normalText" fallback:@"Normal text file"] : _statusLanguage,
-		status(@"statusbar-length-lines", @"Length: $STR_REPLACE1$   Lines: $STR_REPLACE2$", length, lines),
-		[status(@"statusbar-Ln-Col", @"Ln: $STR_REPLACE1$   Col: $STR_REPLACE2$", line + 1, column + 1)
-			stringByAppendingFormat:@"   %@", positionText],
-		ending,
-		encoding,
-		[self.editor message:SCI_GETOVERTYPE] ? @"OVR" : @"INS",
+		language, counts[0], counts[1], caret[0], caret[1], positionText, ending, encoding, overwrite ? @"OVR" : @"INS",
+	] toolTips:@[
+		tip(@"Syntax highlighting language", language), tip(@"Document length in bytes", @(length)), tip(@"Total line count", @(lines)),
+		tip(@"Current line", @(line + 1)), tip(@"Current column", @(column + 1)), positionTip,
+		tip(@"Line ending format", ending), tip(@"Character encoding", encoding),
+		tip(@"Typing mode", [resources text:overwrite ? @"Overwrite" : @"Insert"]),
 	]];
 }
 

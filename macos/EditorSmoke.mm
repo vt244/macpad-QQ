@@ -1333,6 +1333,46 @@ static bool CheckFinderService(NSURL *test, EditorDocumentController *controller
 	return Check(refused && opened, "open multiple local files through the Finder service and reject folders and non-file URLs");
 }
 
+static bool CheckStatusBar(NSURL *test, EditorDocumentController *controller)
+{
+	NSURL *file = [test URLByAppendingPathComponent:@"status-count.txt"];
+	NSString *source = [@"" stringByPaddingToLength:1234550 withString:@"123456789\n" startingAtIndex:0];
+	if (!Check([source writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:nullptr], "write a large line-count fixture"))
+		return false;
+	EditorDocument *document = [controller makeDocumentWithContentsOfURL:file ofType:controller.defaultType error:nullptr];
+	if (!Check(document != nil, "open the line-count fixture"))
+		return false;
+	[controller addDocument:document];
+	[document makeWindowControllers];
+	[document showWindows];
+	NSWindow *window = document.windowControllers.firstObject.window;
+	NSRect frame = window.frame;
+	frame.size.width = window.minSize.width;
+	[window setFrame:frame display:NO];
+	[document.editor message:SCI_DOCUMENTEND];
+	[document refreshLocalization];
+	[window.contentView layoutSubtreeIfNeeded];
+	NSMutableArray<NSTextField *> *fields = [NSMutableArray array];
+	for (NSView *view in [(NSStackView *)document.chrome.statusBar arrangedSubviews])
+		if ([view isKindOfClass:NSTextField.class])
+			[fields addObject:(NSTextField *)view];
+
+	NSTextField *lines = fields.count == 9 ? fields[2] : nil;
+	BOOL countFits = [lines.stringValue hasSuffix:@"123456"] && lines.frame.size.width >= lines.intrinsicContentSize.width - 1;
+	BOOL namesPresent = fields.count == 9;
+	for (NSTextField *field in fields)
+		namesPresent &= field.toolTip.length > 0 && field.frame.size.width > 0;
+	namesPresent &= [lines.toolTip isEqualToString:[NSString stringWithFormat:@"%@: 123456", EditorUIString(@"Total line count")]];
+	[document.editor message:SCI_SETSEL wParam:0 lParam:12];
+	[document refreshLocalization];
+	NSString *selectionTip = fields.count == 9 ? fields[5].toolTip : nil;
+	BOOL selectionNames = [selectionTip containsString:EditorUIString(@"Selected characters")] &&
+		[selectionTip containsString:EditorUIString(@"Selected lines")];
+	[document close];
+	return Check(countFits, "show the entire line count at minimum window width") &&
+		Check(namesPresent && selectionNames, "show full status field names and update the selection tooltip");
+}
+
 static bool CheckPreviewLanguages()
 {
 	if (!Check([EditorSyntaxExtension([NSURL fileURLWithPath:@"/SConstruct"]) isEqualToString:@"py"] &&
@@ -1895,7 +1935,8 @@ int RunSmokeTest(void)
 	if (!Check([workspace startAtDirectory:recoveryDirectory] && ![otherInstance startAtDirectory:recoveryDirectory],
 		"prevent another instance from overwriting the same recovery workspace"))
 		return 1;
-	if (!CheckExtendedPort(test, controller) || !CheckFinderService(test, controller) || !CheckPreviewLanguages())
+	if (!CheckExtendedPort(test, controller) || !CheckFinderService(test, controller) ||
+		!CheckPreviewLanguages() || !CheckStatusBar(test, controller))
 		return 1;
 	puts("Passed: toolbar XML, localized dialogs, shortcuts import, Windows path mappings, print-to-PDF and plugin ABI v3.");
 	puts("Passed: dockable panels, tab transfers and split rotation, editing commands, monitoring, search and history, settings, XML, macros, terminal options, Run, native plugins and catalog updates.");

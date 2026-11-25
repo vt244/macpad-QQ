@@ -89,6 +89,19 @@
 	<key>pref-reloadToEnd</key><string>Переходить в конец при перечитывании</string>
 	<key>pref-hideToolbar</key><string>Скрыть панель инструментов</string>
 	<key>pref-hideStatusBar</key><string>Скрыть строку состояния</string>
+	<key>native-text:Syntax highlighting language</key><string>Язык подсветки синтаксиса</string>
+	<key>native-text:Document length in bytes</key><string>Размер документа в байтах</string>
+	<key>native-text:Total line count</key><string>Общее количество строк</string>
+	<key>native-text:Current line</key><string>Текущая строка</string>
+	<key>native-text:Current column</key><string>Текущий столбец</string>
+	<key>native-text:Caret byte position</key><string>Позиция курсора в байтах</string>
+	<key>native-text:Selected characters</key><string>Количество выделенных символов</string>
+	<key>native-text:Selected lines</key><string>Количество выделенных строк</string>
+	<key>native-text:Line ending format</key><string>Формат конца строки</string>
+	<key>native-text:Character encoding</key><string>Кодировка символов</string>
+	<key>native-text:Typing mode</key><string>Режим ввода</string>
+	<key>native-text:Overwrite</key><string>Замена</string>
+	<key>native-text:Insert</key><string>Вставка</string>
 	<key>pref-hideTabBar</key><string>Скрыть панель вкладок</string>
 	<key>pref-tabCloseButtons</key><string>Показывать кнопки закрытия вкладок</string>
 	<key>pref-doubleClickClosesTab</key><string>Закрывать вкладку двойным щелчком</string>
