@@ -104,6 +104,31 @@ static void CollectSharedStrings(pugi::xml_node english, pugi::xml_node localize
 
 NSString *EditorUIString(NSString *english) { return [EditorResources.shared text:english]; }
 
+NSString *EditorSyntaxExtension(NSURL *fileURL)
+{
+	NSString *name = fileURL.lastPathComponent.lowercaseString;
+	static NSDictionary<NSString *, NSString *> *const namedFiles = @{
+		@"makefile": @"mak", @"gnumakefile": @"mak", @"cmakelists.txt": @"cmake",
+		@"sconstruct": @"py", @"sconscript": @"py", @"wscript": @"py",
+		@"rakefile": @"rb", @"vagrantfile": @"rb",
+		@"crontab": @"sh", @"pkgbuild": @"sh", @"apkbuild": @"sh"
+	};
+	NSString *namedExtension = name.length ? namedFiles[name] : nil;
+	if (namedExtension)
+		return namedExtension;
+	NSString *extension = fileURL.pathExtension.lowercaseString;
+	if (!extension.length && [name hasPrefix:@"."])
+		return [name substringFromIndex:1];
+	return extension ?: @"";
+}
+
+NSInteger EditorLineNumberMarginWidth(ScintillaView *view)
+{
+	NSString *lastLine = [NSString stringWithFormat:@"%ld", [view message:SCI_GETLINECOUNT]];
+	const auto width = [view message:SCI_TEXTWIDTH wParam:STYLE_LINENUMBER lParam:reinterpret_cast<sptr_t>(lastLine.UTF8String)];
+	return MAX(32, width + 10);
+}
+
 static std::optional<int> Color(pugi::xml_attribute attribute)
 {
 	std::string_view value = attribute.value();
@@ -292,6 +317,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 
 @implementation EditorResources
 {
+	NSBundle *_bundle;
 	NSDictionary<NSString *, NSString *> *_labels;
 	NSDictionary<NSString *, NSString *> *_englishLabels;
 	NSDictionary<NSString *, NSString *> *_findLabels;
@@ -316,6 +342,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	self = [super init];
 	if (self)
 	{
+		_bundle = NSBundle.mainBundle;
 		NSFileManager *fm = NSFileManager.defaultManager;
 		NSString *override = NSProcessInfo.processInfo.environment[@"MACPAD_DATA_DIR"];
 		NSURL *support = [fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSUserDomainMask].firstObject;
@@ -330,7 +357,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 				_profile = legacyProfile;
 		}
 		LoadXML(_toolbar, [_profile URLByAppendingPathComponent:@"toolbarButtonsConf.xml"]);
-		LoadXML(_languages, [NSBundle.mainBundle URLForResource:@"langs.model" withExtension:@"xml"]);
+		LoadXML(_languages, [_bundle URLForResource:@"langs.model" withExtension:@"xml"]);
 		NSMutableDictionary *englishLabels = [NSMutableDictionary dictionary];
 		if (LoadXML(_english, [NSBundle.mainBundle URLForResource:@"english" withExtension:@"xml" subdirectory:@"localization"]))
 			CollectLabels(TranslationRoot(_english).child("Menu").child("Main"), englishLabels);
@@ -346,10 +373,25 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	return self;
 }
 
+- (instancetype)initForPreviewWithBundle:(NSBundle *)bundle
+{
+	self = [super init];
+	if (self)
+	{
+		_bundle = bundle;
+		_settings = [NSMutableDictionary dictionary];
+		LoadXML(_languages, [_bundle URLForResource:@"langs.model" withExtension:@"xml"]);
+		[self loadTheme:nil];
+		[self loadUserLanguages];
+	}
+	return self;
+}
+
 - (NSDictionary<NSString *, NSURL *> *)catalog:(NSString *)folder
 {
 	NSMutableDictionary<NSString *, NSURL *> *files = [NSMutableDictionary dictionary];
-	for (NSURL *base in @[NSBundle.mainBundle.resourceURL, _profile])
+	NSURL *resources = _bundle.resourceURL;
+	for (NSURL *base in _profile ? @[resources, _profile] : (resources ? @[resources] : @[]))
 	{
 		NSURL *directory = [base URLByAppendingPathComponent:folder isDirectory:YES];
 		NSArray<NSURL *> *urls = [NSFileManager.defaultManager contentsOfDirectoryAtURL:directory
@@ -380,7 +422,9 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	_userLanguages.reset();
 	_userLanguageFiles = [NSMutableDictionary dictionary];
 	auto root = _userLanguages.append_child("NotepadPlus");
-	NSMutableArray<NSURL *> *files = [NSMutableArray arrayWithObject:[_profile URLByAppendingPathComponent:@"userDefineLang.xml"]];
+	NSMutableArray<NSURL *> *files = [NSMutableArray array];
+	if (_profile)
+		[files addObject:[_profile URLByAppendingPathComponent:@"userDefineLang.xml"]];
 	NSDictionary *catalog = [self catalog:@"userDefineLangs"];
 	NSArray *filenames = [catalog.allKeys sortedArrayUsingSelector:@selector(compare:)];
 	for (NSString *file in filenames)
@@ -411,7 +455,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 
 - (BOOL)isProfileLanguageFile:(NSURL *)url
 {
-	if (!url.isFileURL)
+	if (!_profile || !url.isFileURL)
 		return NO;
 	NSString *profile = _profile.URLByResolvingSymlinksInPath.URLByStandardizingPath.path;
 	NSString *file = url.URLByResolvingSymlinksInPath.URLByStandardizingPath.path;
@@ -609,7 +653,17 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	if (!LoadXML(_theme, url) || !_theme.child("NotepadPlus").child("GlobalStyles"))
 	{
 		_selectedTheme = nil;
-		LoadXML(_theme, [NSBundle.mainBundle URLForResource:@"stylers.model" withExtension:@"xml"]);
+		LoadXML(_theme, [_bundle URLForResource:@"stylers.model" withExtension:@"xml"]);
+	}
+	NSURL *bundledThemes = [_bundle.resourceURL URLByAppendingPathComponent:@"themes" isDirectory:YES];
+	if (!_selectedTheme || [bundledThemes.URLByStandardizingPath.path
+		isEqualToString:_selectedTheme.URLByDeletingLastPathComponent.URLByStandardizingPath.path])
+	{
+		auto size = _theme.child("NotepadPlus").child("GlobalStyles")
+			.find_child_by_attribute("WidgetStyle", "styleID", "32").attribute("fontSize");
+		const int points = size.as_int();
+		if (points > 0 && points <= 96)
+			size.set_value((points * 3 + 1) / 2);
 	}
 }
 
@@ -1345,7 +1399,7 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 				overrides |= 1U << i;
 	[view message:SCI_STYLERESETDEFAULT];
 	[view setStringProperty:SCI_STYLESETFONT parameter:STYLE_DEFAULT value:@"Menlo"];
-	[view message:SCI_STYLESETSIZE wParam:STYLE_DEFAULT lParam:12];
+	[view message:SCI_STYLESETSIZE wParam:STYLE_DEFAULT lParam:18];
 	ApplyStyle(view, STYLE_DEFAULT, widgets.find_child_by_attribute("WidgetStyle", "styleID", "32"), overrideStyle, overrides);
 	[view message:SCI_STYLECLEARALL];
 	for (auto style : widgets.children("WidgetStyle"))
@@ -1457,14 +1511,27 @@ static void ConfigureUDL(ScintillaView *view, pugi::xml_node language, pugi::xml
 	if (identifier)
 		*identifier = name.length ? name : @"normal";
 	if (!lexerStyles && name.length)
-		lexerStyles = root.child("LexerStyles").find_child_by_attribute("LexerType", "name", name.UTF8String);
+	{
+		NSString *styleName = [name isEqualToString:@"json5"] ? @"json" : ([name isEqualToString:@"jsp"] ? @"html" : name);
+		lexerStyles = root.child("LexerStyles").find_child_by_attribute("LexerType", "name", styleName.UTF8String);
+	}
 	NSDictionary *aliases = @{@"c": @"cpp", @"cs": @"cpp", @"java": @"cpp", @"javascript": @"cpp", @"javascript.js": @"cpp",
 		@"rc": @"cpp", @"objc": @"cpp", @"go": @"cpp", @"php": @"hypertext", @"html": @"hypertext", @"sh": @"bash",
-		@"batch": @"batch", @"tex": @"latex", @"js": @"cpp", @"typescript": @"cpp", @"shell": @"bash"};
+		@"tex": @"latex", @"js": @"cpp", @"typescript": @"cpp", @"shell": @"bash",
+		@"actionscript": @"cpp", @"asp": @"hypertext", @"autoit": @"au3", @"baanc": @"baan", @"cobol": @"COBOL",
+		@"fortran77": @"f77", @"ini": @"props", @"json5": @"json", @"jsp": @"hypertext", @"postscript": @"ps",
+		@"scheme": @"lisp", @"swift": @"cpp"};
 	NSString *lexerName = aliases[name] ?: name;
 	Scintilla::ILexer5 *lexer = highlight && lexerName.length ? CreateLexer(lexerName.UTF8String) : nullptr;
 	[view message:SCI_SETILEXER wParam:0 lParam:reinterpret_cast<sptr_t>(lexer)];
 	SetProperty(view, "fold", @"1");
+	if ([lexerName isEqualToString:@"json"])
+	{
+		SetProperty(view, "lexer.json.escape.sequence", @"1");
+		SetProperty(view, "lexer.json.allow.comments", [name isEqualToString:@"json5"] ? @"1" : @"0");
+		if ([name isEqualToString:@"json5"])
+			language = _languages.child("NotepadPlus").child("Languages").find_child_by_attribute("Language", "name", "json");
+	}
 	NSArray<NSString *> *keywords = @[@"instre1", @"instre2", @"type1", @"type2", @"type3", @"type4", @"type5", @"type6", @"type7", @"type8"];
 	for (NSUInteger i = 0; i < keywords.count; ++i)
 	{

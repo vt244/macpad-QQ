@@ -31,7 +31,7 @@ add_executable(macpad macos-main.mm EditorDocument.mm EditorChrome.mm EditorReso
 	EditorText.mm EditorFileSearch.mm EditorSearchResultsView.mm EditorWorkspace.mm EditorMacros.mm EditorHash.mm EditorRun.mm
 	EditorDocumentList.mm EditorPanelChrome.mm EditorContextMenus.mm EditorDock.mm EditorFolderPanel.mm EditorProjectPanel.mm
 	EditorFunctionList.mm EditorDocumentMap.mm EditorInsertPanels.mm EditorIncrementalSearch.mm EditorEditActions.mm
-	EditorCompletion.mm EditorTabManager.mm EditorPrinting.mm EditorShortcuts.mm EditorSettings.mm EditorLaunchOptions.mm EditorPluginCatalog.mm)
+	EditorCompletion.mm EditorTabManager.mm EditorPrinting.mm EditorPreview.mm EditorShortcuts.mm EditorSettings.mm EditorLaunchOptions.mm EditorPluginCatalog.mm)
 file(GLOB detector_sources CONFIGURE_DEPENDS "${root}/PowerEditor/src/uchardet/*.cpp")
 target_sources(macpad PRIVATE ${detector_sources})
 set_target_properties(macpad PROPERTIES OUTPUT_NAME "macpadqq")
@@ -39,3 +39,10 @@ target_compile_options(macpad PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc>)
 target_include_directories(macpad PRIVATE "${root}/PowerEditor/src/pugixml" "${root}/PowerEditor/src/uchardet" "${sci}/src")
 target_link_libraries(macpad PRIVATE editor "-framework Cocoa" "-framework QuartzCore" "-framework CoreText"
 	"-framework CoreGraphics" "-framework UniformTypeIdentifiers")
+
+add_executable(TextPreview quick-look/TextPreview.mm EditorPreview.mm EditorResources.mm EditorText.mm ${detector_sources})
+target_compile_options(TextPreview PRIVATE $<$<COMPILE_LANGUAGE:OBJCXX>:-fobjc-arc;-fapplication-extension>)
+target_include_directories(TextPreview PRIVATE "${root}/PowerEditor/src/pugixml" "${root}/PowerEditor/src/uchardet")
+target_link_options(TextPreview PRIVATE "-Wl,-e,_NSExtensionMain" "-Wl,-application_extension")
+target_link_libraries(TextPreview PRIVATE editor "-framework Cocoa" "-framework QuickLookUI" "-framework QuartzCore"
+	"-framework CoreText" "-framework CoreGraphics")

@@ -19,7 +19,7 @@ body:
     id: environment
     attributes:
       label: macpadqq version, OS version, and architecture
-      placeholder: macpadqq 0.2-beta, macOS 15, Apple silicon
+      placeholder: macpadqq 0.3-beta, macOS 15, Apple silicon
     validations:
       required: true
   - type: textarea

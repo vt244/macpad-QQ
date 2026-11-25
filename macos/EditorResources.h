@@ -3,6 +3,8 @@
 
 @class ScintillaView;
 NSString *EditorUIString(NSString *english);
+NSString *EditorSyntaxExtension(NSURL *fileURL);
+NSInteger EditorLineNumberMarginWidth(ScintillaView *view);
 
 @interface EditorResources : NSObject
 @property(nonatomic, readonly) NSURL *profile;
@@ -12,6 +14,7 @@ NSString *EditorUIString(NSString *english);
 @property(nonatomic, readonly) NSURL *selectedTranslation;
 @property(nonatomic, readonly) BOOL usesDarkColors;
 + (instancetype)shared;
+- (instancetype)initForPreviewWithBundle:(NSBundle *)bundle;
 - (NSString *)label:(NSString *)identifier fallback:(NSString *)fallback;
 - (NSString *)text:(NSString *)english;
 - (NSString *)englishMenuLabel:(NSString *)identifier;

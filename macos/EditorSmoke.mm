@@ -328,10 +328,11 @@ static bool CheckFolderWorkspace(EditorDocumentController *controller, EditorDoc
 {
 	NSURL *folder = [test URLByAppendingPathComponent:@"workspace-fixture" isDirectory:YES];
 	NSURL *nested = [folder URLByAppendingPathComponent:@"nested" isDirectory:YES];
-	NSURL *file = [nested URLByAppendingPathComponent:@"example.txt"];
+	NSURL *file = [nested URLByAppendingPathComponent:@"example.csv"];
+	NSString *csv = @"name,value\r\nexample,\"a,b\"\r\n";
 	NSFileManager *files = NSFileManager.defaultManager;
 	if (!Check([files createDirectoryAtURL:nested withIntermediateDirectories:YES attributes:nil error:nullptr] &&
-		[@"workspace" writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:nullptr], "create a workspace source tree"))
+		[csv writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:nullptr], "create a workspace source tree"))
 		return false;
 	[controller addWorkspaceFolders:@[folder, folder]];
 	NSOutlineView *outline = (NSOutlineView *)ViewMatching(document.editor.window.contentView, ^BOOL(NSView *view) {
@@ -343,6 +344,29 @@ static bool CheckFolderWorkspace(EditorDocumentController *controller, EditorDoc
 	if (!Check(outline.numberOfRows == 3 &&
 		[[controller captureWorkspace][@"workspaceFolders"] isEqual:@[folder.path]], "expand the workspace tree and save its root"))
 		return false;
+	EditorResources *resources = EditorResources.shared;
+	NSURL *previousTheme = resources.selectedTheme;
+	[resources chooseTheme:nil];
+	[document applyTheme];
+	[outline selectRowIndexes:[NSIndexSet indexSetWithIndex:2] byExtendingSelection:NO];
+	[outline keyDown:[NSEvent keyEventWithType:NSEventTypeKeyDown location:NSZeroPoint modifierFlags:0 timestamp:0
+		windowNumber:outline.window.windowNumber context:nil characters:@" " charactersIgnoringModifiers:@" " isARepeat:NO keyCode:49]];
+	NSWindow *preview = nil;
+	for (NSWindow *window in NSApp.windows)
+		if (window.visible && [window.representedURL isEqual:file])
+			preview = window;
+	ScintillaView *content = (ScintillaView *)preview.contentView;
+	const BOOL displayed = [content.string isEqualToString:csv] && [content message:SCI_GETREADONLY] &&
+		[content message:SCI_GETMARGINTYPEN wParam:0] == SC_MARGIN_NUMBER &&
+		[content message:SCI_GETMARGINWIDTHN wParam:0] > 0 && ![controller documentForURL:file];
+	const BOOL defaultSize = [content message:SCI_STYLEGETSIZE wParam:STYLE_DEFAULT] == 15 &&
+		[document.editor message:SCI_STYLEGETSIZE wParam:STYLE_DEFAULT] == 15;
+	[preview close];
+	[resources chooseTheme:previousTheme];
+	[document applyTheme];
+	if (!Check(displayed, "preview raw CSV with line numbers on Space without opening a document") ||
+		!Check(defaultSize, "use the bundled 15 point font in the editor and preview"))
+		return false;
 	[controller toggleFolderWorkspace:nil];
 	return true;
 }
@@ -352,7 +376,7 @@ static bool CheckProjectWorkspace(EditorDocumentController *controller, EditorDo
 	NSURL *input = [test URLByAppendingPathComponent:@"project.xml"];
 	NSURL *exported = [test URLByAppendingPathComponent:@"exported-project.xml"];
 	NSString *xml = @"<NotepadPlus><Project name=\"Example\"><Folder name=\"Sources\">"
-		"<File name=\"workspace-fixture\\nested\\example.txt\"/><File name=\"X:\\other.txt\"/>"
+		"<File name=\"workspace-fixture\\nested\\example.csv\"/><File name=\"X:\\other.txt\"/>"
 		"</Folder></Project></NotepadPlus>";
 	EditorProjectWorkspace *workspace = [EditorProjectWorkspace new];
 	EditorProjectWorkspace *restored = [EditorProjectWorkspace new];
@@ -1309,6 +1333,75 @@ static bool CheckFinderService(NSURL *test, EditorDocumentController *controller
 	return Check(refused && opened, "open multiple local files through the Finder service and reject folders and non-file URLs");
 }
 
+static bool CheckStatusBar(NSURL *test, EditorDocumentController *controller)
+{
+	NSURL *file = [test URLByAppendingPathComponent:@"status-count.txt"];
+	NSString *source = [@"" stringByPaddingToLength:1234550 withString:@"123456789\n" startingAtIndex:0];
+	if (!Check([source writeToURL:file atomically:YES encoding:NSUTF8StringEncoding error:nullptr], "write a large line-count fixture"))
+		return false;
+	EditorDocument *document = [controller makeDocumentWithContentsOfURL:file ofType:controller.defaultType error:nullptr];
+	if (!Check(document != nil, "open the line-count fixture"))
+		return false;
+	[controller addDocument:document];
+	[document makeWindowControllers];
+	[document showWindows];
+	NSWindow *window = document.windowControllers.firstObject.window;
+	NSRect frame = window.frame;
+	frame.size.width = window.minSize.width;
+	[window setFrame:frame display:NO];
+	[document.editor message:SCI_DOCUMENTEND];
+	[document refreshLocalization];
+	[window.contentView layoutSubtreeIfNeeded];
+	NSMutableArray<NSTextField *> *fields = [NSMutableArray array];
+	for (NSView *view in [(NSStackView *)document.chrome.statusBar arrangedSubviews])
+		if ([view isKindOfClass:NSTextField.class])
+			[fields addObject:(NSTextField *)view];
+
+	NSTextField *lines = fields.count == 9 ? fields[2] : nil;
+	BOOL countFits = [lines.stringValue hasSuffix:@"123456"] && lines.frame.size.width >= lines.intrinsicContentSize.width - 1;
+	BOOL namesPresent = fields.count == 9;
+	for (NSTextField *field in fields)
+		namesPresent &= field.toolTip.length > 0 && field.frame.size.width > 0;
+	namesPresent &= [lines.toolTip isEqualToString:[NSString stringWithFormat:@"%@: 123456", EditorUIString(@"Total line count")]];
+	[document.editor message:SCI_SETSEL wParam:0 lParam:12];
+	[document refreshLocalization];
+	NSString *selectionTip = fields.count == 9 ? fields[5].toolTip : nil;
+	BOOL selectionNames = [selectionTip containsString:EditorUIString(@"Selected characters")] &&
+		[selectionTip containsString:EditorUIString(@"Selected lines")];
+	[document close];
+	return Check(countFits, "show the entire line count at minimum window width") &&
+		Check(namesPresent && selectionNames, "show full status field names and update the selection tooltip");
+}
+
+static bool CheckPreviewLanguages()
+{
+	if (!Check([EditorSyntaxExtension([NSURL fileURLWithPath:@"/SConstruct"]) isEqualToString:@"py"] &&
+		[EditorSyntaxExtension([NSURL fileURLWithPath:@"/Vagrantfile"]) isEqualToString:@"rb"] &&
+		[EditorSyntaxExtension([NSURL fileURLWithPath:@"/APKBUILD"]) isEqualToString:@"sh"],
+		"recognize documented filenames without extensions"))
+		return false;
+	NSURL *model = [NSBundle.mainBundle URLForResource:@"langs.model" withExtension:@"xml"];
+	NSXMLDocument *xml = [[NSXMLDocument alloc] initWithContentsOfURL:model options:NSXMLNodeLoadExternalEntitiesNever error:nullptr];
+	NSArray<NSXMLNode *> *languages = [xml nodesForXPath:@"/NotepadPlus/Languages/Language/@name" error:nullptr];
+	if (!Check(languages.count > 0, "load the bundled syntax model for preview"))
+		return false;
+	ScintillaView *view = [[ScintillaView alloc] initWithFrame:NSMakeRect(0, 0, 300, 150)];
+	NSSet *plain = [NSSet setWithArray:@[@"normal", @"nfo", @"searchResult"]];
+	for (NSXMLNode *language in languages)
+	{
+		NSString *name = language.stringValue;
+		if ([plain containsObject:name])
+			continue;
+		[EditorResources.shared configure:view extension:@"" language:name syntaxHighlighting:YES identifier:nullptr];
+		if ([view message:SCI_GETLEXER] <= SCLEX_NULL)
+		{
+			fprintf(stderr, "No lexer for bundled syntax: %s\n", name.UTF8String);
+			return false;
+		}
+	}
+	return true;
+}
+
 int RunSmokeTest(void)
 {
 	NSString *directory = NSProcessInfo.processInfo.environment[@"MACPAD_DATA_DIR"];
@@ -1604,7 +1697,8 @@ int RunSmokeTest(void)
 			[editor message:SCI_GETLEXER], [editor message:SCI_GETSTYLEAT wParam:0]);
 	if (!Check([[document dataOfType:controller.defaultType error:&error] isEqualToData:encoded], "round trip UTF-16 BOM and CRLF") ||
 		!Check([editor message:SCI_GETEOLMODE] == SC_EOL_CRLF, "detect CRLF for new lines") ||
-		!Check([editor message:SCI_STYLEGETBACK wParam:STYLE_DEFAULT] == 0x563412, "apply imported XML theme") ||
+		!Check([editor message:SCI_STYLEGETBACK wParam:STYLE_DEFAULT] == 0x563412 &&
+			[editor message:SCI_STYLEGETSIZE wParam:STYLE_DEFAULT] == 10, "preserve the imported XML theme's explicit size") ||
 		!Check([editor message:SCI_GETLEXER] == SCLEX_PYTHON && [editor message:SCI_GETSTYLEAT wParam:0] == SCE_P_WORD,
 			"highlight a Python keyword with Lexilla"))
 		return 1;
@@ -1841,7 +1935,8 @@ int RunSmokeTest(void)
 	if (!Check([workspace startAtDirectory:recoveryDirectory] && ![otherInstance startAtDirectory:recoveryDirectory],
 		"prevent another instance from overwriting the same recovery workspace"))
 		return 1;
-	if (!CheckExtendedPort(test, controller) || !CheckFinderService(test, controller))
+	if (!CheckExtendedPort(test, controller) || !CheckFinderService(test, controller) ||
+		!CheckPreviewLanguages() || !CheckStatusBar(test, controller))
 		return 1;
 	puts("Passed: toolbar XML, localized dialogs, shortcuts import, Windows path mappings, print-to-PDF and plugin ABI v3.");
 	puts("Passed: dockable panels, tab transfers and split rotation, editing commands, monitoring, search and history, settings, XML, macros, terminal options, Run, native plugins and catalog updates.");

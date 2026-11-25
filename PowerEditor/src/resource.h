@@ -19,9 +19,9 @@
 
 //************ macpadqq version ***************************
 
-#define NOTEPAD_PLUS_VERSION L"macpadqq v0.2-beta"
-#define VERSION_PRODUCT_VALUE L"0.2-beta\0"
-#define VERSION_DIGITALVALUE 0, 2, 0, 0
+#define NOTEPAD_PLUS_VERSION L"macpadqq v0.3-beta"
+#define VERSION_PRODUCT_VALUE L"0.3-beta\0"
+#define VERSION_DIGITALVALUE 0, 3, 0, 0
 
 // Upstream compatibility versions for Windows plugin checks, API and updater.
 #define VERSION_NPP_COMPATIBILITY_VALUE L"8.9.9.1"
@@ -763,6 +763,7 @@
 	#define NPPM_INTERNAL_INVISIBLECHARSINFINDWHAT      (NOTEPADPLUS_USER_INTERNAL + 112)
 	#define NPPM_INTERNAL_DISABLESELECTEDTEXTDRAGDROP   (NOTEPADPLUS_USER_INTERNAL + 113)
 	#define NPPM_INTERNAL_INCSEARCHBARPOSITION          (NOTEPADPLUS_USER_INTERNAL + 114)
+	#define NPPM_INTERNAL_REFRESHDOCLISTORDER           (NOTEPADPLUS_USER_INTERNAL + 115)
 
 
 // See Notepad_plus_msgs.h

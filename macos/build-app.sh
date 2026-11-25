@@ -69,8 +69,18 @@ cp scintilla/License.txt "$resources/licenses/Scintilla.txt"
 cp lexilla/License.txt "$resources/licenses/Lexilla.txt"
 cp PowerEditor/src/pugixml/LICENSE.md "$resources/licenses/pugixml.txt"
 
+preview="$app/Contents/PlugIns/TextPreview.appex"
+mkdir -p "$preview/Contents/MacOS"
+cp macos/quick-look/Info.plist "$preview/Contents/"
+cp '.tmp/native-build/TextPreview' "$preview/Contents/MacOS/"
+xcrun clang++ -fobjc-arc -framework Foundation \
+	macos/quick-look/ConfigureContentTypes.mm -o "$work/configure-preview"
+"$work/configure-preview" "$app/Contents/Info.plist" "$preview/Contents/Info.plist" \
+	"$resources/langs.model.xml" "$resources/stylers.model.xml" "$resources"/themes/*.xml "$resources"/userDefineLangs/*.xml
+/usr/bin/codesign --force --sign - --entitlements macos/quick-look/TextPreview.entitlements "$preview"
+
 /usr/bin/codesign --force --sign - "$app"
-/usr/bin/codesign --verify --strict "$app"
+/usr/bin/codesign --verify --deep --strict "$app"
 
 if [[ -e "dist/macpadqq.app" ]]; then
 	mv "dist/macpadqq.app" "$work/previous.app"

@@ -13,6 +13,7 @@
 #import "EditorMacros.h"
 #import "EditorPlugins.h"
 #import "EditorPluginCatalog.h"
+#import "EditorPreview.h"
 #import "EditorPrinting.h"
 #import "EditorResources.h"
 #import "EditorRun.h"
@@ -88,6 +89,22 @@ void RunWorkspaceLifecycleTest(BOOL restore);
 @interface MacpadApp : NSObject <NSApplicationDelegate, NSMenuDelegate>
 @property(nonatomic, strong) EditorLaunchOptions *launchOptions;
 - (void)buildMenu;
+@end
+
+@interface MacpadPreviewPanel : NSPanel
+@end
+
+@implementation MacpadPreviewPanel
+- (void)sendEvent:(NSEvent *)event
+{
+	if (event.type == NSEventTypeKeyDown && event.keyCode == 53 &&
+		!(event.modifierFlags & NSEventModifierFlagDeviceIndependentFlagsMask))
+	{
+		[self close];
+		return;
+	}
+	[super sendEvent:event];
+}
 @end
 
 static NSString *Label(NSString *identifier, NSString *fallback)
@@ -1591,7 +1608,7 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 	[self openDocuments:urls];
 }
 
-- (void)openFinderSelection:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)error
+static NSArray<NSURL *> *FinderFiles(NSPasteboard *pasteboard)
 {
 	NSArray<NSURL *> *urls = [pasteboard readObjectsForClasses:@[NSURL.class]
 		options:@{NSPasteboardURLReadingFileURLsOnlyKey: @YES}];
@@ -1603,6 +1620,12 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 			regular.boolValue)
 			[files addObject:url.URLByStandardizingPath];
 	}
+	return files.array;
+}
+
+- (void)openFinderSelection:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)error
+{
+	NSArray<NSURL *> *files = FinderFiles(pasteboard);
 	if (!files.count)
 	{
 		if (error)
@@ -1610,7 +1633,52 @@ static NSURL *CustomSearchURL(NSString *pattern, NSString *query)
 		return;
 	}
 	[NSApp activateIgnoringOtherApps:YES];
-	[self openDocuments:files.array];
+	[self openDocuments:files];
+}
+
+static BOOL ShowTextPreview(NSURL *file, NSError **error)
+{
+	static NSPanel *panel;
+	NSRect frame = panel ? panel.contentView.bounds : NSMakeRect(0, 0, 760, 520);
+	ScintillaView *view = [[ScintillaView alloc] initWithFrame:frame];
+	if (!LoadEditorPreview(view, file, EditorResources.shared, error))
+		return NO;
+	if (!panel)
+	{
+		panel = [[MacpadPreviewPanel alloc] initWithContentRect:frame
+			styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
+			backing:NSBackingStoreBuffered defer:NO];
+		panel.releasedWhenClosed = NO;
+		[panel center];
+	}
+	panel.title = file.lastPathComponent;
+	panel.representedURL = file;
+	panel.contentView = view;
+	[panel makeFirstResponder:view.content];
+	[panel makeKeyAndOrderFront:nil];
+	return YES;
+}
+
+void PreviewEditorFile(NSURL *fileURL)
+{
+	NSError *error = nil;
+	if (!ShowTextPreview(fileURL, &error) && error)
+		[NSApp presentError:error];
+}
+
+- (void)previewFinderSelection:(NSPasteboard *)pasteboard userData:(NSString *)userData error:(NSString **)message
+{
+	NSArray<NSURL *> *files = FinderFiles(pasteboard);
+	if (files.count != 1)
+	{
+		if (message)
+			*message = EditorUIString(@"Select one file in Finder.");
+		return;
+	}
+	[NSApp activateIgnoringOtherApps:YES];
+	NSError *error = nil;
+	if (!ShowTextPreview(files.firstObject, &error) && message)
+		*message = error.localizedDescription;
 }
 
 - (void)openDocuments:(NSArray<NSURL *> *)urls

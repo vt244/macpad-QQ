@@ -291,6 +291,12 @@ static NSColor *ReadableTabText(NSColor *foreground, NSColor *background)
 - (NSMenu *)menuForEvent:(NSEvent *)event { return EditorTabMenu(self.document); }
 @end
 
+enum StatusFieldIndex
+{
+	StatusSyntax, StatusLength, StatusLines, StatusLine, StatusColumn, StatusPosition,
+	StatusLineEnding, StatusEncoding, StatusMode, StatusFieldCount
+};
+
 @interface StatusField : NSTextField
 @property(nonatomic) NSUInteger fieldIndex;
 @end
@@ -299,9 +305,9 @@ static NSColor *ReadableTabText(NSColor *foreground, NSColor *background)
 - (NSMenu *)menuForEvent:(NSEvent *)event
 {
 	EditorResources *resources = EditorResources.shared;
-	if (self.fieldIndex == 4)
+	if (self.fieldIndex == StatusEncoding)
 		return [[NSApp.mainMenu itemWithTitle:[resources label:@"encoding" fallback:@"Encoding"]].submenu copy];
-	if (self.fieldIndex == 3)
+	if (self.fieldIndex == StatusLineEnding)
 	{
 		NSMenu *edit = [NSApp.mainMenu itemWithTitle:[resources label:@"edit" fallback:@"Edit"]].submenu;
 		NSString *title = [resources label:@"edit-eolConversion" fallback:@"EOL Conversion"];
@@ -464,8 +470,10 @@ static EditorTabStrip *TabStrip(BOOL other)
 	_statusHeight = [status.heightAnchor constraintEqualToConstant:21];
 	_statusHeight.active = YES;
 	NSMutableArray<NSTextField *> *fields = [NSMutableArray array];
-	CGFloat widths[] = {0, 142, 194, 110, 83, 31};
-	for (NSUInteger i = 0; i < 6; ++i)
+	const NSLayoutPriority compression[] = {
+		NSLayoutPriorityDefaultLow, 755, 999, 758, 757, 751, 753, 754, 756
+	};
+	for (NSUInteger i = 0; i < StatusFieldCount; ++i)
 	{
 		StatusField *field = [[StatusField alloc] initWithFrame:NSZeroRect];
 		field.fieldIndex = i;
@@ -477,13 +485,14 @@ static EditorTabStrip *TabStrip(BOOL other)
 		field.font = [NSFont systemFontOfSize:12];
 		field.lineBreakMode = NSLineBreakByTruncatingTail;
 		field.translatesAutoresizingMaskIntoConstraints = NO;
-		[field setContentCompressionResistancePriority:NSLayoutPriorityDefaultLow forOrientation:NSLayoutConstraintOrientationHorizontal];
-		if (widths[i] > 0)
-			[field.widthAnchor constraintEqualToConstant:widths[i]].active = YES;
+		[field setContentCompressionResistancePriority:compression[i] forOrientation:NSLayoutConstraintOrientationHorizontal];
+		[field setContentHuggingPriority:i == StatusSyntax ? NSLayoutPriorityDefaultLow : NSLayoutPriorityDefaultHigh
+			forOrientation:NSLayoutConstraintOrientationHorizontal];
+		[field.widthAnchor constraintGreaterThanOrEqualToConstant:24].active = YES;
 		[fields addObject:field];
 		[status addArrangedSubview:field];
 		[status setCustomSpacing:5 afterView:field];
-		if (i < 5)
+		if (i == StatusSyntax || i == StatusLines || i == StatusPosition || i == StatusLineEnding || i == StatusEncoding)
 		{
 			NSView *separator = ColoredView();
 			[separator.heightAnchor constraintEqualToConstant:15].active = YES;
@@ -732,10 +741,16 @@ static EditorTabStrip *TabStrip(BOOL other)
 		[button.document closeEditorTab:nil];
 }
 
-- (void)setStatusFields:(NSArray<NSString *> *)fields
+- (void)setStatusFields:(NSArray<NSString *> *)fields toolTips:(NSArray<NSString *> *)toolTips
 {
-	for (NSUInteger i = 0; i < MIN(fields.count, _statusLabels.count); ++i)
-		_statusLabels[i].stringValue = fields[i];
+	for (NSUInteger i = 0; i < _statusLabels.count; ++i)
+	{
+		NSTextField *label = _statusLabels[i];
+		if (![label.stringValue isEqualToString:fields[i]])
+			label.stringValue = fields[i];
+		if (![label.toolTip isEqualToString:toolTips[i]])
+			label.toolTip = toolTips[i];
+	}
 }
 
 - (void)viewDidChangeEffectiveAppearance

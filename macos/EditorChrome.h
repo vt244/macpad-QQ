@@ -19,6 +19,6 @@
 - (void)refreshToolbarLabels:(NSArray<NSToolbarItem *> *)commands;
 - (void)refreshColors;
 - (void)refreshAppearancePreferences;
-- (void)setStatusFields:(NSArray<NSString *> *)fields;
+- (void)setStatusFields:(NSArray<NSString *> *)fields toolTips:(NSArray<NSString *> *)toolTips;
 - (void)setTabsHidden:(BOOL)hidden;
 @end
