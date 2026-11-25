@@ -1,3 +1,8 @@
+macpadqq 0.3-beta
+
+ - Added read-only text previews with syntax highlighting and line numbers on macOS.
+ - Increased the bundled editor and preview font size from 10 to 15 points.
+
 macpadqq 0.2-beta
 
  - Added a native macOS editor using AppKit and Scintilla Cocoa.

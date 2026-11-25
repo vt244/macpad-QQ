@@ -19,9 +19,9 @@
 
 //************ macpadqq version ***************************
 
-#define NOTEPAD_PLUS_VERSION L"macpadqq v0.2-beta"
-#define VERSION_PRODUCT_VALUE L"0.2-beta\0"
-#define VERSION_DIGITALVALUE 0, 2, 0, 0
+#define NOTEPAD_PLUS_VERSION L"macpadqq v0.3-beta"
+#define VERSION_PRODUCT_VALUE L"0.3-beta\0"
+#define VERSION_DIGITALVALUE 0, 3, 0, 0
 
 // Upstream compatibility versions for Windows plugin checks, API and updater.
 #define VERSION_NPP_COMPATIBILITY_VALUE L"8.9.9.1"
